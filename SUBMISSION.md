@@ -86,31 +86,80 @@ _Your answer here._
 
 ## 5. Authentication, Identity, and the Embedding Model
 
-> This section carries significant marks. Keep the two auth layers clearly separate.
-
 ### 5.1 Mocked end-user identity
-- **Token format and claims:** _e.g. mock JWT with subject, role, policy id, issuer, audience, expiry._
-- **How roles are derived:** _policyholder vs beneficiary, and how the deceased-state flag promotes a linked beneficiary to the restricted role._
-- **Server-side enforcement:** _how every protected action is authorized on the backend, not the UI._
+
+- **Token format and claims:** the host portal signs a mock OIDC JWT using RS256. It
+  carries `sub` (user ID), `role`, `policy_id`, `deceased_flag`, `iss: host-portal`,
+  `aud: companion-api`, and a 15-minute expiry. The companion backend fetches the host's
+  public key from `/.well-known/jwks.json` (a mock JWKS endpoint) and checks the
+  signature, issuer, audience and expiry on every request. This split matters: the
+  backend can check any token, but only the host can create one. That is why we chose
+  RS256 over HS256: with a shared secret, anything that can check a token can also
+  forge one.
+
+- **How roles are derived:** always from the token's claims, never from the UI. The role
+  claim and the deceased flag work together, giving three cases. A `policyholder` gets
+  full servicing access. A `beneficiary` whose linked policyholder has died
+  (`deceased_flag: true`) gets the restricted role: Q&A and claims only. A `beneficiary`
+  whose policyholder is alive gets no access to the policy at all; being named on a
+  policy grants nothing until the flag is set. There is no fourth case: on a
+  policyholder's own token the flag is always false, because a policyholder whose death
+  has been verified can no longer log in. Each party owns one step: Momentum sets
+  the flag after verifying the death, the host signs it into the token at login, and the
+  backend enforces it.
+
+- **Server-side enforcement:** the backend consults the model at most twice per message,
+  and neither call carries any authority. The first call only names the intent ("this is
+  a What-If request"); the backend then checks the role-capability matrix in code; only
+  if the role allows it does the backend run the action and make the second call, which
+  only phrases a result our code already produced. A refused request never reaches an
+  action or a second call: the backend replies with a fixed, empathetic template and
+  writes an audit entry.
 
 ### 5.2 Role-to-capability matrix
-> Fill in what each role may do. Beneficiary must be restricted to Policy Q&A and Claims only.
 
 | Capability | Policyholder | Beneficiary |
 |---|---|---|
-| Grounded Policy Q&A | | |
-| Quotes & Alterations (What-If) | | |
-| Self-Service Updates (e.g. address) | | |
-| Claims Support | | |
+| Grounded Policy Q&A | Yes | Yes |
+| Quotes & Alterations (What-If) | Yes | No: refused by the server, audited |
+| Self-Service Updates (e.g. address) | Yes | No: refused by the server, audited |
+| Claims Support | Yes | Yes |
+| Beneficiary change | Yes, with human review | No |
+| Banking change | Yes, with human review | No |
+
+The Beneficiary column applies once the deceased flag is set. A beneficiary whose linked
+policyholder is alive has no access at all: every row is No until the flag is set.
 
 ### 5.3 Host-to-companion embedding
-- **Embedding mechanism:** _iframe / web component / script embed, and why._
-- **Identity handoff:** _how the host passes a short-lived scoped token to the companion (e.g. postMessage with origin allowlist, or signed handoff token), and how the companion backend validates signature, issuer, audience, and expiry._
-- **Trust boundaries:** _confirm the user identity token and the gateway machine credentials are separate and never cross boundaries. Reference your architecture diagram._
-- **Security notes:** _origin checks, token TTL, no secrets in the browser, re-validation on every request._
 
-> If you chose an alternative to the recommended host-and-widget model (e.g. a single SPA with route/API
-> guards), justify it here and explain how you preserve the same trust boundaries.
+- **Embedding mechanism:** an iframe on its own origin. The browser itself keeps the
+  host page and the companion separated, so neither can read the other's data. We
+  rejected a script-embed widget because it runs inside the host page, where any other
+  script could read the token, and a single SPA because it removes the boundary this
+  challenge is testing.
+
+- **Identity handoff:** the companion tells its parent window it is ready
+  (`COMPANION_READY`); the host replies with the JWT via `postMessage`, aimed at the
+  companion's exact origin; the companion only accepts messages from origins on its
+  allowlist. The ready-first handshake avoids timing problems on slow loads. The backend
+  then re-checks the token on every request; the handoff is never trusted on its own.
+
+- **Trust boundaries:** two credentials that never meet. The user's JWT travels
+  host → companion → backend and stops there. The gateway's OAuth2 client-credentials
+  live only in backend configuration and travel only backend → gateway. The browser
+  never sees them. Both edges are drawn and labelled on the architecture diagram
+  (section 9).
+
+- **Security notes:** pinned target origins and allowlists on both sides of the iframe;
+  a short 15-minute token life, with a fresh token requested quietly over the same
+  channel when it expires (the backend keeps conversation state, so an expiring token
+  never loses a claim in progress). Renewal is not unlimited: it only works while the
+  companion sits inside a live, authenticated portal page, so the portal session is the
+  real outer bound, and every renewal re-reads the user's profile, so a role or
+  deceased-flag change is never more than 15 minutes stale. No secrets in the browser;
+  re-validation and re-authorization on every request; and every validation and
+  authorization outcome, including expired or invalid tokens, written to the audit log
+  with the Appendix A9 fields.
 
 ---
 
@@ -163,9 +212,30 @@ _Diagram / link here._
 
 ## 11. Assumptions and Open Questions
 
-> Document any assumptions you made and anything you would confirm with Momentum given more time.
+**Assumptions**
 
-_Your answer here._
+- A listed beneficiary has no companion access until the deceased flag is set. The flag
+  unlocks the restricted role; it never upgrades anyone.
+- A policyholder whose death has been verified can no longer log in, so "policyholder
+  with the flag set" cannot occur.
+- A set deceased flag means the insurer has already validated the death certificate, so
+  the claims checklist marks it as on file and never asks the bereaved beneficiary to
+  supply it again.
+- Token issuance and renewal are logged by the identity provider (the host portal,
+  mocked here), as a production IdP would; the companion's audit log records validation
+  and authorization outcomes, which is the enforcement record.
+- The provided policy guide is product-level and contains nothing personal, so retrieval
+  filtering is a relevance tool today. The day per-customer documents join the store,
+  the same metadata filter plus row-level security becomes access control.
+- Stored conversation history is personal data; retention and access would follow
+  Momentum's data policies.
+
+**Open questions**
+
+- The gateway's OAuth2 token endpoint URL (a placeholder in `.env.example` until
+  credentials are issued).
+- Whether the full policy guide at the finals keeps the heading structure our
+  section-based chunker assumes (the fixed-size fallback covers it if not).
 
 ---
 

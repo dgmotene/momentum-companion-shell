@@ -60,6 +60,14 @@ outweighed the above. In any case we validate the model's JSON output ourselves 
 language, because the documentation does not promise that Node's structured output mode
 works either.
 
+One option we looked at and set aside for now: the script that loads the policy guide
+(decision 9) stands alone and runs once, so it could be written in Python without touching
+the rest of the backend. That would matter if the full guide at the finals turns out to be
+full of complex tables, which Python's PDF tools handle better. We are not doing it now,
+because judges would then need both Node and Python installed for no benefit in this
+phase. We note it here so the option is on record: if the need arises, only that one
+script changes.
+
 ## Decision 2: Vector Store (in-memory vs SQLite vs pgvector)
 
 To answer policy questions, we break the policy guide into pieces, turn each piece into an
@@ -84,6 +92,17 @@ backend restarts, which means re-embedding the guide on every boot and a backend
 cannot start at all when the gateway is down. SQLite persists, but it has no vector search
 of its own, so we would be writing the similarity maths in our own code and spending the
 write-up defending it.
+
+Two more things this choice gives us. First, because the guide's pieces live in ordinary
+database tables, a search can be narrowed with plain SQL in the same query, for example to
+one product or one section of the guide. Today that only helps find the right answer: the
+guide is a shared product document with nothing personal in it, and everything personal
+(cover amounts, premiums, beneficiaries) lives in the policy tables instead. But the day
+individual documents join the store, such as a customer's policy schedule or claim
+letters, that same filter becomes a security wall: the database itself can be told to only
+ever return rows belonging to the person asking, based on their verified token. Second,
+when the document set grows at the finals, Postgres has a built-in index (HNSW) that keeps
+the search fast without us changing any code.
 
 ## Decision 3: JWT Signing Scheme (mock end-user identity)
 
@@ -146,6 +165,15 @@ because their abstractions assume the tool-calling our gateway lacks, and becaus
 judges are testing whether we understand orchestration ourselves. "The library does it" is
 a poor answer. Two Haiku calls per message is a cost we accept; the model is fast and
 cheap.
+
+How the first call answers us matters too. We ask the model to reply with one tiny piece
+of machine-readable text in a fixed format, our code checks it, and if the reply does not
+fit the format we ask once more. If the small model proves unreliable at even that, the
+backup plan is simpler markers: ask it to wrap its answer in a tag such as
+`<intent>qa</intent>` and pick the answer out from between the tags. Claude models follow
+tag instructions very reliably, and finding one tag in a reply is sturdier than digging a
+structured answer out of prose. Either way, the checking happens in our code, and a bad
+reply never reaches the user.
 
 ## Decision 6: Session memory shape
 
@@ -233,6 +261,13 @@ At question time the backend fetches the three to five best matching pieces, usi
 similarity computed inside the database by pgvector. There is also an honesty rule enforced
 in code: if nothing matches well enough, the backend declines to answer with the approved
 fallback response instead of letting the model guess.
+
+One refinement on top of the section chunks: parents and children. What we embed for
+search are small, targeted pieces of a section, which keeps matching precise, but what we
+hand the model is the full section the match belongs to, so the small model sees the
+surrounding rules and exclusions instead of an orphaned fragment. Section-based chunking
+makes this nearly free, because the heading already defines where the parent begins and
+ends, and it is one of the main ways we compensate for the small chat model.
 
 The standard alternative, splitting purely by size, lost because it slices across topics. A
 piece that is half "Cooling-off" and half "Fees" matches both subjects weakly and neither
