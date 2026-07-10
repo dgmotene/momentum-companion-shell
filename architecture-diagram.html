@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>System Architecture: Accessible Life Insurance AI Companion | Nullius In Verba</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --navy: #0f2942;
+    --navy-light: #1a3a5c;
+    --navy-soft: #2d4a6f;
+    --gold: #c9953c;
+    --gold-light: #f5e6c8;
+    --gold-dark: #a07730;
+    --teal: #2b8a7e;
+    --teal-light: #d4f1ed;
+    --purple: #6b46c1;
+    --purple-light: #ede9fe;
+    --sage: #7fb069;
+    --sage-light: #e8f5e3;
+    --coral: #e85d5d;
+    --coral-light: #ffe5e5;
+    --cream: #faf8f5;
+    --sand: #f4f1ec;
+    --stone: #e8e3dc;
+    --text: #1a1a2e;
+    --text-secondary: #4a4a5a;
+    --text-muted: #7a7a8a;
+    --mono: 'JetBrains Mono', monospace;
+    --shadow: 0 2px 8px rgba(15,41,66,0.06), 0 1px 3px rgba(15,41,66,0.04);
+    --shadow-md: 0 8px 24px rgba(15,41,66,0.1), 0 2px 8px rgba(15,41,66,0.05);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    line-height: 1.55;
+    padding: 48px 24px;
+  }
+
+  .page {
+    max-width: 1160px;
+    margin: 0 auto;
+  }
+
+  /* ─── Document header ─── */
+  .doc-header {
+    text-align: center;
+    margin-bottom: 44px;
+    padding-bottom: 28px;
+    border-bottom: 2px solid var(--stone);
+  }
+  .doc-eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold-dark);
+    background: var(--gold-light);
+    padding: 5px 14px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+  }
+  .doc-header h1 {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--navy);
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+  .doc-header p {
+    font-size: 15px;
+    color: var(--text-muted);
+  }
+  .doc-meta {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+  }
+  .doc-meta span { display: flex; align-items: center; gap: 6px; }
+  .doc-meta b { color: var(--navy); font-weight: 600; }
+
+  /* ─── Section ─── */
+  .section { margin-bottom: 56px; }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .section-num {
+    width: 30px;
+    height: 30px;
+    background: var(--navy);
+    color: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .section-title h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .section-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+
+  /* ─── Trust zones ─── */
+  .zone {
+    border-radius: 16px;
+    padding: 22px;
+    position: relative;
+  }
+  .zone-1 { background: #eef5ff; border: 2px solid #a9caff; }
+  .zone-2 { background: #eafaf4; border: 2px solid #9ce0c4; margin: 18px 0 4px; }
+  .zone-3 { background: #fffaef; border: 2px solid #f3d78e; }
+  .zone-4 { background: #f6f1ff; border: 2px solid #cdb8f0; }
+
+  .zone-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .zone-tag {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 6px;
+  }
+  .zone-1 .zone-tag { background: #2b6cb0; color: white; }
+  .zone-2 .zone-tag { background: var(--teal); color: white; }
+  .zone-3 .zone-tag { background: var(--gold-dark); color: white; }
+  .zone-4 .zone-tag { background: var(--purple); color: white; }
+
+  .zone-host {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-family: var(--mono);
+  }
+
+  .zone-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 8px 0 4px;
+  }
+  .zone-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+    max-width: 780px;
+  }
+
+  .comp-grid {
+    display: grid;
+    gap: 12px;
+  }
+  .comp-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .comp-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+  .comp {
+    background: white;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 10px;
+    padding: 14px;
+    box-shadow: var(--shadow);
+  }
+  .comp h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .comp ul {
+    list-style: none;
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+  .comp ul li { padding-left: 12px; position: relative; }
+  .comp ul li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 8px;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--gold);
+  }
+
+  .dot {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+  }
+  .dot-blue { background: #2b6cb0; }
+  .dot-teal { background: var(--teal); }
+  .dot-gold { background: var(--gold-dark); }
+  .dot-purple { background: var(--purple); }
+
+  /* ─── Connector with token label ─── */
+  .connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 0;
+  }
+  .connector-token {
+    background: white;
+    border: 1.5px dashed var(--gold);
+    border-radius: 10px;
+    padding: 8px 16px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    max-width: 520px;
+  }
+  .connector-token .tk-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gold-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .connector-token .tk-claims {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+  .connector-arrow {
+    font-size: 20px;
+    color: var(--gold);
+    line-height: 1;
+    margin: 2px 0;
+  }
+
+  .boundary-warn {
+    margin-top: 14px;
+    background: var(--coral-light);
+    border: 1px solid #f5b4b4;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: #8b2e2e;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ─── Data flow ─── */
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .flow-step {
+    background: white;
+    border: 1px solid var(--stone);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+  .flow-step-num {
+    width: 26px; height: 26px;
+    background: var(--navy);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .flow-step h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .flow-step p {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .flow-step code {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    background: var(--sand);
+    padding: 1px 5px;
+    border-radius: 4px;
+    color: var(--navy);
+  }
+  .flow-step.reject { border-color: #f5b4b4; }
+  .flow-step.reject .flow-step-num { background: var(--coral); }
+
+  /* ─── Pipeline ─── */
+  .pipeline {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    flex-wrap: wrap;
+  }
+  .pipe-node {
+    flex: 1;
+    min-width: 150px;
+    background: white;
+    border: 1px solid var(--stone);
+    border-radius: 12px;
+    padding: 18px 16px;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .pipe-node .pipe-icon {
+    width: 40px; height: 40px;
+    margin: 0 auto 10px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+  .pipe-node h4 { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .pipe-node p { font-size: 11px; color: var(--text-muted); }
+  .pipe-arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 22px;
+    color: var(--gold);
+  }
+
+  /* ─── Two token flows ─── */
+  .flows-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .token-flow {
+    background: white;
+    border: 1px solid var(--stone);
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
+  .token-flow-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .token-flow-head .flow-badge {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding: 3px 9px;
+    border-radius: 5px;
+    text-transform: uppercase;
+  }
+  .flow-badge.user { background: #eef5ff; color: #2b6cb0; }
+  .flow-badge.machine { background: var(--purple-light); color: var(--purple); }
+  .token-flow h3 { font-size: 15px; font-weight: 700; color: var(--navy); }
+  .token-flow-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+
+  .tstep {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--stone);
+  }
+  .tstep:last-child { border-bottom: none; }
+  .tstep-marker {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+  .tstep-marker.user { background: #2b6cb0; }
+  .tstep-marker.machine { background: var(--purple); }
+  .tstep-body strong { font-size: 13px; color: var(--navy); }
+  .tstep-body p { font-size: 11.5px; color: var(--text-secondary); font-family: var(--mono); margin-top: 1px; }
+
+  /* ─── Legend ─── */
+  .legend {
+    background: var(--navy);
+    border-radius: 14px;
+    padding: 22px 24px;
+    color: white;
+  }
+  .legend h3 { font-size: 14px; font-weight: 700; margin-bottom: 14px; letter-spacing: 0.3px; }
+  .legend-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 32px;
+  }
+  .legend-item { display: flex; gap: 10px; align-items: flex-start; }
+  .legend-swatch {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    border: 1.5px solid rgba(255,255,255,0.3);
+  }
+  .legend-item div { font-size: 12px; }
+  .legend-item strong { display: block; font-weight: 600; }
+  .legend-item span { color: rgba(255,255,255,0.6); font-size: 11px; }
+
+  /* SVG icon sizing */
+  svg { display: block; }
+
+  .callout {
+    background: var(--sand);
+    border-left: 3px solid var(--gold);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    margin-top: 16px;
+  }
+  .callout b { color: var(--navy); }
+
+  .footer {
+    text-align: center;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--stone);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .section { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="doc-header">
+    <div class="doc-eyebrow">System Architecture</div>
+    <h1>Accessible Life Insurance AI Companion</h1>
+    <p>Secure, grounded, role-aware conversational assistant built on Momentum's AI Gateway</p>
+    <div class="doc-meta">
+      <span><b>Team</b> Nullius In Verba</span>
+      <span><b>Pattern</b> Host-embed + Backend-for-Frontend</span>
+      <span><b>Trust zones</b> 4</span>
+    </div>
+  </div>
+
+  <!-- Section 1: Trust Zones -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-num">1</div>
+      <div>
+        <h2>Four Trust Zones</h2>
+        <p>Each boundary is crossed by exactly one token. The two token types never mix.</p>
+      </div>
+    </div>
+
+    <!-- Zone 1 + nested Zone 2 -->
+    <div class="zone zone-1">
+      <div class="zone-head">
+        <span class="zone-tag">Trust Zone 1 · Host</span>
+        <span class="zone-host">Next.js (mock portal)</span>
+      </div>
+      <div class="zone-title">Momentum Life Insurance Portal (Host Application)</div>
+      <div class="zone-desc">
+        The insurer's portal where the user is already authenticated. It owns the session, knows the
+        user's identity, role, and policy context, and issues a short-lived (15 min) RS256-signed
+        handoff token, publishing its public key at <code style="font-family:var(--mono);font-size:11px;">/.well-known/jwks.json</code>.
+      </div>
+      <div class="comp-grid cols-3">
+        <div class="comp">
+          <h4><span class="dot dot-blue">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/></svg>
+          </span>OIDC Login</h4>
+          <ul><li>Mock OIDC, modelled on real IdPs</li><li>Signs RS256 JWT on sign-in</li></ul>
+        </div>
+        <div class="comp">
+          <h4><span class="dot dot-blue">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+          </span>Session Owner</h4>
+          <ul><li>Holds user identity + role</li><li>Knows policy context</li></ul>
+        </div>
+        <div class="comp">
+          <h4><span class="dot dot-blue">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </span>Token Handoff</h4>
+          <ul><li>postMessage, pinned target origin</li><li>Silent renewal while session lives</li></ul>
+        </div>
+      </div>
+
+      <!-- Nested Zone 2 -->
+      <div class="zone zone-2">
+        <div class="zone-head">
+          <span class="zone-tag">Trust Zone 2 · Embedded Child</span>
+          <span class="zone-host">Next.js + TypeScript · own origin</span>
+        </div>
+        <div class="zone-title">Embedded AI Companion (Thuso)</div>
+        <div class="zone-desc">
+          The chat widget, loaded as pill and panel iframes from its own origin by a small
+          host-side loader that renders no UI and never touches the token. It does NOT run its
+          own login: identity arrives via <code style="font-family:var(--mono);font-size:11px;">postMessage</code>,
+          validated against a strict origin allowlist, and is forwarded to the backend on every request.
+        </div>
+        <div class="comp-grid cols-3">
+          <div class="comp">
+            <h4><span class="dot dot-teal">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            </span>Generative Chat UI</h4>
+            <ul><li>Rich interactive cards</li><li>Role-aware suggestions</li></ul>
+          </div>
+          <div class="comp">
+            <h4><span class="dot dot-teal">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </span>No Own Login</h4>
+            <ul><li>Trusts host identity only</li><li>Never authenticates directly</li></ul>
+          </div>
+          <div class="comp">
+            <h4><span class="dot dot-teal">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            </span>Token Relay</h4>
+            <ul><li>Bearer JWT on each call</li><li>To the companion backend only</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Connector 1 -->
+    <div class="connector">
+      <div class="connector-arrow">▼</div>
+      <div class="connector-token">
+        <div class="tk-label">User Identity Token (JWT) · on every request</div>
+        <div class="tk-claims">sub · role · policy_id · deceased_flag · iss · aud · exp</div>
+      </div>
+      <div class="connector-arrow">▼</div>
+    </div>
+
+    <!-- Zone 3 -->
+    <div class="zone zone-3">
+      <div class="zone-head">
+        <span class="zone-tag">Trust Zone 3 · Companion Backend</span>
+        <span class="zone-host">Node.js · Express + TypeScript</span>
+      </div>
+      <div class="zone-title">Companion Backend (backend-for-frontend)</div>
+      <div class="zone-desc">
+        A standalone service. It validates identity against the host's JWKS, enforces role-based
+        access on every request, owns conversation memory, runs retrieval, orchestrates the
+        two-step classify-then-act flow, and holds the gateway machine credentials as
+        server-only environment variables.
+      </div>
+      <div class="comp-grid cols-4">
+        <div class="comp">
+          <h4><span class="dot dot-gold">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>Auth Middleware</h4>
+          <ul><li>Verify RS256 via host JWKS</li><li>Check iss / aud / exp</li><li>Role + deceased_flag gate access</li><li>Refuse and audit outside role</li></ul>
+        </div>
+        <div class="comp">
+          <h4><span class="dot dot-gold">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </span>Session Memory</h4>
+          <ul><li>Postgres, per user + role</li><li>Rolling window + workflow-state card</li><li>Committed with the audit entry</li></ul>
+        </div>
+        <div class="comp">
+          <h4><span class="dot dot-gold">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </span>RAG Retrieval</h4>
+          <ul><li>Embed query via gateway</li><li>pgvector: cosine top-k over child chunks</li><li>Full parent section into the prompt</li></ul>
+        </div>
+        <div class="comp">
+          <h4><span class="dot dot-gold">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </span>Orchestrator</h4>
+          <ul><li>Two-step classify-then-act</li><li>Role gate between the two model calls</li><li>What-If formula, validation, claims state machine</li><li>Escalation routing + audit logging</li></ul>
+        </div>
+      </div>
+      <div class="boundary-warn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        The user identity token and the gateway machine credentials are separate. Gateway credentials
+        live only in the backend's environment and are never exposed to the browser; no frontend
+        code path can reach them.
+      </div>
+    </div>
+
+    <!-- Connector 2 -->
+    <div class="connector">
+      <div class="connector-arrow">▼</div>
+      <div class="connector-token" style="border-color: var(--purple);">
+        <div class="tk-label" style="color: var(--purple);">Gateway Service Token · OAuth2 client-credentials</div>
+        <div class="tk-claims">client_id + client_secret → access_token (machine-to-machine)</div>
+      </div>
+      <div class="connector-arrow">▼</div>
+    </div>
+
+    <!-- Zone 4 -->
+    <div class="zone zone-4">
+      <div class="zone-head">
+        <span class="zone-tag">Trust Zone 4 · External Gateway</span>
+        <span class="zone-host">Momentum Infrastructure</span>
+      </div>
+      <div class="zone-title">Momentum AI Gateway</div>
+      <div class="zone-desc">
+        Stateless, OpenAI-compatible (adapter pattern), secured by OAuth2 client-credentials.
+        No conversation memory and no native tool-calling: both supplied by our backend.
+        Base URL: <code style="font-family:var(--mono);font-size:11px;">https://riskservicesdev.momentum.co.za/ai/api</code>
+      </div>
+      <div class="comp-grid cols-3">
+        <div class="comp">
+          <h4><span class="dot dot-purple">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </span>Chat Completions</h4>
+          <ul><li><code>/chat/completions</code></li><li>claude-3-haiku-20240307</li></ul>
+        </div>
+        <div class="comp">
+          <h4><span class="dot dot-purple">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+          </span>Embeddings</h4>
+          <ul><li><code>/embeddings</code></li><li>titan-embed-text-v2</li></ul>
+        </div>
+        <div class="comp">
+          <h4><span class="dot dot-purple">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </span>Responses (future)</h4>
+          <ul><li><code>/responses</code></li><li>On gateway roadmap</li></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Data Flow -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-num">2</div>
+      <div>
+        <h2>Request Lifecycle: Chat Message</h2>
+        <p>End-to-end path of a single user message. At most two model calls, neither with any authority.</p>
+      </div>
+    </div>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-step-num">1</div>
+        <h4>Frontend</h4>
+        <p>POST <code>/api/chat/message</code> with <code>Authorization: Bearer &lt;jwt&gt;</code> and body <code>{ message, session_id }</code></p>
+      </div>
+      <div class="flow-step reject">
+        <div class="flow-step-num">2</div>
+        <h4>Auth Middleware</h4>
+        <p>Validates the JWT (RS256 via host JWKS, iss, aud, exp) and derives effective access from role + deceased_flag. <b>Rejects with 401</b> and audits if invalid.</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">3</div>
+        <h4>Session Manager</h4>
+        <p>Loads the rolling window + workflow-state card for this user + role, appends the new message.</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">4</div>
+        <h4>Model Call 1 of 2: Classify</h4>
+        <p>Names the intent only (qa / whatif / update / claim). Untrusted output, validated in code with one re-prompt and a keyword fallback. Carries no authority.</p>
+      </div>
+      <div class="flow-step reject">
+        <div class="flow-step-num">5</div>
+        <h4>Role Gate (our code)</h4>
+        <p>Capability matrix check between the two calls. <b>Refused:</b> fixed empathetic template + audit entry, no second call, return.</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">6</div>
+        <h4>Backend Action</h4>
+        <p>Q&amp;A: embed query, pgvector cosine over child chunks, swap in parent sections (below threshold: decline, no model call). Or: What-If formula, update validation, claims state machine.</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">7</div>
+        <h4>Model Call 2 of 2: Compose</h4>
+        <p>Phrases the result our code produced: grounded prompt of parent sections + trimmed history + state card. haiku, temp 0.3.</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">8</div>
+        <h4>Persist + Return</h4>
+        <p>Saves the turn and workflow state with the audit entry in one transaction. Responds with reply + <code>session_id</code> + role.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: Ingestion Pipeline -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-num">3</div>
+      <div>
+        <h2>Document Ingestion Pipeline (RAG)</h2>
+        <p>Offline pre-processing that grounds every answer in the provided policy documents.</p>
+      </div>
+    </div>
+    <div class="pipeline">
+      <div class="pipe-node">
+        <div class="pipe-icon" style="background: var(--navy);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <h4>Policy PDFs</h4>
+        <p>Provided product documents</p>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-node">
+        <div class="pipe-icon" style="background: var(--teal);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </div>
+        <h4>Chunking</h4>
+        <p>Parents: guide sections · children: a few hundred tokens</p>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-node">
+        <div class="pipe-icon" style="background: var(--gold-dark);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.9 5.8a2 2 0 0 0 1.3 1.3L21 11l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 20l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 11l5.8-1.9a2 2 0 0 0 1.3-1.3L12 2z"/></svg>
+        </div>
+        <h4>Embedding</h4>
+        <p>Children only · gateway titan-embed-v2</p>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-node">
+        <div class="pipe-icon" style="background: var(--purple);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        </div>
+        <h4>pgvector</h4>
+        <p>Postgres · cosine (HNSW at scale)</p>
+      </div>
+    </div>
+    <div class="callout">
+      <b>Why pgvector:</b> the gateway documentation's own showcase path, and Postgres is already
+      our datastore, so it costs nothing extra to adopt: similarity search runs beside the
+      profiles, sessions and audit tables, parent text is stored next to child embeddings, and a
+      built-in index (HNSW) takes over when the full guide arrives at finals. The pipeline runs
+      once, offline, as a standalone script; the backend never waits for it.
+    </div>
+  </div>
+
+  <!-- Section 4: Two token flows -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-num">4</div>
+      <div>
+        <h2>Two Independent Authentication Flows</h2>
+        <p>The core security principle: these tokens never cross boundaries.</p>
+      </div>
+    </div>
+    <div class="flows-2">
+      <div class="token-flow">
+        <div class="token-flow-head">
+          <span class="flow-badge user">Flow 1</span>
+          <h3>End-User Identity</h3>
+        </div>
+        <div class="token-flow-sub">Mock OIDC, modelled on real IdPs</div>
+        <div class="tstep"><div class="tstep-marker user"></div><div class="tstep-body"><strong>Host app: OIDC login</strong><p>user signs in at the portal</p></div></div>
+        <div class="tstep"><div class="tstep-marker user"></div><div class="tstep-body"><strong>Host signs RS256 JWT</strong><p>sub · role · policy_id · deceased_flag · iss · aud · exp</p></div></div>
+        <div class="tstep"><div class="tstep-marker user"></div><div class="tstep-body"><strong>Short-lived token (15 min)</strong><p>handed to the companion · renewed silently while the portal session lives</p></div></div>
+        <div class="tstep"><div class="tstep-marker user"></div><div class="tstep-body"><strong>Backend validates via host JWKS</strong><p>on every request · verifies but can never forge</p></div></div>
+      </div>
+      <div class="token-flow">
+        <div class="token-flow-head">
+          <span class="flow-badge machine">Flow 2</span>
+          <h3>Gateway Machine Auth</h3>
+        </div>
+        <div class="token-flow-sub">Provided · machine-to-machine</div>
+        <div class="tstep"><div class="tstep-marker machine"></div><div class="tstep-body"><strong>Backend: OAuth2 client-credentials</strong><p>client_id + client_secret, backend env only</p></div></div>
+        <div class="tstep"><div class="tstep-marker machine"></div><div class="tstep-body"><strong>Token endpoint issues access_token</strong><p>identifies the application, not the user</p></div></div>
+        <div class="tstep"><div class="tstep-marker machine"></div><div class="tstep-body"><strong>Machine token</strong><p>used to call the AI Gateway</p></div></div>
+        <div class="tstep"><div class="tstep-marker machine"></div><div class="tstep-body"><strong>Gateway authorizes the app</strong><p>never sees the end user</p></div></div>
+      </div>
+    </div>
+    <div class="boundary-warn" style="margin-top: 18px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      The user JWT never reaches the gateway. The gateway credentials never reach the browser. These are enforced as separate, isolated trust boundaries.
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="section">
+    <div class="legend">
+      <h3>Trust Zone Legend</h3>
+      <div class="legend-grid">
+        <div class="legend-item">
+          <div class="legend-swatch" style="background:#a9caff;"></div>
+          <div><strong>Zone 1: Host Application</strong><span>Authenticates the user, owns the session</span></div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="background:#9ce0c4;"></div>
+          <div><strong>Zone 2: Embedded Companion</strong><span>Untrusted UI; receives identity from host</span></div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="background:#f3d78e;"></div>
+          <div><strong>Zone 3: Companion Backend (Express)</strong><span>Enforces auth, holds gateway credentials</span></div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="background:#cdb8f0;"></div>
+          <div><strong>Zone 4: External Gateway</strong><span>Momentum-operated, OAuth2 secured</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Nullius In Verba · Accessible Life Insurance AI Companion · Monkey &amp; River × Momentum Hackathon 2026
+  </div>
+
+</div>
+</body>
+</html>
