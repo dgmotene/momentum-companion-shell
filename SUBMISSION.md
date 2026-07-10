@@ -134,15 +134,24 @@ policyholder is alive has no access at all: every row is No until the flag is se
 
 - **Embedding mechanism:** an iframe on its own origin. The browser itself keeps the
   host page and the companion separated, so neither can read the other's data. We
-  rejected a script-embed widget because it runs inside the host page, where any other
+  rejected running the chat UI as a script widget inside the host page, where any other
   script could read the token, and a single SPA because it removes the boundary this
-  challenge is testing.
+  challenge is testing. The only host-side code is a small loader that injects and
+  repositions the iframes; it renders no UI and never touches the token.
 
 - **Identity handoff:** the companion tells its parent window it is ready
   (`COMPANION_READY`); the host replies with the JWT via `postMessage`, aimed at the
   companion's exact origin; the companion only accepts messages from origins on its
   allowlist. The ready-first handshake avoids timing problems on slow loads. The backend
   then re-checks the token on every request; the handoff is never trusted on its own.
+
+- **Widget lifecycle (pill, panel, full-screen):** the loader injects two iframes from
+  the companion origin: a launcher pill and the chat panel, hidden until opened. An
+  iframe cannot resize itself, so the loader performs every open, minimize and expand in
+  response to lifecycle messages (`COMPANION_MINIMIZE`, `COMPANION_EXPAND`) on the same
+  origin-pinned channel as the token. Lifecycle messages carry no data and grant no
+  authority; a forged one could only open or close a panel, and conversation state lives
+  in the backend, so nothing is lost mid-claim.
 
 - **Trust boundaries:** two credentials that never meet. The user's JWT travels
   host → companion → backend and stops there. The gateway's OAuth2 client-credentials
