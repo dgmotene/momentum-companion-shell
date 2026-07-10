@@ -10,7 +10,7 @@ where security is enforced, and a different credential crosses each one.
 
 ```
   ┌──────────────────────────────────────────────────────────┐
-  │  TRUST ZONE 1 — HOST PORTAL (browser)                    │
+  │  TRUST ZONE 1: HOST PORTAL (browser)                     │
   │  The insurer's portal where you log in (mock OIDC).      │
   │  It issues your identity as a signed JWT: a small pass   │
   │  stating user ID, role, policy ID, deceased flag,        │
@@ -20,7 +20,7 @@ where security is enforced, and a different credential crosses each one.
                          │  the iframe, pinned to its exact origin
                          ▼
   ┌──────────────────────────────────────────────────────────┐
-  │  TRUST ZONE 2 — EMBEDDED COMPANION (iframe)              │
+  │  TRUST ZONE 2: EMBEDDED COMPANION (iframe)               │
   │  The chat UI, on its own origin. Holds only the JWT.     │
   │  No secrets, no role logic, no login of its own.         │
   └──────────────────────┬───────────────────────────────────┘
@@ -28,7 +28,7 @@ where security is enforced, and a different credential crosses each one.
                          │  message (a Bearer token)
                          ▼
   ┌──────────────────────────────────────────────────────────┐
-  │  TRUST ZONE 3 — COMPANION BACKEND                        │
+  │  TRUST ZONE 3: COMPANION BACKEND                         │
   │  Our server. On every request it:                        │
   │  1. verifies the JWT (signature, issuer, audience,       │
   │     expiry) against the portal's published public key    │
@@ -42,7 +42,7 @@ where security is enforced, and a different credential crosses each one.
                          │  enter the browser.
                          ▼
   ┌──────────────────────────────────────────────────────────┐
-  │  TRUST ZONE 4 — MOMENTUM AI GATEWAY (external)           │
+  │  TRUST ZONE 4: MOMENTUM AI GATEWAY (external)            │
   │  Stateless AI service: chat (claude-3-haiku) and         │
   │  embeddings (titan-embed-text-v2). Remembers nothing.    │
   └──────────────────────────────────────────────────────────┘
