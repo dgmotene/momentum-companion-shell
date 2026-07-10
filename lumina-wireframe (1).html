@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lumina · Momentum Life Insurance AI Companion · Design File</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#006D77;
+    --teal-dark:#00505A;
+    --blue:#4ECDC4;
+    --blue-tint:#EAF9F7;
+    --amber:#F4A261;
+    --amber-tint:#FDF1E6;
+    --amber-text:#9A5B22;
+    --green:#52B788;
+    --green-tint:#EAF7F0;
+    --bg:#FAFAFA;
+    --bg-claims:#FAF9F6;
+    --surface:#FFFFFF;
+    --border:#E7E5E1;
+    --ink:#1F2933;
+    --ink-soft:#52606D;
+    --ink-faint:#8A9199;
+    --radius-card:14px;
+    --radius-bubble:20px;
+    --radius-btn:10px;
+    --shadow: 0 4px 24px rgba(20,30,30,0.06);
+    --shadow-sm: 0 2px 10px rgba(20,30,30,0.05);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:#EDEDEA;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wordmark{font-family:'Fraunces',serif; font-weight:500; letter-spacing:0.01em;}
+
+  /* ===== App shell ===== */
+  .shell{display:flex; min-height:100vh;}
+  .orb-mini{
+    width:22px;height:22px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, var(--blue), var(--teal));
+    flex-shrink:0;
+  }
+
+  .canvaswrap{flex:1; min-width:0; padding:32px; display:flex; flex-direction:column; align-items:center; gap:18px;}
+  .canvas-toolbar{
+    width:100%; max-width:1320px; display:flex; align-items:center; gap:18px; background:#fff;
+    border:1px solid #E2E2DE; border-radius:12px; padding:12px 18px;
+  }
+  .topnav-brand{display:flex; align-items:center; gap:9px; cursor:pointer; flex-shrink:0;}
+  .topnav-brand .brand-name{font-size:15.5px; color:var(--teal-dark);}
+  .topnav-tag{font-size:10.5px; color:var(--ink-faint); background:#F0F0EE; padding:2px 8px; border-radius:99px; font-weight:600; text-transform:uppercase; letter-spacing:.03em;}
+  .canvas-title{font-size:13px; font-weight:500; color:var(--ink-faint); flex:1; min-width:0; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .view-toggle{display:flex; background:#FAFAFA; border:1px solid #DADAD6; border-radius:9px; overflow:hidden; flex-shrink:0;}
+  .view-toggle button{
+    border:none; background:transparent; padding:7px 14px; font-size:12.5px; font-weight:500; color:#6E7676; cursor:pointer;
+  }
+  .view-toggle button.active{background:var(--teal); color:#fff;}
+  .back-link{
+    display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--teal);
+    text-decoration:none; cursor:pointer; margin:0 auto 14px; width:100%; max-width:1320px;
+  }
+  .back-link:hover{text-decoration:underline;}
+
+  .frame{
+    background:var(--surface); border-radius:18px; box-shadow: var(--shadow);
+    overflow:hidden; position:relative;
+  }
+  .frame.desktop{width:1320px; max-width:100%;}
+  .frame.desktop.frame-chat{width:900px;}
+  .frame.desktop.frame-wide{width:1000px;}
+  .frame.mobile.frame-chat, .frame.mobile.frame-wide{width:390px; max-width:100%; height:812px;}
+  .frame.mobile{
+    width:390px; max-width:100%; height:812px; box-sizing:border-box;
+    display:flex; flex-direction:column; overflow:hidden;
+    border-radius:26px; border:1px solid #D7D7D2;
+  }
+  .frame.mobile *{box-sizing:border-box;}
+  .frame.mobile > .topbar, .frame.mobile > .claims-header, .frame.mobile > .chat-header{flex:0 0 auto;}
+  /* top-level page bodies (non-chat) scroll; chat wrappers manage their own inner scroll */
+  .frame.mobile > .main, .frame.mobile > .app-body, .frame.mobile > .login-shell, .frame.mobile > .claims-body{min-height:0; overflow-y:auto;}
+  .frame.mobile > .fullchat{flex:1 1 auto; min-height:0; overflow:hidden;}
+
+  /* ===== Persistent chat launcher: responsive placement ===== */
+  .lumina-launch{
+    position:absolute; z-index:40; right:22px; bottom:20px;   /* matches in-widget minimized pill */
+    display:flex; align-items:center; gap:10px;
+    background:#fff; border:1.5px solid var(--teal); border-radius:99px;
+    padding:9px 18px 9px 12px; box-shadow:0 6px 20px rgba(0,109,119,0.18);
+    cursor:pointer; transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .lumina-launch:hover{transform:translateY(-2px); box-shadow:0 10px 26px rgba(0,109,119,0.26);}
+  .lumina-launch:active{transform:translateY(0);}
+  .lumina-launch .ll-title{font-size:13px; font-weight:700; color:var(--teal-dark);}
+  .lumina-launch .ll-sub{font-size:11.5px; color:var(--ink-faint);}
+
+
+  @media (max-width:480px){
+    .canvaswrap{padding:14px 12px;}
+    .canvas-toolbar{padding:10px 12px; gap:10px;}
+    .topnav-brand .topnav-tag{display:none;}
+  }
+  .annot{
+    width:100%; max-width:1320px; background:#fff; border:1px solid #DADAD6; border-radius:12px;
+    padding:16px 20px; font-size:13px; color:#3E4A4A; line-height:1.6;
+  }
+  .annot b{color:var(--teal-dark);}
+  .screen{display:none; width:100%;}
+  .screen.active{display:block;}
+  .frame{margin:0 auto;}
+
+  /* ===== Shared UI atoms used across screens ===== */
+  .pill{
+    display:inline-flex; align-items:center; gap:6px; padding:4px 11px; border-radius:99px;
+    font-size:12px; font-weight:600;
+  }
+  .pill.green{background:var(--green-tint); color:#1E7A54;}
+  .pill.gray{background:#F0F0EE; color:var(--ink-soft);}
+  .btn{
+    border:none; border-radius:var(--radius-btn); padding:11px 20px; font-weight:600; font-size:13.5px;
+    cursor:pointer; font-family:inherit; transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{background:var(--teal); color:#fff; box-shadow:0 6px 16px rgba(0,109,119,0.25);}
+  .btn-primary.muted{background:#5C8E90; box-shadow:none;}
+  .btn-outline{background:#fff; color:var(--teal); border:1.4px solid var(--teal);}
+  .btn-text{background:transparent; color:var(--ink-soft); font-weight:500; padding:11px 6px;}
+  .chip{
+    border:1.4px solid var(--teal); background:#fff; color:var(--teal); border-radius:99px;
+    padding:8px 15px; font-size:13px; font-weight:500; cursor:pointer; white-space:nowrap;
+  }
+  .chip:hover{background:var(--blue-tint);}
+  .chip.locked{border-color:#D8D8D4; color:#A8ADA9; cursor:not-allowed; display:flex; gap:6px; align-items:center;}
+  .chatbar{
+    display:flex; flex-wrap:wrap; gap:8px; padding:12px 14px; border-top:1px solid var(--border); background:#FBFBFA;
+  }
+  #s2Body.split{flex-direction:row; overflow:hidden;}
+  #s2Body.split .wif-explorer{width:300px; flex-shrink:0; border-right:1px solid var(--border); padding:18px; overflow-y:auto; background:#FBFBFA;}
+  #s2Body.split .wif-chat{flex:1; min-width:0; overflow-y:auto;}
+  .frame.mobile #s2Body.split{flex-direction:column;}
+  .frame.mobile #s2Body.split .wif-explorer{width:100%; border-right:none; border-bottom:1px solid var(--border);}
+    .chatbar .chip{flex:1 1 130px; min-width:0; text-align:center; white-space:normal; line-height:1.3;}
+  .bar-action.is-active, .qn-btn.is-active{
+    border-color:var(--teal); color:var(--teal-dark); background:var(--blue-tint);
+    box-shadow:0 0 0 2px rgba(0,109,119,0.35); font-weight:700;
+  }
+
+  /* topbar / sidebar (portal chrome) */
+  .topbar{
+    height:64px; border-bottom:1px solid var(--border); display:flex; align-items:center;
+    justify-content:space-between; padding:0 28px; background:#fff;
+  }
+  .topbar .logo{font-weight:800; letter-spacing:-0.02em; font-size:16px; color:var(--teal-dark);}
+  .topbar .logo span{color:var(--blue);}
+  .topbar-right{display:flex; align-items:center; gap:18px;}
+  .avatar-chip{width:32px;height:32px;border-radius:50%; background:#DDEDEA; color:var(--teal-dark); font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;}
+
+  .app-body{display:flex;}
+  .sidebar{
+    width:200px; border-right:1px solid var(--border); padding:20px 12px; flex-shrink:0; background:#fff;
+  }
+  .side-item{
+    padding:10px 12px; border-radius:8px; font-size:13.5px; color:var(--ink-soft); font-weight:500;
+    margin-bottom:2px; cursor:pointer; display:flex; align-items:center; gap:9px;
+  }
+  .side-item.active{background:var(--blue-tint); color:var(--teal-dark); font-weight:600; border-left:3px solid var(--teal); padding-left:9px;}
+  .side-item .lockdot{margin-left:auto; font-size:11px;}
+  .side-item.disabled{color:#B8BFC2; cursor:not-allowed;}
+
+  .main{flex:1; min-width:0; padding:32px 40px; background:var(--bg);}
+  .greeting-h{font-family:'Fraunces',serif; font-size:27px; font-weight:500; color:#1B2626;}
+  .greeting-sub{color:var(--ink-faint); font-size:14.5px; margin-top:4px;}
+
+  .cardgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:24px;}
+  .card{
+    background:#fff; border:1px solid var(--border); border-radius:var(--radius-card); padding:20px;
+    box-shadow:var(--shadow-sm);
+  }
+  .card h3{font-size:13.5px; color:var(--ink-faint); font-weight:600; margin:0 0 12px; text-transform:uppercase; letter-spacing:.04em;}
+  .card .big{font-size:24px; font-weight:700; color:var(--ink);}
+  .card .rowline{display:flex; justify-content:space-between; font-size:13px; padding:7px 0; color:var(--ink-soft); border-top:1px solid #F1F1EF;}
+  .card .rowline:first-of-type{border-top:none;}
+  .spark{height:28px; margin-top:10px; display:flex; align-items:flex-end; gap:3px;}
+  .spark div{flex:1; background:var(--blue); opacity:.55; border-radius:2px;}
+
+  .lumina-banner{
+    margin-top:22px; border-radius:18px; padding:22px 26px; display:flex; gap:16px; align-items:center;
+    background:linear-gradient(120deg, rgba(78,205,196,0.10), rgba(0,109,119,0.06));
+    border:1px solid rgba(0,109,119,0.12);
+  }
+  .orb{
+    width:52px;height:52px;border-radius:50%; flex-shrink:0;
+    background:radial-gradient(circle at 32% 30%, #7BE0D6, var(--teal) 78%);
+    box-shadow:0 0 0 6px rgba(78,205,196,0.14);
+    animation:breathe 4s ease-in-out infinite;
+  }
+  .orb.small{width:34px;height:34px; box-shadow:0 0 0 4px rgba(78,205,196,0.14);}
+  .orb.tiny{width:26px;height:26px; box-shadow:none;}
+  @keyframes breathe{0%,100%{transform:scale(1);} 50%{transform:scale(1.06);}}
+  @media (prefers-reduced-motion: reduce){.orb{animation:none;}}
+  .lumina-banner .txt strong{font-family:'Fraunces',serif; font-weight:500; font-size:16.5px; color:#123; display:block; margin-bottom:3px;}
+  .lumina-banner .txt p{margin:0; font-size:13.6px; color:var(--ink-soft); line-height:1.5; max-width:560px;}
+  .quicklinks{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;}
+
+  /* Chat UI */
+  .chatpanel{
+    width:430px; border-left:1px solid var(--border); display:flex; flex-direction:column; height:640px; background:#fff;
+  }
+  .chat-header{padding:16px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px;}
+  .chat-header .name{font-family:'Fraunces',serif; font-weight:500; font-size:15px; color:var(--teal-dark);}
+  .chat-header .sub{font-size:11.5px; color:var(--ink-faint);}
+  .disclaimer-strip{background:#F6F6F3; font-size:11.5px; color:var(--ink-faint); padding:9px 18px; display:flex; justify-content:space-between; border-bottom:1px solid var(--border);}
+  .disclaimer-strip a{color:var(--teal); font-weight:600; text-decoration:none;}
+  .msgs{flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding:18px; display:flex; flex-direction:column; gap:14px; max-width:100%;}
+  .row{display:flex; gap:9px; align-items:flex-end; max-width:100%; box-sizing:border-box;}
+  .row > .bubble{min-width:0; max-width:82%;}
+  .row > *{min-width:0;}
+  .row.user{justify-content:flex-end;}
+  .bubble{
+    max-width:78%; padding:12px 15px; font-size:13.8px; line-height:1.55; border-radius:var(--radius-bubble);
+    overflow-wrap:anywhere; word-break:break-word; min-width:0;
+  }
+  .bubble.lumina{background:var(--blue-tint); color:#1B2626; border-bottom-left-radius:6px;}
+  .bubble.user{background:rgba(0,109,119,0.09); color:#123; border-bottom-right-radius:6px;}
+  .infocard{background:#fff; border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-top:8px; font-size:13px; max-width:100%; overflow-wrap:anywhere;}
+  .infocard .r{display:flex; justify-content:space-between; padding:6px 0; border-top:1px solid #F1F1EF;}
+  .infocard .r:first-child{border-top:none;}
+  .infocard .r b{color:var(--ink);}
+  .feedback{display:flex; gap:8px; font-size:12px; color:var(--ink-faint); margin-top:6px; justify-content:flex-end;}
+  .chips-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; max-width:100%;}
+  .chat-input{border-top:1px solid var(--border); padding:12px 14px; display:flex; gap:9px; align-items:center;}
+  .chat-input .field{
+    flex:1; border:1px solid var(--border); border-radius:22px; padding:10px 16px; font-size:13px; color:var(--ink-faint); background:#FAFAFA;
+  }
+  .sendbtn{
+    width:38px;height:38px;border-radius:50%; background:var(--teal); color:#fff; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .attach-btn{
+    width:34px;height:34px;border-radius:50%; background:#F0F0EE; color:var(--teal-dark);
+    border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+    font-size:22px; line-height:1; padding-bottom:2px;
+  }
+  .attach-btn:hover{background:var(--teal); color:#fff;}
+  /* File attachment bubble (user-sent documents) */
+  .filecard{display:flex; align-items:center; gap:10px; background:#fff; border:1px solid rgba(255,255,255,0.5); border-radius:12px; padding:9px 12px; min-width:0; max-width:100%;}
+  .bubble.user .filecard{background:rgba(255,255,255,0.16); border-color:rgba(255,255,255,0.3);}
+  .filecard .fico{width:34px;height:34px;border-radius:8px; background:var(--teal); color:#fff; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0;}
+  .filecard .fmeta{line-height:1.3; min-width:0;}
+  .filecard .fname{font-size:12.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .filecard .fsize{font-size:11px; opacity:.8;}
+  .typing-dots{display:inline-flex; gap:4px; padding:4px 2px;}
+  .typing-dots span{width:6px;height:6px;border-radius:50%; background:var(--teal); opacity:.5; animation:blink 1.2s infinite;}
+  .typing-dots span:nth-child(2){animation-delay:.2s;} .typing-dots span:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,80%,100%{opacity:.3} 40%{opacity:1}}
+
+  /* Full-chat standalone screen */
+  .fullchat{display:flex;}
+  .frame.desktop .fullchat{height:680px;}
+  .fullchat .msgs{padding:26px 60px;}
+  .fullchat .row .bubble{max-width:60%;}
+
+  /* Explorer */
+  .explorer-split{display:flex; height:680px;}
+  .explorer-panel{flex:1; min-height:0; padding:24px 28px; background:#fff; overflow-y:auto;}
+  .sim-banner{background:var(--amber-tint); color:var(--amber-text); font-size:12.5px; font-weight:600; padding:10px 14px; border-radius:10px; margin-bottom:20px;}
+  .slider-block{margin-bottom:22px;}
+  .slider-block .lbl{display:flex; justify-content:space-between; font-size:13.5px; font-weight:600; margin-bottom:8px;}
+  .slider-block .lbl span{color:var(--teal); font-variant-numeric:tabular-nums;}
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:6px; border-radius:4px; background:linear-gradient(to right, var(--teal) 45%, #E5E5E2 45%);
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:20px;height:20px;border-radius:50%; background:#fff; border:3px solid var(--teal); box-shadow:0 2px 6px rgba(0,0,0,.15); cursor:pointer;
+  }
+  table.compare{width:100%; border-collapse:collapse; margin-top:10px; font-size:13px;}
+  table.compare th{text-align:left; color:var(--ink-faint); font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:.03em; padding:8px 10px; border-bottom:1px solid var(--border);}
+  table.compare td{padding:10px; border-bottom:1px solid #F1F1EF;}
+  table.compare td.changed{background:var(--blue-tint); font-weight:700; color:var(--teal-dark);}
+  .note-box{background:#F6F6F3; border-radius:10px; padding:12px 14px; font-size:12.5px; color:var(--ink-soft); margin-top:16px;}
+
+  /* Claims screen */
+  .claims-shell{background:var(--bg-claims);}
+  .claims-header{padding:20px 30px; border-bottom:1px solid var(--border);}
+  .claims-header h1{font-size:19px; margin:0; color:#2B3333; font-weight:700;}
+  .claims-header p{margin:3px 0 0; font-size:13px; color:var(--ink-faint);}
+  .claims-body{display:flex; height:640px;}
+  .claims-main{flex:1; min-height:0; padding:28px 34px; overflow-y:auto;}
+  .empathy-bubble{
+    background:#fff; border:1px solid #EEE9DF; border-radius:22px; padding:22px 26px; max-width:560px; box-shadow:var(--shadow-sm);
+  }
+  .empathy-bubble p{font-size:15px; line-height:1.7; color:#2B3333; margin:0 0 16px; font-family:'Fraunces',serif; font-weight:400;}
+  .btnrow{display:flex; gap:10px;}
+  .checklist-panel{width:320px; flex-shrink:0; border-left:1px solid var(--border); padding:22px; background:#fff; overflow-y:auto;}
+  .checklist-panel h4{font-size:12.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); margin:0 0 16px;}
+  .clitem{display:flex; gap:11px; padding:11px 0; border-bottom:1px solid #F3F1EC;}
+  .clitem:last-child{border-bottom:none;}
+  .clicon{width:22px;height:22px;border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12px; margin-top:1px;}
+  .clicon.done{background:var(--green); color:#fff;}
+  .clicon.active{background:var(--amber-tint); color:var(--amber-text); border:1.5px solid var(--amber);}
+  .clicon.todo{background:#F0F0EE; color:#B8BFC2;}
+  .clitem .t{font-size:13px; font-weight:600; color:#2B3333;}
+  .clitem .d{font-size:12px; color:var(--ink-faint); margin-top:3px; line-height:1.5;}
+  .sla-card{background:var(--blue-tint); border-radius:14px; padding:16px 18px; margin-top:20px; font-size:13px; color:#123; line-height:1.6; display:flex; gap:12px;}
+  .dropzone{
+    margin-top:22px; border:2px dashed #BFD9D9; border-radius:16px; padding:30px; text-align:center; color:var(--ink-faint); font-size:13px; background:#fff;
+  }
+  .helpline{
+    border-top:1px solid var(--border); padding:12px 30px; font-size:13px; color:var(--teal-dark); font-weight:600; display:flex; align-items:center; gap:8px; background:#fff;
+  }
+
+  /* Beneficiary */
+  .role-badge{display:inline-flex; align-items:center; gap:7px; background:#F0F0EE; color:var(--ink-soft); font-size:12px; font-weight:600; padding:6px 12px; border-radius:99px; margin-bottom:16px;}
+  .stepper{display:flex; margin-top:18px;}
+  .step{flex:1; text-align:center; position:relative;}
+  .step .dot{width:14px;height:14px;border-radius:50%; background:#E2E2DE; margin:0 auto 8px; position:relative; z-index:2;}
+  .step.done .dot{background:var(--teal);}
+  .step .line{position:absolute; top:6px; left:-50%; width:100%; height:2px; background:#E2E2DE; z-index:1;}
+  .step.done .line{background:var(--teal);}
+  .step:first-child .line{display:none;}
+  .step .lbl2{font-size:11.5px; color:var(--ink-faint); font-weight:600;}
+  .step.done .lbl2{color:var(--teal-dark);}
+
+  /* Escalation */
+  .transfer-card{display:flex; gap:22px; background:#F6F6F3; border-radius:12px; padding:14px 18px; margin:14px 0; font-size:12.5px; color:var(--ink-soft);}
+  .transfer-card b{color:var(--green);}
+  .channel-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:8px;}
+  .channelcard{border:1px solid var(--border); border-radius:14px; padding:18px; text-align:left; background:#fff; cursor:pointer;}
+  .channelcard:hover{border-color:var(--teal); box-shadow:var(--shadow-sm);}
+  .channelcard .ic{font-size:20px; margin-bottom:10px;}
+  .channelcard .t{font-weight:700; font-size:13.5px; color:#2B3333;}
+  .channelcard .tag{display:inline-block; margin-top:6px; font-size:11px; background:var(--green-tint); color:#1E7A54; padding:2px 8px; border-radius:99px; font-weight:600;}
+
+  /* Login screen */
+  .login-shell{display:flex; min-height:640px;}
+  .login-side{
+    flex:1; min-width:0; background:linear-gradient(160deg, var(--teal-dark), var(--teal) 55%, #0B8A93);
+    padding:56px 48px; display:flex; flex-direction:column; justify-content:space-between; color:#fff; position:relative; overflow:hidden;
+  }
+  .login-side::after{
+    content:""; position:absolute; width:520px; height:520px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,0.10), transparent 70%);
+    right:-160px; bottom:-180px;
+  }
+  .login-side .logo-lg{font-weight:800; font-size:19px; letter-spacing:-0.02em; position:relative; z-index:1;}
+  .login-side .logo-lg span{color:var(--blue);}
+  .login-copy{position:relative; z-index:1;}
+  .login-copy h2{font-family:'Fraunces',serif; font-weight:500; font-size:30px; line-height:1.3; margin:0 0 14px; max-width:380px;}
+  .login-copy p{font-size:14px; line-height:1.6; color:rgba(255,255,255,0.82); max-width:360px; margin:0 0 26px;}
+  .login-stats{display:flex; gap:28px; position:relative; z-index:1;}
+  .login-stats div b{display:block; font-size:20px; font-weight:700;}
+  .login-stats div span{font-size:11.5px; color:rgba(255,255,255,0.7);}
+  .login-side .foot{font-size:11.5px; color:rgba(255,255,255,0.55); position:relative; z-index:1;}
+
+  .login-form-wrap{
+    flex:1; min-width:0; display:flex; align-items:center; justify-content:center; background:#fff; padding:48px;
+  }
+  .login-form{width:100%; max-width:340px;}
+  .login-form h1{font-size:21px; font-weight:700; margin:0 0 6px; color:#1B2626;}
+  .login-form .sub{font-size:13.5px; color:var(--ink-faint); margin-bottom:26px;}
+  .field-group{margin-bottom:16px;}
+  .field-group label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:6px;}
+  .field-group .input{
+    border:1.4px solid var(--border); border-radius:10px; padding:11px 14px; font-size:13.5px; color:var(--ink-faint); background:#FAFAFA;
+  }
+  .field-group .input.filled{color:var(--ink); background:#fff;}
+  .field-row{display:flex; justify-content:space-between; align-items:center; margin:2px 0 20px;}
+  .field-row label{display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--ink-soft);}
+  .field-row a{font-size:12.5px; color:var(--teal); text-decoration:none; font-weight:600;}
+  .btn-block{width:100%; text-align:center; padding:12px; font-size:14px;}
+  .divider-row{display:flex; align-items:center; gap:12px; margin:22px 0; color:var(--ink-faint); font-size:11.5px;}
+  .divider-row::before, .divider-row::after{content:""; flex:1; height:1px; background:var(--border);}
+  .launch-ai-btn{
+    width:100%; display:flex; align-items:center; gap:12px; padding:13px 16px; border-radius:12px;
+    background:linear-gradient(120deg, rgba(78,205,196,0.12), rgba(0,109,119,0.07)); border:1.4px solid rgba(0,109,119,0.25);
+    cursor:pointer; text-align:left;
+  }
+  .launch-ai-btn .t{font-weight:700; font-size:13.5px; color:var(--teal-dark);}
+  .launch-ai-btn .d{font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
+  .launch-ai-btn .arrow{margin-left:auto; color:var(--teal); font-size:16px;}
+  .login-footnote{font-size:11px; color:var(--ink-faint); text-align:center; margin-top:24px; line-height:1.6;}
+
+  /* Start screen: user cards */
+  .user-card{
+    display:flex; align-items:center; gap:14px; padding:16px 18px; border:1.4px solid var(--border);
+    border-radius:14px; background:#fff; cursor:pointer; transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .user-card:hover{border-color:var(--teal); box-shadow:var(--shadow-sm);}
+  .uc-txt{flex:1;}
+  .uc-name{font-weight:700; font-size:14.5px; color:#1B2626;}
+  .uc-role{font-size:12.5px; color:var(--ink-faint); margin-top:2px;}
+  .uc-arrow{color:var(--teal); font-size:16px;}
+
+  /* Preview strip */
+  .preview-strip{
+    width:100%; max-width:1320px; display:flex; align-items:center; gap:10px; background:#0E3E42; color:#fff;
+    border-radius:10px; padding:9px 16px; font-size:12.5px;
+  }
+  .preview-strip b{font-weight:700;}
+  .preview-strip .pill{background:rgba(255,255,255,0.15); color:#fff;}
+  .preview-strip a{margin-left:auto; color:var(--blue); font-weight:600; text-decoration:none; cursor:pointer;}
+
+  /* ===== Mobile chat UX ===== */
+  .chat-back{display:none;}
+  .frame.mobile .chat-back{
+    display:flex; align-items:center; justify-content:center;
+    width:38px; height:38px; margin-left:-8px; border-radius:50%;
+    color:var(--teal-dark); font-size:23px; font-weight:800; line-height:1;
+    cursor:pointer; flex-shrink:0; padding-bottom:2px;
+  }
+  .frame.mobile .chat-back:active{background:var(--blue-tint);}
+  .frame.mobile #chatCloseBtn{display:none;}
+  /* ===== Mobile chat: frame is the fixed-height column; only .msgs scrolls ===== */
+  .frame.mobile .fullchat{flex:1 1 auto; min-height:0; height:auto; display:flex; overflow:hidden;}
+  .frame.mobile .fullchat > div, .frame.mobile .chatcol{
+    flex:1 1 auto; width:100%; max-width:100%; min-width:0; min-height:0;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .frame.mobile .fullchat{flex-direction:column;}
+  .frame.mobile .msgs{width:100%;}
+  .frame.mobile .chat-header, .frame.mobile .chat-input, .frame.mobile .chatbar{flex:0 0 auto;}
+  .frame.mobile #s2Body{flex:1 1 auto; min-height:0; display:flex; flex-direction:column; overflow:hidden;}
+  .frame.mobile .msgs{flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; padding:16px 12px;}
+  .frame.mobile .fullchat, .frame.mobile #s2Body, .frame.mobile .chatpanel, .frame.mobile .gate-message{max-width:100%; overflow-x:hidden;}
+  /* Flex-shrink chain: allow rows and bubbles to shrink below intrinsic width */
+  .frame.mobile .row{display:flex; width:100%; max-width:100%; min-width:0;}
+  .frame.mobile .row > *{min-width:0;}
+  .frame.mobile .bubble{max-width:82%; min-width:0; box-sizing:border-box; overflow-wrap:anywhere; word-break:break-word;}
+  /* Inner HTML inside a bubble (status divs, lists) must also be bounded */
+  .frame.mobile .bubble *{max-width:100%; min-width:0; overflow-wrap:anywhere; word-break:break-word; box-sizing:border-box;}
+  .frame.mobile .chat-input{box-sizing:border-box; max-width:100%;}
+  .frame.mobile .chat-input .field{min-width:0;}
+  .frame.mobile .filecard{min-width:0; max-width:100%;}
+  .frame.mobile .chatbar{overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch;}
+  .frame.mobile .chatbar .chip{flex-shrink:0;}
+  /* What-If explorer cards must not force width on mobile */
+  .frame.mobile .wif-explorer, .frame.mobile .main{min-width:0;}
+  .frame.mobile .card[style*="min-width"]{min-width:0 !important;}
+  .frame.mobile .chips-row{margin-left:0 !important;}
+  .frame.mobile .btnrow{flex-wrap:wrap;}
+  .frame.mobile .btnrow .btn{flex:1 1 auto; min-width:0;}
+  .frame.mobile .topbar{overflow:hidden;}
+  .frame.mobile .topbar .logo{min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px;}
+  /* Calculators (s4) on mobile: explorer top, embedded Lumina bottom, one frame */
+  #s4 .frame.mobile .app-body{display:flex; flex-direction:column; overflow:hidden;}
+  #s4 .frame.mobile .main{flex:0 0 auto; max-height:52%; overflow-y:auto; overflow-x:hidden;}
+  #s4 .frame.mobile .chatpanel{flex:1 1 auto; height:auto; min-height:0; border-top:2px solid var(--teal); border-left:none;}
+  #s4 .app-body.s4-collapsed .chatpanel{display:none;}
+  #s4 .frame.mobile .app-body.s4-collapsed .main{max-height:none; flex:1 1 auto;}
+
+  /* Widget screen (s9): desktop = docked outlined panel */
+  #s9 .frame.desktop .chatpanel, #s4 .frame.desktop .chatpanel{
+    border:1.5px solid var(--teal); border-radius:14px; overflow:hidden;
+    margin-right:14px; box-shadow:inset 0 0 0 1px rgba(0,109,119,0.08);
+  }
+  /* Widget screen (s9): mobile = same minimized pill as desktop, full-screen overlay chat */
+  #s9 .frame.mobile .app-body{position:static !important;}
+  #s9 .frame.mobile #s9MiniPill{position:absolute; right:16px; bottom:16px; z-index:8;}
+  #s9 .frame.mobile .chatpanel{
+    display:none; position:absolute; inset:0; width:100%; height:100%;
+    margin:0; border:none; border-radius:0; box-shadow:none; z-index:12; background:#fff;
+  }
+  #s9 .frame.mobile .chatpanel.open.open{display:flex;}
+  #s9 .frame.mobile #s9Minimize, #s9 .frame.mobile #s9Expand{display:none;}
+
+  /* Quick nav strip (prototype-level, all screens) */
+  .quick-nav{
+    width:100%; max-width:1320px; display:flex; align-items:center; gap:8px; background:#fff;
+    border:1px solid #DADAD6; border-radius:10px; padding:8px 14px; flex-wrap:wrap;
+  }
+  .quick-nav .qn-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); margin-right:4px;}
+  .quick-nav .chip{padding:6px 13px; font-size:12.5px;}
+  .quick-nav .chip.qn-disabled{opacity:.4; cursor:not-allowed; pointer-events:none;}
+
+  /* Role-based visibility (toggled via body class) */
+  .beneficiary-banner{display:none;}
+  body.role-beneficiary .beneficiary-banner{display:flex !important;}
+  body.role-beneficiary .policyholder-only{ display:none !important; }
+  body.role-beneficiary .lock-tag{display:inline !important;}
+  .lock-tag{display:none;}
+  body.role-beneficiary .gate-message{display:flex !important;}
+  body.role-beneficiary .frame.gate-message{display:flex !important;}
+  body.role-beneficiary .policyholder-gate{display:none !important;}
+  body.role-beneficiary .frame.policyholder-gate{display:none !important;}
+  .gate-message{display:none;}
+  .frame.mobile.gate-message{display:none;}
+  body:not(.role-beneficiary) .frame.gate-message{display:none !important;}
+
+  /* mobile frame tweaks */
+  .frame.mobile .topbar{padding:0 16px;}
+  .frame.mobile .main{padding:18px; overflow-y:auto; overflow-x:hidden; flex:1; min-height:0;}
+  .frame.mobile .cardgrid{grid-template-columns:1fr;}
+  .frame.mobile .lumina-banner{flex-direction:column; align-items:flex-start;}
+  .frame.mobile .app-body{flex-direction:column; flex:1; min-height:0; overflow:hidden;}
+  .frame.mobile .sidebar{display:none;}
+  .frame.mobile .chatpanel{width:100%; height:100%; border-left:none; display:flex; flex-direction:column; overflow:hidden;}
+  .frame.mobile .chatpanel .msgs{flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden;}
+  .frame.mobile .chatpanel .chat-header, .frame.mobile .chatpanel .chat-input{flex:0 0 auto;}
+  .frame.mobile .claims-body{flex-direction:column; height:auto; flex:1; min-height:0; overflow-y:auto;}
+  .frame.mobile .claims-main{overflow:visible; padding:20px 18px;}
+  .frame.mobile .checklist-panel{width:100%; border-left:none; border-top:1px solid var(--border);}
+  .frame.mobile .policyholder-gate, .frame.mobile .gate-message{display:flex; flex-direction:column; flex:1 1 auto; min-height:0; overflow:hidden;}
+  .frame.mobile .wif-scroll{overflow-y:auto; flex:1; min-height:0;}
+  .frame.mobile .login-shell{flex-direction:column; flex:1; min-height:0; overflow-y:auto;}
+  .frame.mobile .login-side{padding:32px 22px; min-height:200px;}
+  .frame.mobile .login-side .login-stats{display:none;}
+  .frame.mobile .login-copy h2{font-size:22px;}
+  .frame.mobile .login-form-wrap{padding:28px 22px;}
+  .hide-on-mobile{}
+  .frame.mobile .hide-on-mobile{display:none !important;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ============ CANVAS ============ -->
+  <!-- Global Talk-to-Lumina launcher (persistent minimized pill on every screen) -->
+  <div class="canvaswrap" style="width:100%;">
+
+    <div class="canvas-toolbar">
+      <div class="topnav-brand" id="homeLink">
+        <div class="orb-mini"></div>
+        <span class="brand-name wordmark">Lumina</span>
+        <span class="topnav-tag">Prototype</span>
+      </div>
+      <div class="canvas-title" id="canvasTitle">Start · Select User</div>
+      <div class="view-toggle" id="viewToggle">
+        <button data-v="desktop" class="active">Desktop</button>
+        <button data-v="mobile">Mobile</button>
+      </div>
+    </div>
+
+    <div class="preview-strip" id="previewStrip" style="display:none;">
+      <div class="orb tiny" style="box-shadow:none;"></div>
+      <span>Previewing as <b id="previewName">…</b> <span id="previewRole" class="pill gray" style="margin-left:6px;"></span></span>
+      <a id="switchUserLink" role="link" tabindex="0" style="cursor:pointer;">Switch user</a>
+    </div>
+
+    <div class="quick-nav" id="quickNav" style="display:none;">
+      <span class="qn-label">Screens</span>
+      <button class="chip qn-btn" data-target="s0">Login</button>
+      <button class="chip qn-btn" data-target="s1" data-role="policyholder">Dashboard</button>
+      <button class="chip qn-btn" data-target="s7" data-role="beneficiary">Dashboard</button>
+      <button class="chip qn-btn" data-target="s9">Widget in Portal</button>
+      <button class="chip qn-btn" data-target="s2">Main Chat</button>
+    </div>
+
+    <!-- ============ SCREEN START: SELECT USER ============ -->
+    <div class="screen active" id="sstart">
+      <div class="frame desktop" style="min-height:640px;">
+        <div style="max-width:640px; margin:0 auto; padding:70px 24px; text-align:center;">
+          <div class="orb" style="margin:0 auto 20px;"></div>
+          <div class="wordmark" style="font-size:26px; color:#1B2626;">Lumina · Prototype Preview</div>
+          <p style="color:var(--ink-faint); font-size:14px; margin:10px 0 34px; max-width:440px; margin-left:auto; margin-right:auto;">
+            Choose a user to preview the experience. The rest of this prototype will adapt automatically: a Policyholder has full access, while Beneficiaries see a role-appropriate, restricted view.
+          </p>
+
+          <div style="display:flex; flex-direction:column; gap:14px; text-align:left;">
+            <div class="user-card" data-user="deven">
+              <div class="avatar-chip" style="width:44px;height:44px; font-size:14px; background:#DDEDEA; color:var(--teal-dark);">DP</div>
+              <div class="uc-txt">
+                <div class="uc-name">Deven Pillay</div>
+                <div class="uc-role">Policyholder</div>
+              </div>
+              <span class="pill green">Full access</span>
+              <span class="uc-arrow">→</span>
+            </div>
+
+            <div class="user-card" data-user="kgomotso">
+              <div class="avatar-chip" style="width:44px;height:44px; font-size:14px; background:#FDEBD8; color:#9A5B22;">KP</div>
+              <div class="uc-txt">
+                <div class="uc-name">Kgomotso Pillay</div>
+                <div class="uc-role">Beneficiary · Deven's wife</div>
+              </div>
+              <span class="pill gray">Restricted</span>
+              <span class="uc-arrow">→</span>
+            </div>
+
+            <div class="user-card" data-user="lesedi">
+              <div class="avatar-chip" style="width:44px;height:44px; font-size:14px; background:#E7E0F7; color:#5B3E9E;">LP</div>
+              <div class="uc-txt">
+                <div class="uc-name">Lesedi Vikram Pillay</div>
+                <div class="uc-role">Beneficiary · Deven's son</div>
+              </div>
+              <span class="pill gray">Restricted</span>
+              <span class="uc-arrow">→</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="annot"><b>Design notes:</b> Prototype-only role switcher; the live portal already knows the user. Pick a role to preview how everything adapts.</div>
+    </div>
+
+    <!-- ============ SCREEN 0: HOST PORTAL LOGIN ============ -->
+    <div class="screen" id="s0">
+      <a class="back-link" data-target="sstart">← Switch user</a>
+      <div class="frame desktop">
+        <div class="login-shell">
+          <div class="login-side">
+            <div class="logo-lg">MOMENTUM <span>life</span></div>
+            <div class="login-copy">
+              <h2>Your policy, and a companion who knows it.</h2>
+              <p>Sign in to view your coverage, manage beneficiaries, and talk things through with Lumina, anytime you need to.</p>
+              <div class="login-stats">
+                <div><b>500K+</b><span>Members protected</span></div>
+                <div><b>24/7</b><span>Lumina availability</span></div>
+                <div><b>4.8★</b><span>Member satisfaction</span></div>
+              </div>
+            </div>
+            <div class="foot">© 2026 Momentum Life Insurance. A licensed life insurer and authorised financial services provider (FSP).</div>
+          </div>
+          <div class="login-form-wrap">
+            <div class="login-form">
+              <h1 id="loginGreeting">Welcome back</h1>
+              <div class="sub">Sign in to your Momentum account</div>
+
+              <div class="field-group">
+                <label>Email address</label>
+                <div class="input filled" id="loginEmail">deven.pillay@email.com</div>
+              </div>
+              <div class="field-group">
+                <label>Password</label>
+                <div class="input filled">••••••••••••</div>
+              </div>
+              <div class="field-row">
+                <label><input type="checkbox" checked style="margin:0;"> Remember me</label>
+                <a role="link" tabindex="0" style="cursor:pointer;">Forgot password?</a>
+              </div>
+              <button class="btn btn-primary btn-block" id="signInBtn">Sign in</button>
+
+              <div class="login-footnote">By signing in, you agree to Momentum's Terms of Service and Privacy Policy. Lumina is only available once you're signed in, so it always knows who it's helping and what it may share.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="annot"><b>Design notes:</b> Sign-in is the only entry: Lumina inherits identity from the host, so it never opens before authentication.</div>
+    </div>
+
+    <!-- ============ SCREEN 1: HOST PORTAL DASHBOARD ============ -->
+    <div class="screen" id="s1">
+      <div class="frame desktop" style="position:relative;">
+        <div class="topbar">
+          <div class="logo">MOMENTUM LIFE INSURANCE <span style="color:var(--ink-faint); font-weight:600; font-size:14px; margin-left:8px;">– My Policies</span></div>
+          <div class="topbar-right">
+            <span style="font-size:18px;color:var(--ink-faint);">&#128276;</span>
+            <div class="avatar-chip" id="dashAvatar">DP</div>
+          </div>
+        </div>
+        <div class="beneficiary-banner" style="background:#FDF1E6; border-bottom:1px solid #F0C48A; padding:11px 30px; font-size:13px; color:#8A4B00; font-weight:600; align-items:center; gap:8px;">
+          You are viewing this policy as a Beneficiary.
+        </div>
+        <div class="app-body">
+          <div class="sidebar">
+            <div class="side-item active">&#9679; My Policies</div>
+            <div class="side-item policyholder-only">Calculators <span class="lock-tag">🔒</span></div>
+            <div class="side-item policyholder-only">Update Details <span class="lock-tag">🔒</span></div>
+            <div class="side-item">File a Claim</div>
+            <div class="side-item">Support</div>
+          </div>
+          <div class="main">
+            <div class="greeting-h" style="font-size:22px;">Welcome back, <span id="dashName">Deven Pillay</span></div>
+            <div class="greeting-sub" id="dashRole">Policyholder</div>
+
+            <div class="card" style="max-width:640px; margin-top:22px; padding:26px;">
+              <h3 style="margin-bottom:6px;">Policy</h3>
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <div style="font-family:'Fraunces',serif; font-weight:500; font-size:20px; color:#1B2626;">Myriad Policy</div>
+                  <div style="font-size:13px; color:var(--ink-faint); margin-top:2px;">#POL-***654</div>
+                  <div class="beneficiary-banner" style="display:none; background:none; padding:0; margin-top:4px; font-size:12px; color:var(--ink-faint); font-weight:500;" id="policyOwnerNote">Policy of the late Deven Pillay</div>
+                </div>
+                <span class="pill green">● Active</span>
+              </div>
+              <div class="big" style="margin-top:18px;">R 500 000</div>
+              <div class="rowline"><span>Death Benefit</span><span>Lump sum</span></div>
+              <div class="rowline"><span>Next Premium</span><span>R 1 065 · Aug 3</span></div>
+              <div class="rowline"><span>Term remaining</span><span><b>18 yrs</b></span></div>
+              <div class="spark">
+                <div style="height:40%"></div><div style="height:60%"></div><div style="height:50%"></div>
+                <div style="height:80%"></div><div style="height:65%"></div><div style="height:90%"></div>
+              </div>
+            </div>
+
+            <p style="font-size:11px; color:var(--ink-faint); margin-top:26px;">Momentum Life Insurance Co. Lumina is an AI assistant; for binding decisions, information will be confirmed by a licensed representative.</p>
+          </div>
+        </div>
+        <div class="lumina-launch" data-launch="1">
+          <div class="orb tiny"></div>
+          <span class="ll-title">Lumina</span>
+          <span class="ll-sub">Tap to chat</span>
+        </div>
+      </div>
+      <div class="annot"><b>Design notes:</b> The host portal: read-only policy info, masked policy number, and a persistent pill to open the companion.</div>
+    </div>
+
+
+    <!-- ============ SCREEN 9: EMBEDDED COMPANION IN PORTAL ============ -->
+    <div class="screen" id="s9">
+      <a class="back-link" data-target="s1">← Back to Dashboard</a>
+      <div class="frame desktop">
+        <div class="topbar">
+          <div class="logo">MOMENTUM LIFE INSURANCE <span style="color:var(--ink-faint); font-weight:600; font-size:14px; margin-left:8px;">– My Policies</span></div>
+          <div class="topbar-right"><div class="avatar-chip" id="s9Avatar">DP</div></div>
+        </div>
+        <div class="beneficiary-banner" style="background:#FDF1E6; border-bottom:1px solid #F0C48A; padding:11px 30px; font-size:13px; color:#8A4B00; font-weight:600; align-items:center; gap:8px;">You are viewing this policy as a Beneficiary.</div>
+        <div class="app-body" style="position:relative;">
+          <div class="sidebar">
+            <div class="side-item active">&#9679; My Policies</div>
+            <div class="side-item policyholder-only">Calculators <span class="lock-tag">🔒</span></div>
+            <div class="side-item policyholder-only">Update Details <span class="lock-tag">🔒</span></div>
+            <div class="side-item">File a Claim</div>
+            <div class="side-item">Support</div>
+          </div>
+          <div class="main" style="padding:26px 28px;">
+            <div class="greeting-h" style="font-size:20px;">Myriad Policy</div>
+            <div class="greeting-sub" id="s9GreetingSub">#POL-***654 &nbsp;<span class="pill green" style="font-size:11px;">● Active</span></div>
+            <div class="card" style="max-width:420px; margin-top:18px;">
+              <div class="big">R 500 000</div>
+              <div class="rowline"><span>Death Benefit</span><span>Lump sum</span></div>
+              <div class="rowline"><span>Next Premium</span><span>R 1 065 · Aug 3</span></div>
+            </div>
+            <p style="font-size:12px; color:var(--ink-faint); margin-top:22px; max-width:380px; line-height:1.6;">Lumina opens alongside the page you were on, so your policy stays in view while you talk.</p>
+          </div>
+          <div id="s9MiniPill" style="display:none; position:absolute; right:22px; bottom:20px; align-items:center; gap:10px; background:#fff; border:1.5px solid var(--teal); border-radius:99px; padding:9px 18px 9px 12px; box-shadow:0 6px 20px rgba(0,109,119,0.18); cursor:pointer; z-index:5;">
+            <div class="orb tiny"></div>
+            <span style="font-size:13px; font-weight:700; color:var(--teal-dark);">Lumina</span>
+            <span style="font-size:11.5px; color:var(--ink-faint);">Tap to reopen</span>
+          </div>
+          <div class="chatpanel" id="s9Panel">
+            <div class="chat-header">
+              <div class="chat-back" data-back="overlay" title="Back to portal">❮</div>
+              <div class="orb small"></div>
+              <div><div class="name">Lumina <span style="color:var(--ink-faint); font-weight:400;">• AI Companion</span></div><div class="sub" style="display:flex; align-items:center; gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--green); display:inline-block;"></span> Online</div></div>
+              <div style="margin-left:auto; display:flex; gap:14px; align-items:center;">
+                <div style="color:var(--ink-faint); cursor:pointer; font-size:16px; line-height:1;" id="s9Minimize" title="Minimize Lumina">–</div>
+                <button id="s9Expand" title="Open full-screen chat" style="display:inline-flex; align-items:center; gap:6px; background:var(--teal); color:#fff; border:none; border-radius:99px; padding:5px 12px; font-size:11.5px; font-weight:700; cursor:pointer;">⤢ Maximize</button>
+              </div>
+            </div>
+            <div class="msgs">
+              <div class="row"><div class="orb tiny"></div><div class="bubble lumina" id="widgetWelcome">Hi Deven 👋 I'm Lumina. How can I help you today?</div></div>
+            </div>
+            <div class="chat-input"><button class="attach-btn attach-any" title="Attach a document">+</button><div class="field">Ask me anything about your policy...</div><button class="sendbtn">➤</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="annot"><b>Design notes:</b> The companion embedded in the host: its own origin, identity received via handoff token, adapts to the signed-in role.</div>
+    </div>
+
+    <!-- ============ SCREEN 11: UPDATE FLAGGED FOR REVIEW ============ -->
+    <div class="screen" id="s11">
+      <a class="back-link" data-target="s2">← Prototype nav · Main chat screen</a>
+      <div class="frame desktop frame-chat">
+        <div class="fullchat">
+          <div class="chatcol" style="flex:1; display:flex; flex-direction:column; min-height:0; min-width:0;">
+            <div class="chat-header"><div class="chat-back" data-back="s2" title="Back">❮</div><div class="orb small"></div><div><div class="name">Lumina <span style="color:var(--ink-faint); font-weight:400;">• AI Companion</span></div><div class="sub" style="display:flex; align-items:center; gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--green); display:inline-block;"></span> Online</div></div></div>
+            <div class="msgs">
+              <div class="row"><div class="orb tiny"></div><div class="bubble lumina">Of course, I can help update your address. Go ahead and share the new one whenever you’re ready.</div></div>
+              <div class="row user"><div class="bubble user">88 Marine Drive, Durban, KwaZulu-Natal, 4001</div></div>
+              <div class="row"><div class="orb tiny"></div>
+                <div class="bubble lumina">
+                  Thanks, let me check that.
+                  <div style="margin-top:8px; font-size:13px; line-height:2; color:#1B6B45;">
+                    ✅ Street address verified<br>
+                    ✅ Postal code verified
+                  </div>
+                  <div class="infocard" style="margin-top:10px;">
+                    <div class="r"><span>Current</span><span style="text-decoration:line-through; color:var(--ink-faint);">45 Church St, Gauteng, 2001</span></div>
+                    <div class="r"><span>New</span><b style="color:var(--teal-dark);">88 Marine Drive, KwaZulu-Natal, 4001</b></div>
+                  </div>
+                  
+                </div>
+              </div>
+              <div class="row"><div class="orb tiny"></div>
+                <div class="bubble lumina" style="background:#FDF1E6; border:1px solid #F0C48A;">
+                  I noticed your new address is in a different province (from Gauteng to KwaZulu-Natal). Because a province change can affect your risk rating and premium, this one needs a quick check by our team before it goes live, so I won’t apply it just yet.
+                  <div style="margin-top:10px;">Here’s what happens next:</div>
+                  <div style="margin-top:6px; font-size:13px; line-height:1.9;">
+                    • I’ve securely logged the request and flagged it for review<br>
+                    • A consultant will confirm the change within one business day<br>
+                    • Nothing else is needed from you right now
+                  </div>
+                  <div style="margin-top:10px;">Would you like me to notify you the moment it’s confirmed?</div>
+                </div>
+              </div>
+              <div class="row user"><div class="bubble user">Yes, please notify me.</div></div>
+              <div class="row"><div class="orb tiny"></div>
+                <div class="bubble lumina" style="background:var(--green-tint);">Done, I’ll let you know as soon as it’s confirmed. Reference <b>#UPD‑30517</b>. Is there anything else I can help you with in the meantime?</div>
+              </div>
+            </div>
+            <div class="chat-input"><button class="attach-btn attach-any" title="Attach a document">+</button><div class="field">Ask me anything about your policy...</div><button class="sendbtn">➤</button></div>
+            <div class="chatbar">
+              <button class="chip bar-action policyholder-gate-btn" data-action="whatif">Calculators</button>
+              <button class="chip bar-action policyholder-gate-btn" data-action="update">Update Details</button>
+              <button class="chip bar-action" data-action="claim">File a Claim</button>
+              <button class="chip bar-action" data-action="human" style="border-color:var(--ink-faint); color:var(--ink-soft);">Speak to Human</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="annot"><b>Design notes:</b> High-risk change (province) is flagged for human review by a deterministic backend rule, logged, never auto-applied.</div>
+    </div>
+
+
+    <!-- ============ SCREEN 2: MAIN CHAT ============ -->
+    <div class="screen" id="s2">
+      <div class="frame desktop frame-chat">
+        <div class="fullchat">
+          <div class="chatcol" style="flex:1; display:flex; flex-direction:column; min-height:0; min-width:0;">
+            <div class="chat-header">
+              <div class="chat-back" data-back="s9" title="Back">❮</div>
+              <div class="orb small"></div>
+              <div><div class="name">Lumina <span style="color:var(--ink-faint); font-weight:400;">• AI Companion</span></div><div class="sub" style="display:flex; align-items:center; gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--green); display:inline-block;"></span> Online</div></div>
+              <div id="chatCloseBtn" style="margin-left:auto; color:var(--ink-faint); cursor:pointer; font-size:18px; line-height:1;" title="Minimize Lumina">–</div>
+            </div>
+            <div id="s2Body" style="flex:1; min-height:0; display:flex; flex-direction:column;">
+              <div class="msgs" id="chatFeed">
+                <div class="row"><div class="orb tiny"></div>
+                  <div class="bubble lumina" id="chatWelcome">Hi Deven 👋 I'm Lumina. How can I help you today?</div>
+                </div>
+              </div>
+            </div>
+            <div class="chat-input">
+              <button class="attach-btn attach-any" title="Attach a document">+</button>
+              <div class="field" id="chatInputDemo" style="cursor:pointer;" title="Try: What does my Death Benefit cover?">Ask me anything about your policy...</div>
+              <button class="sendbtn">➤</button>
+            </div>
+            <div class="chatbar">
+              <button class="chip bar-action" data-action="qa">Ask a Question</button>
+              <button class="chip bar-action ph-only-btn" data-action="whatif">Calculators</button>
+              <button class="chip bar-action" data-action="update" id="btnUpdate">Update Details</button>
+              <button class="chip bar-action ph-only-btn" data-action="update_flag" id="btnUpdateFlag">Change Province</button>
+              <button class="chip bar-action" data-action="claim">File a Claim</button>
+              <button class="chip bar-action" data-action="human" style="border-color:var(--ink-faint); color:var(--ink-soft);">Speak to Human</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="annot"><b>Design notes:</b> One conversation surface; the buttons below swap the scenario in place and adapt to the signed-in role.</div>
+    </div>
+
+    <!-- ============ SCREEN 3: ROUTINE Q&A ============ -->
+    <div class="screen" id="s3">
+      <a class="back-link" data-target="s2">← Prototype nav · Main chat screen</a>
+      <div class="frame desktop frame-chat">
+        <div class="fullchat">
+          <div class="chatcol" style="flex:1; display:flex; flex-direction:column; min-height:0; min-width:0;">
+            <div class="chat-header"><div class="orb small"></div><div><div class="name">Lumina</div><div class="sub">Momentum's AI Companion</div></div></div>
+            <div class="msgs">
+              <div class="row user"><div class="bubble user">What does my Death Benefit cover?</div></div>
+              <div class="row"><div class="orb tiny"></div>
+                <div class="bubble lumina">
+                  Your Myriad Policy's Death Benefit pays out <b>R 500 000</b> as a single lump sum to your beneficiaries. Here's what's included:
+                  <ul style="margin:10px 0 10px 18px; padding:0; line-height:1.8;">
+                    <li>Full sum assured paid tax‑free to your nominated beneficiaries</li>
+                    <li>Accidental Death rider adds a further R 100 000</li>
+                    <li>Waiver of Premium continues cover if you're unable to work</li>
+                    <li>Claims are typically excluded if death occurs by suicide within 2 years of the policy start date</li>
+                  </ul>
+                  <div style="font-size:12px; color:var(--ink-faint); font-style:italic;">That’s from your policy’s Death Benefit section</div>
+                  <div class="chips-row" style="margin-top:10px;">
+                    <div class="chip">Show full details</div>
+                    <div class="chip">Compare with other benefits</div>
+                  </div>
+                </div>
+              </div>
+              <div class="row user"><div class="bubble user">And how does that compare to what other insurers would pay out?</div></div>
+              <div class="row"><div class="orb tiny"></div>
+                <div class="bubble lumina">I can't confirm that from the provided documents. I can explain what is available or refer this for human review.</div>
+              </div>
+            </div>
+            <div class="chat-input"><button class="attach-btn attach-any" title="Attach a document">+</button><div class="field">Ask me anything about your policy...</div><button class="sendbtn">➤</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="annot"><b>Design notes:</b> Grounded answers cite the policy in plain language; out-of-scope questions get the honesty fallback, not a guess.</div>
+    </div>
+
+    <!-- ============ SCREEN 4: WHAT-IF (host explorer + embedded Lumina) ============ -->
+    <div class="screen" id="s4">
+      <a class="back-link" data-target="s2">← Prototype nav · Main chat screen</a>
+
+      <!-- Beneficiary: conversational decline (no explorer) -->
+      <div class="frame desktop gate-message" style="flex-direction:column; padding:0; height:640px;">
+        <div class="chat-header"><div class="chat-back" data-back="s2" title="Back">❮</div><div class="orb small"></div><div><div class="name">Lumina <span style="color:var(--ink-faint); font-weight:400;">• AI Companion</span></div><div class="sub" style="display:flex; align-items:center; gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--green); display:inline-block;"></span> Online</div></div></div>
+        <div class="msgs" style="flex:1;">
+          <div class="row user"><div class="bubble user">If the premiums had been R 500 more, how much would I have received?</div></div>
+          <div class="row"><div class="orb tiny"></div>
+            <div class="bubble lumina">I’m sorry, that’s not something I’m able to work out on this policy. Premium and cover simulations sit with the policyholder’s access. I can explain the cover that’s in place, help you with the claim, or if you’d ever like cover of your own, connect you with an advisor. No pressure at all.</div>
+          </div>
+        </div>
+        <div class="chat-input"><button class="attach-btn attach-any" title="Attach a document">+</button><div class="field">Ask a question, or say “help me with a claim”…</div><button class="sendbtn">➤</button></div>
+      </div>
+
+      <!-- Policyholder: host portal (explorer LEFT) with Lumina embedded (RIGHT) -->
+      <div class="frame desktop policyholder-gate">
+        <div class="topbar">
+          <div class="logo">MOMENTUM LIFE INSURANCE <span style="color:var(--ink-faint); font-weight:600; font-size:14px; margin-left:8px;">– What‑If Explorer</span></div>
+          <div class="topbar-right"><div class="avatar-chip" id="s4Avatar">DP</div></div>
+        </div>
+        <div class="app-body" style="position:relative;">
+          <!-- LEFT: the explorer, part of the host page -->
+          <div class="main" style="flex:1; padding:24px 26px; overflow-y:auto;">
+            <div class="greeting-h" style="font-size:18px;">What‑If Explorer</div>
+            <div class="greeting-sub">Policy #POL-***654 · explore changes to your cover</div>
+            <div class="sim-banner" style="background:#FEF6DC; color:#8A6D00; max-width:100%; margin-top:14px;">⚠ Estimate only. A final quote is confirmed by a consultant.</div>
+            <div style="display:flex; gap:18px; margin-top:16px; flex-wrap:wrap;">
+              <div class="card" style="flex:1; min-width:220px;">
+                <h3>Current</h3>
+                <div class="rowline" style="border-top:none;"><span>Sum Assured</span><b>R 500 000</b></div>
+                <div class="rowline"><span>Monthly Premium</span><b>R 1 065</b></div>
+                <div class="rowline"><span>Waiting Period</span><b>12 months</b></div>
+              </div>
+              <div class="card" style="flex:1; min-width:220px;">
+                <h3>Adjust</h3>
+                <div class="slider-block"><div class="lbl">New Sum Assured <span>R 650 000</span></div><input type="range" min="250000" max="1000000" value="650000"></div>
+                <div class="slider-block" style="margin-bottom:6px;"><div class="lbl">Waiting Period (months) <span>6</span></div><input type="range" min="0" max="24" value="6" style="background:linear-gradient(to right, var(--teal) 25%, #E5E5E2 25%);"></div>
+                <div style="background:var(--blue-tint); border-radius:12px; padding:14px 16px; margin-top:14px;">
+                  <div style="font-size:11.5px; color:var(--ink-faint); font-weight:600; text-transform:uppercase; letter-spacing:.03em; margin-bottom:6px;">Estimated new premium</div>
+                  <div style="font-size:22px; font-weight:700; color:var(--teal-dark);">R 1 246 <span style="font-size:12px; color:#B45309; font-weight:600;">(+R 181)</span></div>
+                </div>
+                <div class="btnrow" style="margin-top:14px;"><button class="btn btn-outline">Save Scenario</button><button class="btn btn-primary">Get Official Quote</button></div>
+              </div>
+            </div>
+          </div>
+          <!-- RIGHT: Lumina embedded, talking about what's in the explorer -->
+          <div id="s4MiniPill" style="display:none; position:absolute; right:16px; bottom:16px; align-items:center; gap:10px; background:#fff; border:1.5px solid var(--teal); border-radius:99px; padding:9px 18px 9px 12px; box-shadow:0 6px 20px rgba(0,109,119,0.18); cursor:pointer; z-index:8;">
+            <div class="orb tiny"></div>
+            <span style="font-size:13px; font-weight:700; color:var(--teal-dark);">Lumina</span>
+            <span style="font-size:11.5px; color:var(--ink-faint);">Tap to reopen</span>
+          </div>
+          <div class="chatpanel" id="s4Panel">
+            <div class="chat-header">
+              <div class="chat-back" data-back="s4min" title="Minimize Lumina">❮</div>
+              <div class="orb small"></div>
+              <div><div class="name">Lumina <span style="color:var(--ink-faint); font-weight:400;">• AI Companion</span></div><div class="sub">Explaining your What‑If</div></div>
+            </div>
+            <div class="msgs">
+              <div class="row user"><div class="bubble user">I've been playing with the explorer. Why does my premium jump to R1 246 when I move the cover to R650k?</div></div>
+              <div class="row"><div class="orb tiny"></div>
+                <div class="bubble lumina">Good question. Two things are moving there. Raising your cover from R500 000 to R650 000 is the bigger part of it, more cover costs more each month. On top of that, you've shortened the waiting period from 12 months to 6, which also adds a little, since you'd have faster access to your benefit after a claim. Together that's the R1 246 you're seeing, about R181 more than now. Just remember it's an estimate, not a final quote.</div>
+              </div>
+              <div class="row user"><div class="bubble user">And if I put the waiting period back to 12?</div></div>
+              <div class="row"><div class="orb tiny"></div>
+                <div class="bubble lumina">Then only the cover change would count, so the estimate settles a bit lower than R1 246. The shorter wait is what adds that extra bit on top. Whenever you're happy with a scenario, I can help you set up a proper quote with a consultant.</div>
+              </div>
+            </div>
+            <div class="chat-input"><button class="attach-btn attach-any" title="Attach a document">+</button><div class="field">Ask about any change you’re seeing…</div><button class="sendbtn">➤</button></div>
+            <div class="chatbar">
+              <button class="chip bar-action" data-action="qa" data-hop="1">Ask a Question</button>
+              <button class="chip bar-action" data-action="whatif" data-hop="1">Calculators</button>
+              <button class="chip bar-action" data-action="update" data-hop="1">Update Address</button>
+              <button class="chip bar-action" data-action="update_flag" data-hop="1">Change Province</button>
+              <button class="chip bar-action" data-action="claim" data-hop="1">File a Claim</button>
+              <button class="chip bar-action" data-action="human" data-hop="1" style="border-color:var(--ink-faint); color:var(--ink-soft);">Speak to Human</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="annot"><b>Design notes:</b> Explorer lives on the host (left); Lumina explains the numbers from the embed (right). Beneficiaries are declined and blocked server-side.</div>
+    </div>
+
+    <!-- ============ SCREEN 5: SELF-SERVICE UPDATE ============ -->
+    <div class="screen" id="s5">
+      <a class="back-link" data-target="s2">← Prototype nav · Main chat screen</a>
+      <div class="frame desktop frame-chat">
+        <div class="gate-message" style="flex-direction:column; padding:0; height:640px;">
+          <div class="chat-header"><div class="chat-back" data-back="s2" title="Back">❮</div><div class="orb small"></div><div><div class="name">Lumina <span style="color:var(--ink-faint); font-weight:400;">• AI Companion</span></div><div class="sub" style="display:flex; align-items:center; gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--green); display:inline-block;"></span> Online</div></div></div>
+          <div class="msgs" style="flex:1;">
+            <div class="row user"><div class="bubble user">Can I change the contact details on the policy?</div></div>
+            <div class="row"><div class="orb tiny"></div>
+              <div class="bubble lumina">Of course, Kgomotso. What would you like to update? I can change your own contact details here, and for anything on the policy itself our support team can help.</div>
+            </div>
+            <div class="chips-row" style="margin-top:6px; margin-left:38px;">
+              <div class="chip">Ask about the policy</div>
+              <div class="chip">Help me with the claim</div>
+              <div class="chip">Talk to our support team</div>
+            </div>
+          </div>
+          <div class="chat-input"><button class="attach-btn attach-any" title="Attach a document">+</button><div class="field">Ask a question, or say “help me with a claim”…</div><button class="sendbtn">➤</button></div>
+            <div class="chatbar">
+              <button class="chip bar-action policyholder-gate-btn" data-action="whatif">Calculators</button>
+              <button class="chip bar-action policyholder-gate-btn" data-action="update">Update Details</button>
+              <button class="chip bar-action" data-action="claim">File a Claim</button>
+              <button class="chip bar-action" data-action="human" style="border-color:var(--ink-faint); color:var(--ink-soft);">Speak to Human</button>
+            </div>
+        </div>
+        <div class="fullchat policyholder-gate">
+          <div class="chatcol" style="flex:1; display:flex; flex-direction:column; min-height:0; min-width:0;">
+            <div class="chat-header"><div class="chat-back" data-back="s2" title="Back">❮</div><div class="orb small"></div><div><div class="name">Lumina <span style="color:var(--ink-faint); font-weight:400;">• AI Companion</span></div><div class="sub" style="display:flex; align-items:center; gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--green); display:inline-block;"></span> Online</div></div></div>
+            <div class="msgs">
+              <div class="row"><div class="orb tiny"></div><div class="bubble lumina">Would you like to update your address?</div></div>
+              <div class="row user"><div class="bubble user">Yes please, I've just moved.</div></div>
+              <div class="row"><div class="orb tiny"></div><div class="bubble lumina">Congrats on the move! Go ahead and tell me your new address, and I'll take care of the rest.</div></div>
+              <div class="row user"><div class="bubble user">14 Oak Road, Sandton, 2196</div></div>
+              <div class="row"><div class="orb tiny"></div>
+                <div class="bubble lumina">
+                  Thanks, checking that now.
+                  <div style="margin-top:8px; font-size:13px; line-height:2; color:#1B6B45;">
+                    ✅ Street address verified<br>
+                    ✅ Postal code verified<br>
+                    ✅ Province confirmed: Gauteng
+                  </div>
+                  <div class="infocard" style="margin-top:10px;">
+                    <div class="r"><span>Current</span><span style="text-decoration:line-through; color:var(--ink-faint);">45 Church St, Gauteng, 2001</span></div>
+                    <div class="r"><span>New</span><b style="color:var(--teal-dark);">14 Oak Road, 2196</b></div>
+                  </div>
+                  <div style="margin-top:10px;"><span class="pill green">Low risk</span></div>
+                  <div style="margin-top:8px;">This change is low risk since your province stays the same. Just reply "confirm" and I'll update it right away.</div>
+                </div>
+              </div>
+              <div class="row user"><div class="bubble user">confirm</div></div>
+              <div class="row"><div class="orb tiny"></div>
+                <div class="bubble lumina" style="background:var(--green-tint);">All set. Your address is updated as of today. You'll see this reflected on your next statement.</div>
+              </div>
+            </div>
+            <div class="chat-input"><button class="attach-btn attach-any" title="Attach a document">+</button><div class="field">Ask me anything about your policy...</div><button class="sendbtn">➤</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="annot policyholder-gate" style="margin-top:0;">
+        <b>This is the happy path (low-risk change, applied instantly).</b> The high-risk counterpart, where a province change is flagged for human review instead of applied, is its own screen: see <b>Update · Flagged for Review</b> in the quick nav.
+      </div>
+      <div class="annot"><b>Design notes:</b> Formless conversational update; low-risk changes apply instantly. Beneficiaries are declined and the block is enforced server-side.</div>
+    </div>
+
+    <!-- ============ SCREEN 6: CLAIMS ============ -->
+    <div class="screen" id="s6">
+      <a class="back-link" data-target="s2">← Prototype nav · Main chat screen</a>
+      <div class="frame desktop claims-shell">
+        <div class="claims-header">
+          <h1>Claims Assistant • Death Claim</h1>
+        </div>
+        <div class="claims-body">
+          <div class="claims-main">
+            <div class="empathy-bubble">
+              <p>I'm truly sorry for your loss. I'm here to support you through this difficult time with care and clarity.</p>
+              <div style="font-size:13.5px; color:var(--ink-soft); font-family:'Inter',sans-serif; margin-top:2px;">Would you like me to walk you through this step by step?</div>
+            </div>
+
+            <div class="card" style="max-width:560px; margin-top:26px; padding:16px 20px;">
+              <h3 style="margin-bottom:8px;">Where things stand · in your own time</h3>
+              <div class="rowline" style="border-top:none;"><span>We know about Deven's passing</span><span style="color:#1E7A54;">You won't need to explain it again</span></div>
+              <div class="rowline"><span>Documents shared so far</span><span>3 of 6, any order, whenever you're ready</span></div>
+              <div class="rowline"><span>When everything is in</span><span>We'll come back to you within <b>3 business days</b></span></div>
+            </div>
+
+            <div class="sla-card" style="max-width:560px; margin-top:24px;">
+              <span style="font-size:18px;">🕐</span>
+              <div>Death &amp; Funeral claims are typically processed within <b>3 business days</b>. I'll keep you updated at every step, and you can check progress here anytime.</div>
+            </div>
+
+            <div class="dropzone" style="max-width:560px;">
+              📄 Drag and drop, or tap to upload your documents<br>
+              <span style="font-size:11.5px;">A photocopy is fine to start: PDF, JPG, or PNG accepted</span>
+            </div>
+
+            <div style="max-width:560px; margin-top:24px;">
+              <div class="row user" style="justify-content:flex-end;"><div class="bubble user">Before I carry on, how much does the funeral benefit actually pay out?</div></div>
+              <div class="row" style="margin-top:10px;"><div class="orb tiny"></div>
+                <div class="bubble lumina" style="background:#fff; border:1px solid #EEE9DF;">Of course, we can pause the documents anytime. The Funeral Benefit pays R 50 000 as an immediate lump sum, separate from the main Death Benefit. <span style="font-size:12px; color:var(--ink-faint); font-style:italic;">According to the Policy Guide, Funeral Benefit section</span><br><br>Whenever you're ready, the relationship proof is the next document outstanding. No rush at all.</div>
+              </div>
+            </div>
+          </div>
+          <div class="checklist-panel">
+            <h4>Required Documents · any order is fine</h4>
+            <div class="clitem"><div class="clicon done">✓</div><div><div class="t">Claim Form</div><div class="d">Completed together in this chat</div></div></div>
+            <div class="clitem"><div class="clicon active">→</div><div><div class="t">Relationship Proof</div><div class="d">Suggested next, e.g. marriage or birth certificate</div></div></div>
+            <div class="clitem"><div class="clicon done">✓</div><div><div class="t">Death Certificate</div><div class="d">Already on file from the death notification, no need to resubmit</div></div></div>
+            <div class="clitem"><div class="clicon todo"></div><div><div class="t">ID Documents</div><div class="d">Deceased and claimant</div></div></div>
+            <div class="clitem"><div class="clicon done">✓</div><div><div class="t">Policy Number</div><div class="d">Found automatically from the portal</div></div></div>
+            <div class="clitem"><div class="clicon todo"></div><div><div class="t">Banking Details</div><div class="d">For the payout</div></div></div>
+          </div>
+        </div>
+        <div class="helpline">👤 Talk to a person anytime</div>
+      </div>
+      <div class="annot">
+        <b>Alternate state: returning days later (progress preserved):</b>
+        <div style="margin-top:10px; background:var(--blue-tint); border:1px solid rgba(0,109,119,0.15); border-radius:12px; padding:14px 16px; font-size:13px; color:#123; line-height:1.7; max-width:640px;">
+          Welcome back, Kgomotso. There's no rush at all, everything you shared is saved. We have 3 of the 6 documents so far, and the relationship proof and ID documents are still outstanding. Would you like to continue now, or shall I check in with you later this week?
+        </div>
+      </div>
+      <div class="annot"><b>Design notes:</b> Empathetic, non-linear claim: documents in any order, death certificate pre-verified, SLA stated, a person always reachable.</div>
+    </div>
+
+    <!-- ============ SCREEN 7: BENEFICIARY RESTRICTED ============ -->
+    <div class="screen" id="s7">
+      <a class="back-link" data-target="s1">← Back to Dashboard</a>
+      <div class="frame desktop" style="position:relative;">
+        <div class="topbar">
+          <div class="logo">MOMENTUM <span>life</span></div>
+          <div class="topbar-right"><div class="avatar-chip" id="s7Avatar" style="background:#FDEBD8; color:#9A5B22;">KP</div></div>
+        </div>
+        <div style="background:#FDF1E6; border-bottom:1px solid #F0C48A; padding:11px 30px; font-size:13px; color:#8A4B00; font-weight:600; display:flex; align-items:center; gap:8px;">
+          You are viewing this policy as a Beneficiary.
+        </div>
+        <div class="app-body">
+          <div class="sidebar">
+            <div class="side-item active">● Dashboard</div>
+            <div class="side-item">File a Claim</div>
+            <div class="side-item">Support</div>
+          </div>
+          <div class="main">
+            <div class="greeting-h" style="font-size:22px;">Myriad Policy</div>
+            <div class="greeting-sub">Policy of the late Deven Pillay · #POL-***654</div>
+
+            <div class="lumina-banner" style="margin-top:16px;">
+              <div class="orb"></div>
+              <div class="txt">
+                <strong>Hi <span id="s7Name">Kgomotso</span>, I’m so sorry for your loss.</strong>
+                <p>Whenever you feel ready, I can guide you through starting a claim, or simply answer any questions about the policy. There’s no rush, and a person is always available if you’d prefer.</p>
+              </div>
+            </div>
+
+            <!-- PRIMARY ACTION: start a claim -->
+            <div class="card" style="margin-top:20px; max-width:640px; border:1.5px solid var(--teal); background:linear-gradient(180deg,#F3FBFA,#fff);">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+                <div>
+                  <h3 style="margin-bottom:4px;">Start a claim</h3>
+                  <p style="font-size:13px; color:var(--ink-soft); margin:0; max-width:360px; line-height:1.6;">Lumina will walk you through it gently, one step at a time. Most documents can be added in any order.</p>
+                </div>
+                <button class="btn btn-primary" id="s7StartClaim" style="padding:14px 24px; font-size:14.5px; white-space:nowrap;">Begin with Lumina →</button>
+              </div>
+            </div>
+
+            <!-- SECONDARY: existing claim status (only relevant once a claim exists) -->
+            <div class="card" style="margin-top:18px; max-width:640px;">
+              <h3 style="font-size:15px;">A claim is already in progress</h3>
+              <div class="greeting-sub" style="margin:2px 0 14px;">Reference #MTM‑48213</div>
+              <div class="stepper">
+                <div class="step done"><div class="dot"></div><div class="lbl2">Submitted</div></div>
+                <div class="step done"><div class="line"></div><div class="dot"></div><div class="lbl2">Under Review</div></div>
+                <div class="step"><div class="line"></div><div class="dot"></div><div class="lbl2">Decision</div></div>
+                <div class="step"><div class="line"></div><div class="dot"></div><div class="lbl2">Payout</div></div>
+              </div>
+              <p style="font-size:12.5px; color:var(--ink-faint); margin-top:16px;">Estimated decision by <b style="color:var(--ink);">July 14, 2026</b> · within the 3 business-day death-claim SLA.</p>
+            </div>
+          </div>
+        </div>
+        <div class="lumina-launch" data-launch="1">
+          <div class="orb tiny"></div>
+          <span class="ll-title">Lumina</span>
+          <span class="ll-sub">Tap to chat</span>
+        </div>
+      </div>
+      <div class="annot" id="s7ContextNote" style="display:none; background:#F6F6F3;"><b>Note:</b> You're currently previewing as Deven Pillay (Policyholder), who has full access. This frame documents what Kgomotso or Lesedi would see instead, pick one of them on the Start screen to preview it live.</div>
+      <div class="annot"><b>Design notes:</b> Beneficiary landing leads with Start a claim; the portal surfaces only what the role can use, nothing restricted is shown.</div>
+    </div>
+
+    <!-- ============ SCREEN 8: HUMAN ESCALATION ============ -->
+    <div class="screen" id="s8">
+      <a class="back-link" data-target="s2">← Prototype nav · Main chat screen</a>
+      <div class="frame desktop frame-wide">
+        <div class="chat-header"><div class="chat-back" data-back="s2" title="Back">❮</div><div class="orb small"></div><div><div class="name">Lumina <span style="color:var(--ink-faint); font-weight:400;">• AI Companion</span></div><div class="sub" style="display:flex; align-items:center; gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--green); display:inline-block;"></span> Online</div></div></div>
+        <div style="padding:28px 40px;">
+          <div class="bubble lumina" style="max-width:600px;">It looks like this might be best handled by one of our human advisors. Would you like me to connect you now?</div>
+
+          <button class="btn btn-primary" style="margin-top:20px; padding:15px 26px; font-size:14.5px; display:flex; align-items:center; gap:10px;">
+            Connect to Human Advisor
+            <span style="background:rgba(255,255,255,0.22); font-size:11.5px; font-weight:600; padding:3px 9px; border-radius:99px;">~2 min wait</span>
+          </button>
+
+          <div style="display:flex; gap:22px; margin-top:20px;">
+            <a role="link" tabindex="0" style="cursor:pointer; font-size:13px; color:var(--ink-soft); font-weight:600; text-decoration:none;">Continue with Lumina</a>
+            <a role="link" tabindex="0" style="cursor:pointer; font-size:13px; color:var(--ink-soft); font-weight:600; text-decoration:none;">Schedule a callback instead</a>
+          </div>
+
+          <div class="bubble lumina" style="margin-top:26px; max-width:600px; background:var(--green-tint);">You're connected with Jordan from our Support team. I'll stay available in case you need me again.</div>
+        </div>
+      </div>
+      <div class="annot"><b>Design notes:</b> Escalation framed as help, not a dead end: one clear hand-off with an honest wait time, Lumina stays available after.</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const titles = {
+    sstart:"Start · Select User", s0:"Host Portal Login",
+    s1:"Host Portal Dashboard", s2:"Main Chat Interface", s3:"Routine Policy Q&A",
+    s4:"What‑If Explorer", s5:"Self‑Service Update", s6:"Claims · Death Claim",
+    s7:"Beneficiary Restricted View", s8:"Human Escalation",
+    s9:"Embedded Companion in Portal",
+    s11:"Update · Flagged for Review"
+  };
+  const USERS = {
+    deven:    {name:"Deven Pillay",         role:"Policyholder", initials:"DP", email:"deven.pillay@email.com",    isBeneficiary:false},
+    kgomotso: {name:"Kgomotso Pillay",      role:"Beneficiary",  initials:"KP", email:"kgomotso.pillay@email.com", isBeneficiary:true,  relation:"spouse"},
+    lesedi:   {name:"Lesedi Vikram Pillay", role:"Beneficiary",  initials:"LP", email:"lesedi.pillay@email.com",   isBeneficiary:true,  relation:"child"}
+  };
+  let currentUser = null;
+  let currentScreen = 'sstart';
+
+  const screens = document.querySelectorAll('.screen');
+  const canvasTitle = document.getElementById('canvasTitle');
+  let currentView = 'desktop';
+
+  document.querySelectorAll('.lumina-launch').forEach(el=> el.addEventListener('click', openLumina));
+  var s7sc = document.getElementById('s7StartClaim'); if(s7sc){ s7sc.addEventListener('click', ()=> goToScreen('s6')); }
+
+  function openLumina(){
+    // Always land on the embedded widget; ensure its panel is in default (not minimized) state
+    const p = document.getElementById('s9Panel');
+    const pill = document.getElementById('s9MiniPill');
+    if(p){ p.classList.remove('open'); p.style.display = ''; }
+    if(pill){ pill.style.display = (currentView === 'mobile') ? 'flex' : 'none'; }
+    if(currentView === 'mobile'){ if(p){ p.classList.add('open'); } if(pill){ pill.style.display='none'; } }
+    goToScreen('s9');
+  }
+
+  function goToScreen(id){
+    if(id === 's7' && currentUser && !currentUser.isBeneficiary){
+      // Policyholders have no beneficiary view; ignore the jump.
+      return;
+    }
+    if(id === 's11' && currentUser && currentUser.isBeneficiary){ id = 's5'; }  // beneficiaries can't update; show decline
+    currentScreen = id;
+    screens.forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    canvasTitle.textContent = titles[id];
+    // Active-state ring: highlight the action button + quick-nav chip matching this screen
+    (function(){
+      const actionOf = { s4:'whatif', s5:'update', s6:'claim', s8:'human', s11:'update_flag' };
+      const act = actionOf[id] || null;
+      document.querySelectorAll('.bar-action').forEach(b=>{
+        b.classList.toggle('is-active', !!act && b.dataset.action === act);
+      });
+      document.querySelectorAll('.qn-btn').forEach(b=>{
+        b.classList.toggle('is-active', b.dataset.target === id);
+      });
+    })();
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  document.getElementById('homeLink').addEventListener('click', ()=> goToScreen('sstart'));
+
+  // Quick nav strip: jump to any journey from any screen
+  const scenarioForScreen = { s3:'qa', s4:'whatif', s5:'update', s11:'update_flag', s6:'claim', s8:'human' };
+  document.querySelectorAll('.qn-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const t = btn.dataset.target;
+      const sc = scenarioForScreen[t];
+      if(sc){
+        // Retired standalone screens: open the main chat and swap in the conversation.
+        if(t === 's11' && currentUser && currentUser.isBeneficiary){ /* beneficiary can't update */ }
+        goToScreen('s2');
+        renderScenario(sc);
+      } else {
+        goToScreen(t);
+      }
+    });
+  });
+
+  document.querySelectorAll('.back-link').forEach(link=>{
+    link.addEventListener('click', (e)=>{
+      e.preventDefault();
+      goToScreen(link.dataset.target);
+    });
+  });
+
+  document.querySelectorAll('#viewToggle button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('#viewToggle button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      currentView = btn.dataset.v;
+      document.body.classList.toggle('sim-mobile', currentView === 'mobile');
+      document.querySelectorAll('.frame').forEach(f=>{
+        f.classList.remove('desktop','mobile');
+        f.classList.add(currentView);
+      });
+      // reset widget state per view: desktop = docked panel (pill hidden); mobile = portal + pill launcher
+      const p = document.getElementById('s9Panel');
+      if(p){ p.classList.remove('open'); p.style.display = ''; }
+      const pill = document.getElementById('s9MiniPill');
+      if(pill){ pill.style.display = (currentView === 'mobile') ? 'flex' : 'none'; }
+    });
+  });
+
+
+  // ===== Conversation engine: buttons swap the thread inside the main chat =====
+  // Each scenario returns an array of message objects rendered into #chatFeed.
+  function convo(scenario, user){
+    const first = user.name.split(' ')[0];
+    const ben = user.isBeneficiary;
+    const U = t => ({who:'user', html:t});
+    const L = (t, cls='') => ({who:'lumina', html:t, cls});
+    // File attachment(s) sent by the user; files is an array of {name, size, kind}
+    const F = files => ({who:'user', files:files});
+
+    if(scenario === 'whatif'){
+      if(ben){
+        return [
+          U(`If the premiums had been R\u00a0500 more, how much would I have received?`),
+          L(`I\u2019m sorry, ${first}, that\u2019s not something I\u2019m able to work out on this policy. Premium and cover simulations sit with the policyholder\u2019s access. What I can do is explain the cover that is in place, or help you with the claim. And if you\u2019d ever like cover of your own, I can connect you with one of our advisors who\u2019d be glad to help you explore that, no pressure at all.`),
+        ];
+      }
+      // policyholder: What-If lives on the host (explorer left) with Lumina embedded (right)
+      return 'HOST_WHATIF';
+    }
+
+    if(scenario === 'update'){
+      if(ben){
+        // STRICT per the brief's capability matrix: no updates of any kind on a beneficiary
+        // account. Lumina declines warmly and offers the consultant workaround for contact info.
+        return [
+          U(`I need to update my contact number so you can reach me about the claim.`),
+          L(`Thank you for letting me know, ${first}. I'm not able to make updates on a beneficiary account, so I haven't changed anything. What I can do is make sure the claims consultant handling your claim captures your new number when they're in touch, or I can connect you with them now if you'd like. Either way you won't miss anything about the claim.`),
+          U(`Please connect me now.`),
+          L(`Of course. I'm connecting you with the claims consultant, there's about a two minute wait. They'll take your new number and it will be used for everything on the claim from here. I'll stay right here if you need me afterwards.`, 'ok'),
+        ];
+      }
+      return [
+        L(`Sure, I can help with that. What would you like to update?`),
+        U(`I've just moved. My new address is 14 Oak Road, Sandton, 2196.`),
+        L(`Thanks, let me check that.<div style="margin-top:8px; font-size:13px; line-height:2; color:#1B6B45;">Street address verified<br>Postal code verified<br>Province confirmed: Gauteng</div><div class="infocard" style="margin-top:10px;"><div class="r"><span>Current</span><span style="text-decoration:line-through; color:var(--ink-faint);">45 Church St, 2001</span></div><div class="r"><span>New</span><span style="color:var(--teal-dark); font-weight:600;">14 Oak Road, 2196</span></div></div><div style="margin-top:8px;">Your province stays the same, so I can update this right away. Just reply "confirm".</div>`),
+        U(`confirm`),
+        L(`All set, your address is updated as of today. You'll see it on your next statement. Anything else I can help with?`, 'ok'),
+      ];
+    }
+
+    if(scenario === 'update_flag'){
+      if(ben){
+        return [
+          U(`Can the address on the policy be changed? The province is wrong.`),
+          L(`I'm not able to change the policy's details from this side, ${first}. Changes like that sit with the policyholder's access, and the system won't accept them from a beneficiary account, so I haven't recorded anything. If something on the policy looks wrong, I can flag it for our support team to look into. And of course I'm here for any questions about the policy, or to help with the claim.`),
+        ];
+      }
+      return [
+        L(`Sure, I can help with that. What would you like to update?`),
+        U(`My new address is 88 Marine Drive, Durban, 4001.`),
+        L(`Thanks, let me check that.<div style="margin-top:8px; font-size:13px; line-height:2; color:#1B6B45;">Street address verified<br>Postal code verified</div><div class="infocard" style="margin-top:10px;"><div class="r"><span>Current</span><span style="text-decoration:line-through; color:var(--ink-faint);">45 Church St, 2001</span></div><div class="r"><span>New</span><span style="color:var(--teal-dark); font-weight:600;">88 Marine Drive, 4001</span></div></div>`),
+        L(`I can see this new address is in a different province, from Gauteng to KwaZulu-Natal. A province change can affect your risk rating and premium, so it needs a quick check by our team before it goes live, which means I won't apply it just yet. I'll log the request and a consultant will confirm it within one business day. There's nothing else you need to do right now. Would you like me to let you know the moment it's confirmed?`),
+        U(`Yes, please let me know.`),
+        L(`Done, I'll notify you as soon as it's confirmed. Your reference is UPD-30517. Is there anything else I can help you with in the meantime?`, 'ok'),
+      ];
+    }
+
+    if(scenario === 'claim'){
+      if(ben){
+        // Beneficiary: death claim, natural back-and-forth
+        // Relationship-aware: spouse claims with a marriage certificate, a child with a birth certificate.
+        const spouse = user.relation === 'spouse';
+        const lost   = spouse ? 'My husband' : 'My father';
+        const proof  = spouse ? 'a marriage certificate' : 'a birth certificate';
+        const proofFile = spouse
+          ? {name:'Marriage_Certificate.jpg', size:'Image \u00b7 2.4 MB', kind:'img'}
+          : {name:'Birth_Certificate.pdf',    size:'PDF \u00b7 1.8 MB',   kind:'doc'};
+        const proofName = spouse ? 'marriage certificate' : 'birth certificate';
+        return [
+          U(`I need to make a claim. ${lost} passed away.`),
+          L(`${first}, I'm so sorry for your loss. I'll help you through this and keep it as simple as I can, we can take it at whatever pace feels right.`),
+          L(`When you're ready, we'll need a few things for the claim: a certified copy of your ID, proof of your relationship (${proof} works), the deceased's ID, and the banking details for where the benefit should be paid. You can attach them here in any order, and there's no rush.`),
+          U(`Here are my ID and the ${proofName}.`),
+          F([{name:`${first}_ID.pdf`, size:'PDF \u00b7 1.2 MB', kind:'doc'}, proofFile]),
+          L(`Thank you, ${first}, I've received both your ID and the ${proofName}. What I still need to proceed with the claim are the deceased's ID and the banking details for the payout. Feel free to ask me anything in the meantime, and I'll take the claim forward as soon as those come through.`, 'ok'),
+        ];
+      }
+      // Policyholder: income protection claim exceeding R1,000,000 -> offer human (A6)
+      return [
+        U(`I need to claim on my income protection. It works out to about R1 020 000 for the year.`),
+        L(`I'm sorry you're going through this, ${first}. I can get the income protection claim started right now. We'll need a few things, and you can send them in any order: the claim form (we can fill it in here), your ID, your banking details, a medical report, and proof of income. Your policy number is already linked, so that's handled. These claims are usually assessed within five business days once everything is in.`),
+        L(`Because this claim comes to more than R1 000 000, it needs to be reviewed by one of our advisors before it can go ahead. Would you like me to log the request so an advisor can pick it up?`),
+        U(`Yes, please go ahead.`),
+        L(`Done, I've logged it and an advisor will be in touch. There's about a two minute wait if you'd like to speak to someone now, or they can call you back at a time that suits you. Your reference is CLM-77420, and everything you've shared is saved, so you won't have to repeat it.`, 'ok'),
+      ];
+    }
+
+    if(scenario === 'human'){
+      if(ben){
+        return [
+          U(`This is a lot to take in. Can I just talk to a person?`),
+          L(`Of course, ${first}. I'll connect you with one of our consultants who can help you through this personally. There's about a two minute wait, or they can call you back whenever suits you. Everything we've gone through is saved, so you won't need to repeat anything.`),
+        ];
+      }
+      return [
+        U(`Does my policy cover me if I'm working overseas for a few months?`),
+        L(`That's a fair question, and it's one I can't answer confidently from your policy documents alone, since overseas cover can depend on the specific terms of your benefit. Rather than guess, I'd prefer to get you a definite answer.`),
+        U(`Okay, can someone help me with that?`),
+        L(`Absolutely. I'll connect you with one of our consultants who can confirm exactly how your cover works while you're abroad. There's about a two minute wait, or they can call you back at a time that suits you. Everything we've discussed is saved, so you won't have to repeat yourself.`),
+      ];
+    }
+
+    if(scenario === 'qa'){
+      if(ben){
+        // Beneficiary asks about the payout she'd receive as a beneficiary, not "my death benefit"
+        return [
+          U(`How much will the policy pay out, and how long does it take?`),
+          L(`The policy has a Death Benefit that pays a lump sum of R500 000 to the nominated beneficiaries. That's from the policy's Death Benefit section. It's paid as a single tax-free amount, and once all the claim documents are in, a decision usually follows within three business days. Would you like me to walk you through what's still needed for the claim?`),
+          U(`Is the payout affected by any debts on the policy?`),
+          L(`I can't confirm that from the provided documents. I can explain what is available, or refer this for human review so you get an accurate answer.`),
+        ];
+      }
+      return [
+        U(`What does my Death Benefit actually cover?`),
+        L(`Your Death Benefit pays a lump sum of R500 000 to your nominated beneficiaries if you pass away during the policy term. That's from your policy's Death Benefit section. It's paid as a single tax-free amount, and a claim is usually assessed within a few business days once documents are in. Would you like the full detail, or how it compares to your other benefits?`),
+        U(`And how does that compare to what other insurers would pay out?`),
+        L(`I can't confirm that from the provided documents. I can explain what is available, or refer this for human review.`),
+      ];
+    }
+    return [];
+  }
+
+  function fileCard(f){
+    const icon = f.kind === 'img' ? '🖼️' : '📄';
+    return `<div class="filecard"><div class="fico">${icon}</div><div class="fmeta"><div class="fname">${f.name}</div><div class="fsize">${f.size}</div></div></div>`;
+  }
+  function bubbleRow(m){
+    if(m.who === 'user' && m.files){
+      return `<div class="row user"><div class="bubble user" style="display:flex; flex-direction:column; gap:8px;">${m.files.map(fileCard).join('')}</div></div>`;
+    }
+    if(m.who === 'user') return `<div class="row user"><div class="bubble user">${m.html}</div></div>`;
+    // All of Lumina's messages use one consistent bubble style; status is conveyed by inline
+    // pills/text inside the message, not by changing the bubble colour.
+    return `<div class="row"><div class="orb tiny"></div><div class="bubble lumina">${m.html}</div></div>`;
+  }
+
+  function renderScenario(scenario){
+    if(!currentUser) return;
+    // What-If for a policyholder is a split view (explorer + chat)
+    const data = convo(scenario, currentUser);
+    if(data === 'HOST_WHATIF'){ goToScreen('s4'); return; }
+    // normal: reset any split view FIRST (this may rebuild #chatFeed), THEN fetch and fill it
+    resetChatLayout();
+    const feed = document.getElementById('chatFeed');
+    if(!feed) return;
+    feed.innerHTML = data.map(bubbleRow).join('');
+    feed.scrollTop = feed.scrollHeight;
+    markActive(scenario);
+  }
+
+  function markActive(scenario){
+    document.querySelectorAll('#s2 .bar-action').forEach(b=>{
+      b.classList.toggle('is-active', b.dataset.action === scenario);
+    });
+  }
+
+
+  function resetChatToWelcome(){
+    resetChatLayout();
+    const first = currentUser ? currentUser.name.split(' ')[0] : 'there';
+    const welcomeHTML = (currentUser && currentUser.isBeneficiary)
+      ? `Hi ${first} 👋 I'm Lumina. I'm here to help, what can I do for you today?`
+      : `Hi ${first} 👋 I'm Lumina. How can I help you today?`;
+    const feed = document.getElementById('chatFeed');
+    if(feed){ feed.innerHTML = `<div class="row"><div class="orb tiny"></div><div class="bubble lumina" id="chatWelcome">${welcomeHTML}</div></div>`; }
+    document.querySelectorAll('#s2 .bar-action').forEach(b=> b.classList.remove('is-active'));
+    // Chat bar shows ALL actions for every role: restricted ones demonstrate Lumina's
+    // decline + the server-side block. Host sidebar hiding (.policyholder-only) is separate.
+    document.querySelectorAll('.ph-only-btn').forEach(b=>{ b.style.display = ''; });
+  }
+
+  function resetChatLayout(){
+    const host = document.getElementById('s2Body');
+    if(!host) return;                      // s2 not in DOM yet
+    if(host.classList.contains('split')){
+      host.classList.remove('split');
+    }
+    if(!document.getElementById('chatFeed')){
+      host.innerHTML = `<div class="msgs" id="chatFeed"></div>`;
+    }
+  }
+
+
+  function applyUser(key){
+    currentUser = USERS[key];
+    document.body.classList.remove('role-policyholder','role-beneficiary');
+    document.body.classList.add(currentUser.isBeneficiary ? 'role-beneficiary' : 'role-policyholder');
+    // Top nav shows only chips available to the current role (hide, don't disable)
+    const roleKey = currentUser.isBeneficiary ? 'beneficiary' : 'policyholder';
+    document.querySelectorAll('.qn-btn[data-role]').forEach(b=>{
+      b.style.display = (b.dataset.role === roleKey) ? '' : 'none';
+    });
+    // Preview strip
+    document.getElementById('previewStrip').style.display = 'flex';
+    document.getElementById('quickNav').style.display = 'flex';
+    document.getElementById('previewName').textContent = currentUser.name;
+    const roleEl = document.getElementById('previewRole');
+    roleEl.textContent = currentUser.role;
+
+    // Login screen
+    document.getElementById('loginEmail').textContent = currentUser.email;
+    document.getElementById('loginGreeting').textContent = 'Welcome back';
+
+    // Dashboard
+    document.getElementById('dashAvatar').textContent = currentUser.initials;
+    document.getElementById('dashName').textContent = currentUser.isBeneficiary ? currentUser.name : currentUser.name;
+    document.getElementById('dashRole').textContent = currentUser.role;
+    document.getElementById('policyOwnerNote').style.display = currentUser.isBeneficiary ? 'block' : 'none';
+
+    // Chat welcome message: first name only, reset feed to a single welcome bubble
+    const first = currentUser.name.split(' ')[0];
+    const welcomeHTML = currentUser.isBeneficiary
+      ? `Hi ${first} 👋 I'm Lumina. I'm here to help, what can I do for you today?`
+      : `Hi ${first} 👋 I'm Lumina. How can I help you today?`;
+    resetChatLayout();
+    const feed = document.getElementById('chatFeed');
+    if(feed){ feed.innerHTML = `<div class="row"><div class="orb tiny"></div><div class="bubble lumina" id="chatWelcome">${welcomeHTML}</div></div>`; }
+    document.querySelectorAll('#s2 .bar-action').forEach(b=> b.classList.remove('is-active'));
+    // Chat bar shows ALL actions for every role: restricted ones demonstrate Lumina's
+    // decline + the server-side block. Host sidebar hiding (.policyholder-only) is separate.
+    document.querySelectorAll('.ph-only-btn').forEach(b=>{ b.style.display = ''; });
+
+    // Screen 9 embedded widget
+    document.getElementById('s9Avatar').textContent = currentUser.initials;
+    var s4av=document.getElementById('s4Avatar'); if(s4av) s4av.textContent = currentUser.initials;
+    var s9sub=document.getElementById('s9GreetingSub');
+    if(s9sub){ s9sub.innerHTML = currentUser.isBeneficiary
+      ? 'Policy of the late Deven Pillay · #POL-***654'
+      : '#POL-***654 &nbsp;<span class="pill green" style="font-size:11px;">● Active</span>'; }
+    var s9av=document.getElementById('s9Avatar');
+    if(s9av){ s9av.style.background = currentUser.isBeneficiary ? '#FDEBD8' : ''; s9av.style.color = currentUser.isBeneficiary ? '#9A5B22' : ''; }
+    document.getElementById('widgetWelcome').innerHTML = currentUser.isBeneficiary
+      ? `Hi ${first} 👋 I'm Lumina. I'm here to help, what can I do for you today?`
+      : `Hi ${first} 👋 I'm Lumina. How can I help you today?`;
+
+    // Screen 7 context note (documentation screen)
+    document.getElementById('s7ContextNote').style.display = currentUser.isBeneficiary ? 'none' : 'block';
+    document.getElementById('s7Name').textContent = currentUser.isBeneficiary ? first : 'Kgomotso';
+    document.getElementById('s7Avatar').textContent = currentUser.isBeneficiary ? currentUser.initials : 'AV';
+  }
+
+  // Start screen: user selection
+  document.querySelectorAll('.user-card').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      applyUser(card.dataset.user);
+      goToScreen('s0');
+    });
+  });
+
+  document.getElementById('switchUserLink').addEventListener('click', (e)=>{
+    e.preventDefault();
+    goToScreen('sstart');
+  });
+
+  // Login screen actions
+  document.getElementById('signInBtn').addEventListener('click', ()=>{
+    if(!currentUser) applyUser('deven');
+    goToScreen('s1');
+  });
+
+  // Dashboard: Talk to Lumina
+
+  // Widget expand -> full-screen chat
+  document.getElementById('s9Expand').addEventListener('click', ()=>{ resetChatToWelcome(); goToScreen('s2'); });
+
+  // Widget minimize -> floating pill; pill -> reopen
+  const s9Panel = document.getElementById('s9Panel');
+  const s9Pill = document.getElementById('s9MiniPill');
+  document.getElementById('s9Minimize').addEventListener('click', ()=>{
+    s9Panel.style.display = 'none';
+    s9Pill.style.display = 'flex';
+  });
+  s9Pill.addEventListener('click', ()=>{
+    s9Pill.style.display = 'none';
+    if(currentView === 'mobile'){ s9Panel.style.display = ''; s9Panel.classList.add('open'); }
+    else { s9Panel.style.display = 'flex'; }
+  });
+
+    // Mobile back arrows: s9 overlay -> portal (pill returns); chat screens -> natural parent
+  document.querySelectorAll('.chat-back').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const t = b.dataset.back;
+      if(t === 's4min'){
+        const ab = document.querySelector('#s4 .app-body');
+        const pill = document.getElementById('s4MiniPill');
+        if(ab) ab.classList.add('s4-collapsed');
+        if(pill) pill.style.display = 'flex';
+        return;
+      }
+      if(t === 'overlay'){
+        s9Panel.classList.remove('open');
+        if(currentView === 'mobile'){ s9Pill.style.display = 'flex'; }
+      } else {
+        s9Panel.classList.remove('open');
+        goToScreen(t);
+      }
+    });
+  });
+
+  // Chat bottom bar actions
+  document.querySelectorAll('.bar-action[data-hop]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const action = btn.dataset.action;
+      if(action === 'whatif'){ return; }          // already on What-If
+      goToScreen('s2');
+      renderScenario(action);
+    });
+  });
+
+  var s4Pill = document.getElementById('s4MiniPill');
+  if(s4Pill){
+    s4Pill.addEventListener('click', ()=>{
+      const ab = document.querySelector('#s4 .app-body');
+      if(ab) ab.classList.remove('s4-collapsed');
+      s4Pill.style.display = 'none';
+    });
+  }
+
+  document.querySelectorAll('.attach-any').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      // Append a demo file bubble to the nearest visible message feed
+      const input = btn.closest('.chat-input');
+      const container = input ? input.parentElement : null;
+      const feed = container ? container.querySelector('.msgs') : document.getElementById('chatFeed');
+      if(!feed) return;
+      const row = document.createElement('div');
+      row.className = 'row user';
+      row.innerHTML = `<div class="bubble user"><div class="filecard"><div class="fico">📄</div><div class="fmeta"><div class="fname">Document.pdf</div><div class="fsize">PDF · 1.1 MB</div></div></div></div>`;
+      feed.appendChild(row);
+      const rep = document.createElement('div');
+      rep.className = 'row';
+      rep.innerHTML = `<div class="orb tiny"></div><div class="bubble lumina">Thank you, I've received Document.pdf and added it to your file. Is there anything else you'd like to send?</div>`;
+      feed.appendChild(rep);
+      feed.scrollTop = feed.scrollHeight;
+    });
+  });
+
+  document.querySelectorAll('#s2 .bar-action').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      // Swap the conversation inside the main chat. No navigation, no separate screens.
+      renderScenario(btn.dataset.action);
+    });
+  });
+
+  // Chat header close -> back to Dashboard
+  document.getElementById('chatCloseBtn').addEventListener('click', ()=>{
+    // Minimize: return to the embedded companion in the portal, collapsed to its pill
+    goToScreen('s9');
+    var p2=document.getElementById('s9Panel'), pill2=document.getElementById('s9MiniPill');
+    if(p2) p2.style.display='none'; if(pill2) pill2.style.display='flex';
+  });
+
+  // Chat input row -> demo asking the example Death Benefit question
+  document.getElementById('chatInputDemo').addEventListener('click', ()=> renderScenario('qa'));
+
+  // Default state: no user selected yet, start screen shown, preview strip hidden
+</script>
+</body>
+</html>
