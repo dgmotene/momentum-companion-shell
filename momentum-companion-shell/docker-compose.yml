@@ -1,10 +1,10 @@
-# Recommended: `docker-compose up db` starts Postgres with pgvector and
+# Recommended: `docker compose up -d db` starts Postgres with pgvector and
 # applies seed.sql on first boot. You then run the three Node apps yourself
 # with npm (see README) instead of in Docker, since installing dependencies
 # inside containers on every start is slow and not worth it for this project.
 #
-# You can also run everything in Docker with `docker-compose --profile full up`,
-# but it's slower to start.
+# You can also run everything in Docker with `docker compose --profile full up`
+# (no local Node needed), but it's slower to start.
 
 services:
   db:
@@ -32,7 +32,7 @@ services:
     command: sh -c "npm install && npm run dev"
     environment:
       COMPANION_BACKEND_PORT: 4000
-      JWT_PUBLIC_KEY_PATH: /keys/public.pem
+      HOST_ORIGIN: http://host:3000
       COMPANION_ALLOWED_ORIGIN: http://localhost:3001
       # Gateway credentials only ever live here (placeholders come from .env.example).
       GATEWAY_OAUTH_CLIENT_ID: ${GATEWAY_OAUTH_CLIENT_ID:-placeholder}
@@ -43,10 +43,20 @@ services:
       - "4000:4000"
     volumes:
       - ./companion-backend:/app
-      - ./keys:/keys:ro
     depends_on:
       db:
         condition: service_healthy
+
+  # One-shot: generates the mock RS256 keypair into ./keys if it is missing,
+  # so the full profile needs no local Node at all.
+  keys:
+    profiles: ["full"]
+    image: node:20-alpine
+    working_dir: /app
+    command: node scripts/generate-keys.mjs
+    volumes:
+      - ./scripts:/app/scripts:ro
+      - ./keys:/app/keys
 
   host:
     profiles: ["full"]
@@ -56,11 +66,15 @@ services:
     environment:
       NEXT_PUBLIC_COMPANION_ORIGIN: http://localhost:3001
       JWT_PRIVATE_KEY_PATH: /keys/private.pem
+      JWT_PUBLIC_KEY_PATH: /keys/public.pem
     ports:
       - "3000:3000"
     volumes:
       - ./host:/app
       - ./keys:/keys:ro
+    depends_on:
+      keys:
+        condition: service_completed_successfully
 
   companion:
     profiles: ["full"]

@@ -2,7 +2,7 @@
 //
 // This runs server-side (in the host), so the private key never gets sent to
 // the browser. The companion backend later checks this signature using the
-// public key it exposes at /.well-known/jwks.json.
+// public key the host publishes at /.well-known/jwks.json.
 //
 // Note: this token only proves who the user is. It has nothing to do with
 // the Momentum AI Gateway credentials, which live only in the backend's env.
@@ -18,20 +18,21 @@ const KEY_PATH =
   process.env.JWT_PRIVATE_KEY_PATH ?? path.join(process.cwd(), "..", "keys", "private.pem");
 const KID = "mock-key-1";
 
-// Fake user profiles, matching the rows in db/seed.sql. If a policyholder
-// is marked deceased, their linked beneficiary gets a more restricted role.
+// Fake user profiles, matching the rows in db/seed.sql. On a beneficiary's
+// token, deceased_flag refers to their linked policyholder; it is what
+// unlocks the restricted role.
 const PERSONAS: Record<string, Record<string, unknown>> = {
   policyholder: {
-    sub: "user-001",
+    sub: "user-001", // Thandi Mokoena
     role: "policyholder",
-    policyId: "POL-1001",
-    deceased: false,
+    policy_id: "POL-1001",
+    deceased_flag: false,
   },
   beneficiary: {
-    sub: "user-003",
+    sub: "user-003", // Sipho Dlamini, on his late mother's policy
     role: "beneficiary",
-    policyId: "POL-1002", // linked to a policyholder profile with deceased = true
-    deceased: true,
+    policy_id: "POL-1002",
+    deceased_flag: true,
   },
 };
 

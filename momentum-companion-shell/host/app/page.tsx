@@ -39,8 +39,9 @@ export default function HostPortal() {
     setStatus(`Logged in as ${p}. Token will be handed to the companion iframe.`);
   }
 
-  // Send the token to the companion iframe. We also resend it whenever the
-  // iframe (re)loads, so a refresh doesn't leave the companion without a token.
+  // Send the token when the companion announces it is ready (COMPANION_READY).
+  // The companion re-announces on every (re)load, so that covers reloads too;
+  // the immediate send covers a companion that was ready before login.
   useEffect(() => {
     if (!token) return;
     const send = () => {
@@ -49,10 +50,13 @@ export default function HostPortal() {
         COMPANION_ORIGIN // never "*"
       );
     };
-    const iframe = iframeRef.current;
-    iframe?.addEventListener("load", send);
+    const onReady = (event: MessageEvent) => {
+      if (event.origin !== COMPANION_ORIGIN) return;
+      if (event.data?.type === "COMPANION_READY") send();
+    };
+    window.addEventListener("message", onReady);
     send();
-    return () => iframe?.removeEventListener("load", send);
+    return () => window.removeEventListener("message", onReady);
   }, [token]);
 
   return (

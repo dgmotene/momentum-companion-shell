@@ -3,43 +3,26 @@
 // real route (verify) and Express is simpler to read.
 //
 // What this service does:
-//   - serves a mock JWKS endpoint (the public key, in JWT format)
 //   - verifies the identity JWT (signature, issuer, audience, expiry)
+//     against the public key the host publishes at /.well-known/jwks.json
 //   - will be the only place that holds the Momentum AI Gateway credentials
 //   - everything else below is just a stub for now, no real AI logic yet
 
 import express from "express";
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { importSPKI, exportJWK, createLocalJWKSet, jwtVerify } from "jose";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { createRemoteJWKSet, jwtVerify } from "jose";
 
 const PORT = Number(process.env.COMPANION_BACKEND_PORT ?? 4000);
 const ISSUER = process.env.JWT_ISSUER ?? "https://mock-host.local";
 const AUDIENCE = process.env.JWT_AUDIENCE ?? "companion-backend";
-const PUBLIC_KEY_PATH =
-  process.env.JWT_PUBLIC_KEY_PATH ??
-  path.join(__dirname, "..", "..", "keys", "public.pem");
+const HOST_ORIGIN = process.env.HOST_ORIGIN ?? "http://localhost:3000";
 const ALLOWED_ORIGIN =
   process.env.COMPANION_ALLOWED_ORIGIN ?? "http://localhost:3001";
-const KID = "mock-key-1";
 
-// Build the mock JWKS once when the server starts, from the generated public key.
-let jwks;
-try {
-  const pem = readFileSync(PUBLIC_KEY_PATH, "utf8");
-  const key = await importSPKI(pem, "RS256");
-  const jwk = await exportJWK(key);
-  jwks = { keys: [{ ...jwk, kid: KID, alg: "RS256", use: "sig" }] };
-} catch {
-  console.error(
-    `Public key not found at ${PUBLIC_KEY_PATH}. Run \`npm run setup\` at the repo root first.`
-  );
-  process.exit(1);
-}
-const localJWKS = createLocalJWKSet(jwks);
+// Fetch the host's public key from its JWKS endpoint (cached by jose).
+// The backend can verify tokens but never holds a key that could sign one.
+const hostJWKS = createRemoteJWKSet(
+  new URL(`${HOST_ORIGIN}/.well-known/jwks.json`)
+);
 
 const app = express();
 app.use(express.json());
@@ -53,13 +36,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// GET /.well-known/jwks.json
-// Publishes our public key so tokens can be verified against it, instead of
-// just hardcoding a check somewhere. This is how real OIDC providers do it too.
-app.get("/.well-known/jwks.json", (_req, res) => {
-  res.json(jwks);
-});
-
 // POST /api/verify
 // The only real security logic in this skeleton right now. Checks the token's
 // signature, issuer, audience, and expiry. Every protected route we add later
@@ -68,16 +44,27 @@ app.post("/api/verify", async (req, res) => {
   const token = req.body?.token;
   if (!token) return res.status(400).json({ error: "token required" });
   try {
-    const { payload } = await jwtVerify(token, localJWKS, {
+    const { payload } = await jwtVerify(token, hostJWKS, {
       issuer: ISSUER,
       audience: AUDIENCE,
       algorithms: ["RS256"],
     });
-    // TODO: if the linked policyholder is deceased, downgrade this user to
-    // the restricted Beneficiary role here on the backend, not in the UI.
+    // TODO: apply the role + deceased_flag rules here on the backend, not in
+    // the UI: beneficiary + flag true = Q&A and claims only; flag false = no
+    // access to the policy yet. When cross-checking against the profiles
+    // table, resolve the flag via linked_to (the beneficiary's claim mirrors
+    // the linked policyholder's row, not their own).
     return res.json({ verified: true, claims: payload });
   } catch (err) {
-    return res.status(401).json({ verified: false, error: err.code ?? "invalid token" });
+    // No jose error code (or a JWKS timeout) means the key fetch itself
+    // failed: a setup problem, not a bad token.
+    if (!err.code || err.code === "ERR_JWKS_TIMEOUT") {
+      return res.status(503).json({
+        verified: false,
+        error: `could not fetch the signing key from ${HOST_ORIGIN}/.well-known/jwks.json; is the host running?`,
+      });
+    }
+    return res.status(401).json({ verified: false, error: err.code });
   }
 });
 
@@ -121,6 +108,5 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 
 app.listen(PORT, () => {
   console.log(`companion-backend listening on http://localhost:${PORT}`);
-  console.log(`  JWKS:   GET  /.well-known/jwks.json`);
-  console.log(`  Verify: POST /api/verify`);
+  console.log(`  Verify: POST /api/verify (JWKS from ${HOST_ORIGIN}/.well-known/jwks.json)`);
 });

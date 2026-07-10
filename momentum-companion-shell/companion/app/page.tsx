@@ -10,7 +10,7 @@
 //      real security check, that happens on the backend).
 //   4. Sends the token to the companion backend's /api/verify route.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ALLOWED_PARENT_ORIGINS } from "../lib/origins";
 
 const BACKEND_URL =
@@ -32,6 +32,7 @@ export default function Companion() {
   const [claims, setClaims] = useState<Claims | null>(null);
   const [verify, setVerify] = useState<string>("Waiting for identity token from host…");
   const [rejected, setRejected] = useState<string | null>(null);
+  const lastToken = useRef<string | null>(null);
 
   useEffect(() => {
     async function onMessage(event: MessageEvent) {
@@ -43,6 +44,8 @@ export default function Companion() {
       if (event.data?.type !== "COMPANION_IDENTITY_TOKEN") return;
 
       const token: string = event.data.token;
+      if (token === lastToken.current) return; // the host may resend; verify once
+      lastToken.current = token;
       setClaims(decodeUnverified(token));
 
       // The backend does the actual security check: signature, issuer,
@@ -57,14 +60,22 @@ export default function Companion() {
         const body = await res.json();
         setVerify(
           res.ok
-            ? `Backend verified ✔ role=${body.claims?.role}, policyId=${body.claims?.policyId}`
-            : `Backend rejected token (401): ${body.error ?? "invalid"}`
+            ? `Backend verified ✔ role=${body.claims?.role}, policy_id=${body.claims?.policy_id}`
+            : `Backend rejected token (${res.status}): ${body.error ?? "invalid"}`
         );
       } catch {
         setVerify("Could not reach companion backend. Is it running on :4000?");
       }
     }
     window.addEventListener("message", onMessage);
+    // Tell the host we are ready, so it can send (or resend) the token.
+    // Announce to every allowlisted origin; the browser silently drops the
+    // ones that don't match the actual parent.
+    if (window.parent !== window) {
+      for (const origin of ALLOWED_PARENT_ORIGINS) {
+        window.parent.postMessage({ type: "COMPANION_READY" }, origin);
+      }
+    }
     return () => window.removeEventListener("message", onMessage);
   }, []);
 

@@ -6,6 +6,7 @@
   "scripts": {
     "setup": "node scripts/generate-keys.mjs",
     "install:all": "npm --prefix host install && npm --prefix companion install && npm --prefix companion-backend install",
+    "dev": "npm run dev:backend & npm run dev:companion & npm run dev:host & wait",
     "dev:host": "npm --prefix host run dev",
     "dev:companion": "npm --prefix companion run dev",
     "dev:backend": "npm --prefix companion-backend run dev"
