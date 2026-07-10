@@ -34,17 +34,14 @@ _Your answer here._
 
 ## 2. Technical Stack
 
-> List the concrete choices and a one-line justification for each. Tie choices back to the constraints
-> (stateless gateway, small chat model, no managed RAG, bring-your-own vector store).
-
 | Layer | Choice | Why (tie to constraints) |
 |---|---|---|
-| Host (parent) application | | |
-| Embedded companion frontend (React/Next.js) | | |
-| Companion backend (Python / Node.js) | | |
-| Datastore (profiles, policy data, sessions) | | |
-| Vector store (pgvector / SQLite / in-memory / other) | | |
-| Orchestration framework (Spring AI / OpenAI SDK / LangChain / custom) | | |
+| Host (parent) application | Next.js (mock insurer portal) | The brief's reference shape: a portal that already knows the user. Kept deliberately thin; it exists to issue identity and embed the companion, not to be a product itself |
+| Embedded companion frontend (React/Next.js) | Next.js + TypeScript, own origin, loaded in iframes by a small loader | Chosen over a script-embed widget, which would run the chat inside the host page where any script can read the token. The iframe's cost is a rigid frame; the loader performs open, minimize and expand on the widget's request, and the token never leaves the companion origin |
+| Companion backend (Python / Node.js) | Node.js (Express + TypeScript) | Avoids the gateway's documented Python SDK structured-output bug; regardless of SDK, all model JSON is prompt-enforced and schema-validated server-side (zod) with a bounded re-prompt, so no SDK feature is load-bearing. One language across the stack. The cost: Python's stronger PDF tooling; because ingestion is a standalone script, that option stays open without touching the backend |
+| Datastore (profiles, policy data, sessions) | PostgreSQL | Chosen over SQLite's zero-setup: real transactions (a chat turn and its audit entry commit together), an audit log that survives restarts, and true concurrent writes, where SQLite permits one writer at a time, a real limit once every chat turn writes a session update and an audit entry. The cost is a judge-side dependency, absorbed by docker-compose, documented native setup, and a committed seed |
+| Vector store (pgvector / SQLite / in-memory / other) | Postgres + pgvector (same instance) | Chosen over in-memory (vanishes on restart, boot would need the gateway) and SQLite (no native vector search). With Postgres already in the stack, pgvector costs nothing extra to adopt early, and gives native cosine search beside the app data, SQL filtering in the same query, and a built-in scale path (HNSW) for the full guide at finals; no migration story needed |
+| Orchestration framework (Spring AI / OpenAI SDK / LangChain / custom) | Custom: hand-rolled two-step classify-then-act over the OpenAI-compatible chat API | Chosen over LangChain, whose agent abstractions assume the tool-calling this gateway lacks. The cost: two model calls per turn and every line ours to maintain; acceptable because Haiku is fast and cheap, and the role check between the calls stays deterministic |
 
 ---
 
@@ -75,12 +72,30 @@ _Your answer here._
 
 ## 4. Grounded Policy Q&A (RAG)
 
-> There is no managed RAG API; retrieval is your responsibility.
+- **Ingestion pipeline:** a standalone script, run once, offline. It splits the guide
+  along its own headings into parent sections (kept whole), sub-splits each into small
+  child pieces of a few hundred tokens, embeds the children through the gateway
+  (`titan-embed-text-v2`), and stores child embeddings and parent text side by side in
+  pgvector. The backend never depends on this at startup; a fixed-size splitter is the
+  fallback for long or unstructured sections.
 
-- **Ingestion pipeline:** _how the supplied policy documents are loaded, chunked, and embedded._
-- **Vector store choice and justification:** _pgvector vs SQLite vs in-memory arrays, and why for this scale._
-- **Retrieval and grounding:** _top-k, similarity metric, how context is assembled into the prompt._
-- **Contextual honesty:** _how the assistant stays inside the documents and explicitly declines out-of-scope requests._
+- **Vector store choice and justification:** pgvector over SQLite and in-memory arrays.
+  In-memory vectors vanish on restart and tie boot to gateway availability; SQLite
+  persists but has no vector search, leaving the similarity maths in our code. pgvector
+  searches natively, lives in the same database as profiles, sessions and the audit log,
+  and is already the honest answer at finals scale. Full reasoning in
+  [docs/architecture-decisions.md](docs/architecture-decisions.md).
+
+- **Retrieval and grounding:** the question is embedded via the gateway, matched by
+  cosine similarity against the child pieces (top 3 to 5), and each match is swapped for
+  its full parent section before prompting, so the small model sees whole clauses with
+  their rules and exclusions. The prompt is those parent sections plus the trimmed
+  session history plus the question.
+
+- **Contextual honesty:** enforced in code, not hoped for in prompts. If no child scores
+  above the similarity threshold, the backend declines with the approved fallback
+  response and the model is never called. When it does answer, it cites the section
+  heading it used, as in "per the Cooling-off section, 31 days".
 
 ---
 
