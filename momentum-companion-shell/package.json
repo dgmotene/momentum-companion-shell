@@ -1,0 +1,13 @@
+{
+  "name": "momentum-companion-shell",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Environment Shell for the Accessible Life Insurance AI Companion (design-round skeleton). No AI features implemented — see SUBMISSION.md for the architecture this scaffolding maps to.",
+  "scripts": {
+    "setup": "node scripts/generate-keys.mjs",
+    "install:all": "npm --prefix host install && npm --prefix companion install && npm --prefix companion-backend install",
+    "dev:host": "npm --prefix host run dev",
+    "dev:companion": "npm --prefix companion run dev",
+    "dev:backend": "npm --prefix companion-backend run dev"
+  }
+}

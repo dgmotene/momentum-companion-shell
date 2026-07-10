@@ -1,0 +1,79 @@
+# Recommended: `docker-compose up db` starts Postgres with pgvector and
+# applies seed.sql on first boot. You then run the three Node apps yourself
+# with npm (see README) instead of in Docker, since installing dependencies
+# inside containers on every start is slow and not worth it for this project.
+#
+# You can also run everything in Docker with `docker-compose --profile full up`,
+# but it's slower to start.
+
+services:
+  db:
+    image: pgvector/pgvector:pg15
+    container_name: companion-db
+    environment:
+      POSTGRES_USER: companion
+      POSTGRES_PASSWORD: companion
+      POSTGRES_DB: companion
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U companion -d companion"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  companion-backend:
+    profiles: ["full"]
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    environment:
+      COMPANION_BACKEND_PORT: 4000
+      JWT_PUBLIC_KEY_PATH: /keys/public.pem
+      COMPANION_ALLOWED_ORIGIN: http://localhost:3001
+      # Gateway credentials only ever live here (placeholders come from .env.example).
+      GATEWAY_OAUTH_CLIENT_ID: ${GATEWAY_OAUTH_CLIENT_ID:-placeholder}
+      GATEWAY_OAUTH_CLIENT_SECRET: ${GATEWAY_OAUTH_CLIENT_SECRET:-placeholder}
+      GATEWAY_BASE_URL: ${GATEWAY_BASE_URL:-https://riskservicesdev.momentum.co.za/ai/api}
+      DATABASE_URL: postgres://companion:companion@db:5432/companion
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./companion-backend:/app
+      - ./keys:/keys:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  host:
+    profiles: ["full"]
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    environment:
+      NEXT_PUBLIC_COMPANION_ORIGIN: http://localhost:3001
+      JWT_PRIVATE_KEY_PATH: /keys/private.pem
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./host:/app
+      - ./keys:/keys:ro
+
+  companion:
+    profiles: ["full"]
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    environment:
+      NEXT_PUBLIC_HOST_ORIGIN: http://localhost:3000
+      NEXT_PUBLIC_COMPANION_BACKEND_URL: http://localhost:4000
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./companion:/app
+
+volumes:
+  dbdata:
