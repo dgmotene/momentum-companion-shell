@@ -453,12 +453,14 @@ shell's README for that path).
 ```bash
 git clone https://github.com/MnR-Hackathon-Group-C/nullius-in-verba.git
 cd nullius-in-verba/momentum-companion-shell
-
-npm run setup                  # one-time: mock RS256 keypair (git-ignored)
-docker compose up -d db        # Postgres + pgvector, seeds itself on first boot
-npm run install:all            # dependencies for all three services
-npm run dev                    # backend :4000, companion :3001, host :3000
+npm run quickstart
 ```
+
+`quickstart` chains four steps, each safe to re-run and available individually:
+`npm run setup` (mock RS256 keypair, git-ignored), `docker compose up -d db`
+(Postgres + pgvector, seeds itself on first boot), `npm run install:all`, and
+`npm run dev` (backend :4000, companion :3001, host :3000). Without Docker it
+skips the database and carries on; the hello-world flow does not touch it yet.
 
 Open **http://localhost:3000**, log in as Policyholder or Beneficiary, and watch the
 companion iframe receive the token and report the backend's verification, including the

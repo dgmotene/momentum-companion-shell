@@ -34,7 +34,15 @@ read by `companion-backend`.
 
 ```bash
 git clone <repo-url> && cd nullius-in-verba/momentum-companion-shell
+npm run quickstart
+```
 
+`quickstart` runs the four steps below in order; every step is safe to re-run.
+If Docker is not available it skips the database and carries on, since the
+hello-world flow does not touch it yet. Use the steps individually when you
+only need one:
+
+```bash
 # 1. Generate the mock RS256 keypair (writes keys/private.pem, keys/public.pem)
 npm run setup
 

@@ -34,6 +34,7 @@ Then open **http://localhost:3000**, log in as Policyholder or Beneficiary,
 and watch the embedded companion receive its identity token and report the
 backend's verification.
 
-For the faster npm dev loop, the sanity checks, and the no-Docker fallback,
-see the [shell's README](momentum-companion-shell/README.md) or SUBMISSION.md
-section 12.
+With Node 20+ installed, `npm run quickstart` inside `momentum-companion-shell/`
+does the same over the faster npm path. For the individual steps, sanity checks
+and the no-Docker fallback, see the
+[shell's README](momentum-companion-shell/README.md) or SUBMISSION.md section 12.
