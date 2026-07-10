@@ -203,10 +203,15 @@ The prompt stays a constant size while the facts that matter never fall out of v
         [ "What if I lower my cover to R1 000 000?" ]
                        │
                        ▼
-        THE BACKEND checks the role:
-          Beneficiary? ──► REFUSED and audited,
-                       │   before anything runs
+        THE BACKEND asks THE MODEL to name the
+        intent: "whatif" (a model call that
+        performs nothing)
+                       │
                        ▼
+        THE BACKEND checks the role:
+          Beneficiary? ──► REFUSED and audited, replied
+                       │   with a fixed template; no action
+                       ▼   runs, no second model call
         ┌─────────────────────────────┐
         │  Backend-only formula       │  new = max(200, current ×
         │  (THE BACKEND's maths,      │  (requested / current sum) × factor)
@@ -229,9 +234,14 @@ The prompt stays a constant size while the facts that matter never fall out of v
         [ "I've moved, here's my new address" ]
                        │
                        ▼
-        THE BACKEND checks the role:
-          Beneficiary? ──► REFUSED and audited
+        THE BACKEND asks THE MODEL to name the
+        intent: "update" (a model call that
+        performs nothing)
                        │
+                       ▼
+        THE BACKEND checks the role:
+          Beneficiary? ──► REFUSED and audited, replied
+                       │   with a fixed template
                        ▼
         ┌─────────────────────────────┐
         │  Conversational capture     │  THE MODEL asks for what is missing,
@@ -255,6 +265,12 @@ The prompt stays a constant size while the facts that matter never fall out of v
               [ "I need to claim" ]
                        │
                        ▼
+        THE BACKEND asks THE MODEL to name the
+        intent: "claim" (a model call that
+        performs nothing); the role gate passes,
+        both roles may claim
+                       │
+                       ▼
         ┌─────────────────────────────┐
         │     What kind of claim?     │  THE MODEL asks gently; THE BACKEND
         └──────────────┬──────────────┘  classifies: death / funeral / income /
@@ -262,8 +278,11 @@ The prompt stays a constant size while the facts that matter never fall out of v
         ┌─────────────────────────────┐
         │  Checklist for that type,   │  THE BACKEND's state machine derives
         │  tracked by a server-side   │  it, e.g. funeral: death certificate
-        │  state machine              │  + ID; send things in any order,
-        └──────────────┬──────────────┘  never asked twice
+        │  state machine              │  + ID. A set deceased flag means the
+        └──────────────┬──────────────┘  certificate is already on file and
+                       │                 pre-ticked, never requested from the
+                       │                 bereaved; the rest can arrive in any
+                       │                 order, nothing asked twice
                        ▼
         ┌─────────────────────────────┐
         │  Documents ticked off as    │  THE BACKEND tracks arrivals; upload
@@ -290,9 +309,10 @@ The prompt stays a constant size while the facts that matter never fall out of v
 **Sipho files a claim.** Sipho's mother passed away recently. He logs into the portal and
 the assistant already knows he is her beneficiary, so it only offers what he is allowed to
 do: ask questions and claim. It gently tells him which documents a funeral claim needs,
-lets him send them in any order, keeps track of what is still missing so he is never asked
-twice, and tells him honestly that assessment takes up to 3 working days once everything
-is in. If the conversation shows distress, a human is offered immediately.
+and the death certificate is already ticked off: his mother's death was verified when the
+deceased flag was set, so he is never asked for it. He can send the rest in any order,
+nothing is asked twice, and he is told honestly that assessment takes up to 3 working days
+once everything is in. If the conversation shows distress, a human is offered immediately.
 
 **Thandi checks a What-If.** Thandi wonders what happens to her premium if she lowers her
 cover. The assistant runs the numbers using Momentum's own formula (a backend calculation,
