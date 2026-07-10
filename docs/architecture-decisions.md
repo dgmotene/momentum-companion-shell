@@ -36,7 +36,7 @@ A few other facts shaped the decisions:
 | 3 | JWT signing scheme | RS256 signed tokens with a mock JWKS endpoint |
 | 4 | Embedding mechanism | iframe with postMessage handoff |
 | 5 | Orchestration pattern | Classify first, then act, built by hand |
-| 6 | Session memory shape | Recent messages plus a running summary card |
+| 6 | Session memory shape | Recent messages plus a pinned workflow-state card |
 | 7 | Workflow state location | The backend keeps the state, not the model |
 | 8 | App datastore | Same Postgres database, separate tables |
 | 9 | Ingestion timing | A one-time script, seed data committed to the repo |
@@ -143,6 +143,11 @@ user's token and the conversation. The last option, making the chat just another
 the portal, removes the separation entirely. This blurs the security boundary, as the
 brief warns.
 
+One nuance: the full design does place one small script in the host page, the loader that
+injects and repositions the chat frames (the launcher pill and the panel). It renders no
+UI and never touches the token, so the risk that ruled out script widgets does not apply
+to it.
+
 ## Decision 5: Orchestration pattern (tool-calling without tool-calling)
 
 Modern AI platforms let a model trigger actions directly, a feature called tool-calling.
@@ -180,10 +185,11 @@ reply never reaches the user.
 Because the gateway remembers nothing, every request must carry whatever the model needs to
 know about the conversation so far.
 
-We send the last six to ten messages, together with a small structured card that our code
-keeps up to date: which task the user is busy with, what information they have already
-given, and what their role allows. The card is always included, however old the facts on it
-are. The prompt therefore stays roughly the same size forever, while the facts that matter
+We send the last six to ten messages, together with a small structured card, the
+workflow-state card, that our code keeps up to date: which journey the user is busy with,
+which fields they have already given, and which are still missing. The session separately
+records a snapshot of the user's role. The card is always included, however old the facts
+on it are. The prompt therefore stays roughly the same size forever, while the facts that matter
 never fall out of view. For a small model, a compact "here is where we are" note works
 better than pages of transcript.
 
@@ -285,8 +291,8 @@ so it ships with:
 - Plain instructions for running against a locally installed Postgres (version 15 or newer
   with pgvector), because Docker is a convenience and must never be the only way to run the
   project.
-- The committed seed file, seed.sql, containing the schema, the mock profiles and the
-  pre-embedded policy guide, so the backend starts with data even on placeholder gateway
-  credentials.
+- The committed seed file, seed.sql, containing the schema and the mock profiles, with
+  the documents table ready for the guide. The guide's own rows arrive via the standalone
+  ingest script once real gateway credentials exist; the backend runs fine without them.
 - A single DATABASE_URL environment variable whose default matches the compose file, so the
   standard path needs no configuration at all.
