@@ -16,7 +16,7 @@
 | Field | Value |
 |---|---|
 | Team name | Nullius In Verba |
-| Team members (and who speaks to what in the video) | Vutomi Khosa (the problem and Lumina intro), Thabani Hlatshwayo (architecture and the key trade-off), Dalton Motene (access control and the deceased flag), Modise Mogane (grounded AI and empathetic claims), Katlego Mtimane (trade-offs and the plan for finals) |
+| Team members (and who speaks to what in the video) | Vutomi Khosa (the problem and Lumina intro), Thabani Hlatshwayo (architecture and the key trade-off), Dalton Motene (access control and the deceased flag),Katlego Mtimane (grounded AI and empathetic claims),  Modise Mogane (trade-offs and the plan for finals) |
 | Repository link (GitHub / GitLab) | https://github.com/MnR-Hackathon-Group-C/nullius-in-verba |
 | Walkthrough video link (mandatory, 3–5 min) | |
 | Architecture diagram location (file / link) | [architecture-diagram.html](architecture-diagram.html), repo root, viewable without cloning at https://host-html.com/p/kpzzj1: the four trust zones, both model calls per turn, and the two credential paths that never meet. The same architecture as mermaid in [docs/architecture.md](docs/architecture.md) and in plain language in [docs/how-it-works.md](docs/how-it-works.md) |
