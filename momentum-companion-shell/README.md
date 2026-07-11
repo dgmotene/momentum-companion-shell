@@ -56,9 +56,9 @@ npm run install:all
 npm run dev              # backend :4000, companion :3001, host :3000
 ```
 
-`npm run dev` needs a POSIX shell (Linux, macOS, Git Bash). To run the
-services separately instead: `npm run dev:backend`, `npm run dev:companion`,
-`npm run dev:host`.
+`npm run dev` runs the three services together (via `concurrently`, so it works
+on Windows too); Ctrl-C stops all of them. To run the services separately
+instead: `npm run dev:backend`, `npm run dev:companion`, `npm run dev:host`.
 
 Then open **http://localhost:3000**, click **Log in as Policyholder** or
 **Log in as Beneficiary**, and watch the embedded companion receive the token

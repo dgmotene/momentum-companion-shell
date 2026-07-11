@@ -464,11 +464,12 @@ skips the database and carries on; the hello-world flow does not touch it yet.
 
 Open **http://localhost:3000**, log in as Policyholder or Beneficiary, and watch the
 companion iframe receive the token and report the backend's verification, including the
-role and deceased-flag claims. `npm run dev` needs a POSIX shell; the services can also
-be run separately (`npm run dev:backend`, `dev:companion`, `dev:host`). Alternatively
-the whole project comes up with Docker alone, no local Node needed:
-`docker compose --profile full up` generates the keys, seeds the database and starts
-all three services (slower first start).
+role and deceased-flag claims. `npm run dev` starts the three services together and
+works on Windows, macOS and Linux; they can also be run separately
+(`npm run dev:backend`, `dev:companion`, `dev:host`). Alternatively the whole project
+comes up with Docker alone, no local Node needed: `docker compose --profile full up`
+generates the keys, seeds the database and starts all three services (slower first
+start).
 
 Environment variables: every variable in the codebase is listed in
 `momentum-companion-shell/.env.example` with placeholder values. The gateway OAuth2
