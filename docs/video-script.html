@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lumina · Video Script · Nullius In Verba</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #006D77;
+    --teal-dark: #00505A;
+    --blue-tint: #EAF9F7;
+    --amber-tint: #FDF1E6;
+    --amber-text: #9A5B22;
+    --green: #52B788;
+    --green-tint: #EAF7F0;
+    --ink: #1F2933;
+    --ink-soft: #52606D;
+    --ink-faint: #8A9199;
+    --border: #E7E5E1;
+    --sand: #F6F6F3;
+    --bg: #FAFAF7;
+    --shadow: 0 4px 24px rgba(20,30,30,0.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    padding: 48px 24px;
+  }
+  .serif { font-family: 'Fraunces', Georgia, serif; font-weight: 500; }
+  .page { max-width: 880px; margin: 0 auto; }
+
+  /* Header */
+  .doc-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 28px;
+    border-bottom: 2px solid var(--border);
+  }
+  .doc-eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--teal);
+    background: var(--blue-tint);
+    padding: 5px 14px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+  }
+  .doc-header h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    font-size: 32px;
+    color: var(--teal-dark);
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .doc-header p {
+    font-size: 15px;
+    color: var(--ink-faint);
+  }
+  .doc-meta {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    flex-wrap: wrap;
+  }
+  .doc-meta span { display: flex; align-items: center; gap: 6px; }
+  .doc-meta b { color: var(--teal-dark); font-weight: 600; }
+
+  /* Section headers */
+  .section {
+    margin: 44px 0 24px;
+  }
+  .section-title {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .section-title h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    font-size: 22px;
+    color: var(--teal-dark);
+  }
+  .section-title .rule {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Timing block */
+  .timing {
+    background: var(--sand);
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 2;
+    color: var(--ink-soft);
+  }
+  .timing .time { color: var(--teal); font-weight: 700; margin-right: 12px; }
+  .timing .speaker { color: var(--ink); font-weight: 600; }
+
+  /* Setup checklist */
+  .checklist {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 26px;
+  }
+  .checklist ol { list-style: none; counter-reset: step; }
+  .checklist li {
+    counter-increment: step;
+    padding: 10px 0;
+    padding-left: 34px;
+    position: relative;
+    font-size: 14px;
+    color: var(--ink-soft);
+    border-bottom: 1px dashed var(--border);
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 8px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--teal);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+  }
+  .checklist code {
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 12px;
+    background: var(--sand);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--teal-dark);
+  }
+
+  /* Speaker card */
+  .speaker-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+  }
+  .speaker-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 22px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .speaker-num {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .speaker-head h3 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    font-size: 20px;
+    color: var(--teal-dark);
+    margin-bottom: 2px;
+  }
+  .speaker-head .role { font-size: 13px; color: var(--ink-faint); }
+  .speaker-head .time {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--teal);
+    font-weight: 700;
+    background: var(--blue-tint);
+    padding: 5px 12px;
+    border-radius: 6px;
+  }
+
+  .lbl {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+    margin-top: 18px;
+  }
+  .lbl:first-of-type { margin-top: 0; }
+
+  .on-screen {
+    background: var(--blue-tint);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+  }
+
+  .actions-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .actions-table th, .actions-table td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--ink-soft);
+  }
+  .actions-table th {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--ink-faint);
+    background: var(--sand);
+  }
+  .actions-table td:first-child { font-weight: 500; color: var(--ink); width: 55%; }
+  .actions-table td code, .actions-table th code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    background: white;
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--teal-dark);
+    border: 1px solid var(--border);
+  }
+
+  .script {
+    background: #FEFDF9;
+    border-left: 3px solid var(--teal);
+    border-radius: 4px 8px 8px 4px;
+    padding: 18px 22px;
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.75;
+    color: #2B3333;
+  }
+  .script p + p { margin-top: 14px; }
+  .script b { font-weight: 600; color: var(--teal-dark); font-family: 'Inter', sans-serif; }
+  .script em {
+    font-style: normal;
+    background: var(--amber-tint);
+    color: var(--amber-text);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .handoff {
+    margin-top: 16px;
+    padding: 10px 14px;
+    background: var(--green-tint);
+    border-radius: 8px;
+    font-size: 12.5px;
+    color: #1E7A54;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .handoff::before {
+    content: "→";
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  /* Demo prompts callout */
+  .prompts-callout {
+    background: var(--amber-tint);
+    border: 1px solid #F0C48A;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 24px 0;
+  }
+  .prompts-callout h3 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--amber-text);
+    margin-bottom: 12px;
+  }
+  .prompts-callout .prompt {
+    background: white;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-top: 10px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ink);
+    border-left: 3px solid var(--amber-text);
+  }
+  .prompts-callout .prompt strong { color: var(--amber-text); }
+  .prompts-callout .prompt-q {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--sand);
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: var(--teal-dark);
+    font-size: 12.5px;
+  }
+
+  /* Tips */
+  .tips {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+  }
+  .tips h3 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    font-size: 17px;
+    color: var(--teal-dark);
+    margin-bottom: 14px;
+  }
+  .tips ul {
+    list-style: none;
+  }
+  .tips li {
+    padding: 8px 0 8px 22px;
+    position: relative;
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .tips li::before {
+    content: "";
+    position: absolute;
+    left: 4px; top: 15px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+  }
+  .tips li b { color: var(--ink); font-weight: 600; }
+
+  /* Footer */
+  .foot {
+    text-align: center;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+
+  @media print {
+    body { background: white; padding: 20px; }
+    .speaker-card, .checklist, .tips, .prompts-callout { break-inside: avoid; box-shadow: none; }
+    .doc-header, .section-title h2 { color: black; }
+  }
+
+  @media (max-width: 640px) {
+    body { padding: 20px 12px; }
+    .speaker-card { padding: 20px 18px; }
+    .checklist { padding: 16px 18px; }
+    .doc-header h1 { font-size: 24px; }
+    .doc-meta { gap: 12px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="doc-header">
+    <div class="doc-eyebrow">Concept Walkthrough</div>
+    <h1>Lumina — Video Script</h1>
+    <p>The recording plan for the virtual-phase submission video.</p>
+    <div class="doc-meta">
+      <span><b>Target length</b> 4:00 (max 5:00)</span>
+      <span><b>Team</b> 5 speakers</span>
+      <span><b>Each block</b> ≈ 45 seconds</span>
+    </div>
+  </div>
+
+  <!-- Timing flow -->
+  <div class="section">
+    <div class="section-title"><h2>Flow at a glance</h2><div class="rule"></div></div>
+    <div class="timing">
+      <div><span class="time">0:00 – 0:10</span> Title slate + team names on screen</div>
+      <div><span class="time">0:10 – 0:55</span> <span class="speaker">Speaker 1</span> · The problem + Lumina intro</div>
+      <div><span class="time">0:55 – 1:45</span> <span class="speaker">Speaker 2</span> · Architecture &amp; key trade-off</div>
+      <div><span class="time">1:45 – 2:35</span> <span class="speaker">Speaker 3</span> · Access control &amp; the deceased flag</div>
+      <div><span class="time">2:35 – 3:25</span> <span class="speaker">Speaker 4</span> · Grounded AI &amp; empathetic claims</div>
+      <div><span class="time">3:25 – 4:00</span> <span class="speaker">Speaker 5</span> · Trade-offs + plan for finals</div>
+      <div><span class="time">4:00 – 4:10</span> Closing slate + repo link</div>
+    </div>
+  </div>
+
+  <!-- Setup -->
+  <div class="section">
+    <div class="section-title"><h2>Setup before recording</h2><div class="rule"></div></div>
+    <div class="checklist">
+      <ol>
+        <li>Open Tab A: <code>docs/lumina-wireframe.html</code> — sit on the <b>Start</b> screen (user selector).</li>
+        <li>Open Tab B: <code>docs/architecture-diagram.html</code> — scrolled to the top.</li>
+        <li>Screen recorder ready (QuickTime → New Screen Recording, or Loom).</li>
+        <li>Do not resize windows during recording. Adjust zoom <b>now</b> if text is too small.</li>
+        <li>Turn off notifications. Silence phones.</li>
+        <li>Do one dry run end-to-end before you hit record — pacing beats perfection.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- Demo prompts baked in -->
+  <div class="section">
+    <div class="section-title"><h2>Demo prompts — pre-rendered in the wireframe</h2><div class="rule"></div></div>
+    <div class="prompts-callout">
+      <h3>Nothing is typed on camera. Speaker 4 clicks; the response is already drawn.</h3>
+      <div class="prompt">
+        <div><strong>Screen 3 · first exchange</strong></div>
+        <div style="margin-top:6px;">Prompt: <span class="prompt-q">What is the cooling-off period?</span> — grounded RAG answer with source citation ("Per the Policy Guide — Cooling-off section, p.4").</div>
+      </div>
+      <div class="prompt">
+        <div><strong>Screen 3 · second exchange</strong></div>
+        <div style="margin-top:6px;">Prompt: <span class="prompt-q">What is my current interest rate?</span> — the exact Appendix A10 honesty fallback line, no invented answer.</div>
+      </div>
+      <div class="prompt">
+        <div><strong>Screen 4 · What-If explorer</strong></div>
+        <div style="margin-top:6px;">Prompt: <span class="prompt-q">What if I reduce my cover to R500 000?</span> — R1M → R500K with the Appendix A4 formula visible; estimated new premium R533 and the trade-off named.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Speaker 1 -->
+  <div class="section">
+    <div class="section-title"><h2>Speaker cards</h2><div class="rule"></div></div>
+
+    <div class="speaker-card">
+      <div class="speaker-head">
+        <div class="speaker-num">1</div>
+        <div style="flex:1;">
+          <h3>The problem &amp; Lumina intro</h3>
+          <div class="role">Problem setter · sets scene, introduces the product</div>
+        </div>
+        <div class="time">0:10 – 0:55</div>
+      </div>
+
+      <div class="lbl">On screen</div>
+      <div class="on-screen">Tab A · Start screen → click <b>Thabo Naidoo</b> (policyholder) → sign in on s0 → land on s1 (dashboard). Stay on s1 as the segment closes.</div>
+
+      <div class="lbl">Click flow</div>
+      <table class="actions-table">
+        <thead><tr><th>When you say…</th><th>Do this</th></tr></thead>
+        <tbody>
+          <tr><td>"…moment they're least able to read a policy guide."</td><td>Click <b>Thabo Naidoo</b> on the Start screen</td></tr>
+          <tr><td>"…lives inside Momentum's client portal."</td><td>Click <b>Sign in</b> on s0</td></tr>
+          <tr><td>"…respectful of who's asking."</td><td>Leave s1 on screen for handoff</td></tr>
+        </tbody>
+      </table>
+
+      <div class="lbl">Script (≈ 110 words)</div>
+      <div class="script">
+        <p>Life insurance is one of the most important products people buy, and one they understand the least. Documents run to hundreds of pages, and the moment someone actually needs support — updating cover, filing a claim — is often the moment they're least able to read a policy guide.</p>
+        <p>We're building <b>Lumina</b>, an accessible AI companion that lives inside Momentum's client portal. It helps policyholders understand their cover in plain language, explore what-if scenarios, update their details conversationally, and guides bereaved beneficiaries through claims with care.</p>
+        <p>Our design has one non-negotiable: the assistant is trustworthy — grounded in Momentum's own documents, honest when it doesn't know, and respectful of who's asking.</p>
+      </div>
+
+      <div class="handoff">"<b>Speaker 2</b> will show how we built the system to keep that promise."</div>
+    </div>
+
+    <!-- Speaker 2 -->
+    <div class="speaker-card">
+      <div class="speaker-head">
+        <div class="speaker-num">2</div>
+        <div style="flex:1;">
+          <h3>Architecture &amp; key trade-off</h3>
+          <div class="role">Systems view · four trust zones</div>
+        </div>
+        <div class="time">0:55 – 1:45</div>
+      </div>
+
+      <div class="lbl">On screen</div>
+      <div class="on-screen">Tab B · <code>architecture-diagram.html</code> — scroll slowly from Trust Zone 1 down through Zones 2, 3, then to the "Why pgvector" callout.</div>
+
+      <div class="lbl">Click flow</div>
+      <table class="actions-table">
+        <thead><tr><th>When you say…</th><th>Do this</th></tr></thead>
+        <tbody>
+          <tr><td>"…four clear trust zones."</td><td>Show top of diagram, Zone 1 visible</td></tr>
+          <tr><td>"…arrives via postMessage with a strict origin allowlist."</td><td>Scroll to reveal Zone 2 (iframe zone)</td></tr>
+          <tr><td>"…verifies the token using the portal's public JWKS endpoint."</td><td>Scroll to Zone 3, point at the amber "two auth flows never cross" banner</td></tr>
+          <tr><td>"…never sees the user token; the browser never sees the gateway credentials."</td><td>Scroll to the pgvector pipeline / callout</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:12px; color:var(--ink-faint); margin-top:6px; font-style:italic;">Rule: scroll between sentences, never during them.</p>
+
+      <div class="lbl">Script (≈ 125 words)</div>
+      <div class="script">
+        <p>The architecture has four clear trust zones. The <b>host portal</b> owns the authenticated session and signs a short-lived identity token with an RS256 private key. The <b>companion</b> lives in an iframe on its own origin — the browser isolates it from the portal at the DOM level; the token arrives via postMessage with a strict origin allowlist.</p>
+        <p>The <b>companion backend</b> is a Node.js backend-for-frontend. It verifies the token using the portal's public JWKS endpoint, runs retrieval against <b>Postgres with pgvector</b>, and holds the gateway credentials as server-only secrets. One Postgres instance holds the vector store, sessions, and the audit log — one system, one seed file, atomic writes.</p>
+        <p>The <b>AI gateway</b> sits outside. It never sees the user token; the browser never sees the gateway credentials. Every choice is justified in our architecture-decisions record.</p>
+      </div>
+
+      <div class="handoff">"<b>Speaker 3</b> will show how those trust zones translate into real access control."</div>
+    </div>
+
+    <!-- Speaker 3 -->
+    <div class="speaker-card">
+      <div class="speaker-head">
+        <div class="speaker-num">3</div>
+        <div style="flex:1;">
+          <h3>Access control &amp; the deceased flag</h3>
+          <div class="role">Security · role gating is real, not UI theatre</div>
+        </div>
+        <div class="time">1:45 – 2:35</div>
+      </div>
+
+      <div class="lbl">On screen</div>
+      <div class="on-screen">Tab A · Currently on s1 (Thabo's dashboard). Then <b>Switch user</b> back to Start → click <b>Anika Naidoo</b> (beneficiary) → land on s7. Point at the amber trust chip.</div>
+
+      <div class="lbl">Click flow</div>
+      <table class="actions-table">
+        <thead><tr><th>When you say…</th><th>Do this</th></tr></thead>
+        <tbody>
+          <tr><td>"…he sees the full portal: What-If, updates, claims, everything."</td><td>Keep s1 on screen (Thabo's dashboard)</td></tr>
+          <tr><td>"Now watch what happens…"</td><td>Click <b>Switch user</b> (top-left back link) → Start screen</td></tr>
+          <tr><td>"…the deceased-state flag."</td><td>Click <b>Anika Naidoo</b> (beneficiary) — lands on s7</td></tr>
+          <tr><td>"The amber chip here isn't a UI trick."</td><td>Point cursor at the amber chip below the header</td></tr>
+          <tr><td>"…the authorization is the one that's binding."</td><td>Let s7 linger for handoff</td></tr>
+        </tbody>
+      </table>
+
+      <div class="lbl">Script (≈ 120 words)</div>
+      <div class="script">
+        <p>Access control is where a lot of AI products get lazy. Ours doesn't.</p>
+        <p>This is Thabo, a policyholder — he sees the full portal: What-If, updates, claims, everything.</p>
+        <p>Now watch what happens when the linked policyholder profile carries a <b>deceased-state flag</b>. Anika, the beneficiary, receives a token — signed by the portal with RS256, verified by the backend via a public JWKS endpoint. Our backend can verify but cannot forge; the security boundary is honest.</p>
+        <p>The amber chip here isn't a UI trick. It reflects a token claim, and the backend re-checks it on every request — actually <em>between</em> the classify and reply model calls, so a refused action never generates an answer at all. Presentation and authorization stay in sync, but the authorization is the one that's binding.</p>
+      </div>
+
+      <div class="handoff">"<b>Speaker 4</b> will show what Lumina does inside those boundaries."</div>
+    </div>
+
+    <!-- Speaker 4 -->
+    <div class="speaker-card">
+      <div class="speaker-head">
+        <div class="speaker-num">4</div>
+        <div style="flex:1;">
+          <h3>Grounded AI &amp; empathetic claims</h3>
+          <div class="role">Product · citations, honesty, What-If, and claims</div>
+        </div>
+        <div class="time">2:35 – 3:25</div>
+      </div>
+
+      <div class="lbl">On screen</div>
+      <div class="on-screen">Tab A · Navigate s7 → s2 → s3 (Q&amp;A with cooling-off + interest-rate) → s4 (What-If with R500K reduction) → s6 (Claims empathy + SLA).</div>
+
+      <div class="lbl">Click flow</div>
+      <table class="actions-table">
+        <thead><tr><th>When you say…</th><th>Do this</th></tr></thead>
+        <tbody>
+          <tr><td>"Trust needs proof."</td><td>Navigate from s7 → <b>Main chat screen</b> (quick nav) → s2</td></tr>
+          <tr><td>"Every answer Lumina gives cites the policy section…"</td><td>Click <b>Ask a Question</b> chip → lands on s3</td></tr>
+          <tr><td>"…for example, per the Policy Guide, Cooling-off section, page 4."</td><td>Point at the italic citation line on s3</td></tr>
+          <tr><td>"…the exact line from Appendix A."</td><td>Let the second bubble ("I can't confirm…") linger for two seconds</td></tr>
+          <tr><td>"Claims is where empathy really matters."</td><td>Back to s2 → click <b>File a Claim</b> chip → lands on s6</td></tr>
+          <tr><td>"Anika lost her husband. Lumina opens with acknowledgement…"</td><td>Point at the empathy bubble</td></tr>
+          <tr><td>"…the 3-business-day SLA is visible."</td><td>Point at the SLA card</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:12px; color:var(--ink-faint); margin-top:6px; font-style:italic;">Optional (if time allows): also open s4 to show the What-If R1M → R500K reduction with the formula visible.</p>
+
+      <div class="lbl">Script (≈ 120 words)</div>
+      <div class="script">
+        <p>Trust needs proof. Every answer Lumina gives cites the policy section it came from — this one, for example: <em>"Per the Policy Guide, Cooling-off section, page 4."</em> When someone asks something the documents don't cover, Lumina says so — the exact line from Appendix A: <em>"I can't confirm that from the provided documents. I can explain what is available or refer this for human review."</em> No invented facts. No confident guesses.</p>
+        <p>Claims is where empathy really matters. Anika lost her husband. Lumina opens with acknowledgement, not a form. Documents come in any order. Some are already on file from the death notification — she won't be asked to explain her loss twice. The 3-business-day SLA is visible, and a human is always one tap away.</p>
+      </div>
+
+      <div class="handoff">"<b>Speaker 5</b> will close on our trade-offs and what we'd build first at finals."</div>
+    </div>
+
+    <!-- Speaker 5 -->
+    <div class="speaker-card">
+      <div class="speaker-head">
+        <div class="speaker-num">5</div>
+        <div style="flex:1;">
+          <h3>Trade-offs &amp; plan for finals</h3>
+          <div class="role">Delivery lead · lands the plane</div>
+        </div>
+        <div class="time">3:25 – 4:00</div>
+      </div>
+
+      <div class="lbl">On screen</div>
+      <div class="on-screen">Either: open <code>SUBMISSION.md</code> at §10.1 and §10.2 in a third tab, <b>or</b> stay on s6 and deliver verbally. Either way, the last two sentences carry the presentation home with no screen motion.</div>
+
+      <div class="lbl">Script (≈ 90 words)</div>
+      <div class="script">
+        <p>We chose a middle path. <b>Simpler than we could have</b>: no microservices, no agent framework. <b>More robust than a toy</b>: real vector search, real session store. Every component maps to a specific requirement.</p>
+        <p>At finals, day one we wire live retrieval end-to-end — the full policy guide into pgvector, and the chat endpoint reading from it. Then we move card selection from the client into the model's structured output, so the same code path renders every rich answer. After that: real identity provider, audit persistence, and streaming responses.</p>
+        <p>Thank you.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recording guidance -->
+  <div class="section">
+    <div class="section-title"><h2>Recording guidance</h2><div class="rule"></div></div>
+    <div class="tips">
+      <h3>Pacing &amp; delivery</h3>
+      <ul>
+        <li>Speak roughly <b>20% slower</b> than feels natural. On playback it will sound just right.</li>
+        <li><b>Pause briefly before switching screens</b> — gives the viewer's eye time to catch up.</li>
+        <li>Don't read verbatim from the script. <b>Learn the beats, speak the substance.</b></li>
+        <li>If any speaker runs over 50 seconds in rehearsal, <b>cut a sentence</b> — don't rush.</li>
+      </ul>
+    </div>
+    <div class="tips" style="margin-top:16px;">
+      <h3>Common mistakes to avoid</h3>
+      <ul>
+        <li><b>Reading the architecture diagram word-for-word.</b> Point at zones and narrate the story — trust boundaries, tokens crossing.</li>
+        <li><b>Selling features instead of trade-offs.</b> Judges care about <em>why</em> far more than <em>what</em>.</li>
+        <li><b>Ending flat.</b> Speaker 5's last two sentences should carry the presentation home.</li>
+        <li><b>Typing on camera.</b> The demo prompts are already baked into the wireframe. Just click.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Closing slate -->
+  <div class="section">
+    <div class="section-title"><h2>Closing slate (4:00 – 4:10)</h2><div class="rule"></div></div>
+    <div class="checklist">
+      <p style="font-size:13.5px; color:var(--ink-soft); margin-bottom:14px;">Have a simple text slate ready to hold on screen for the final 5–10 seconds.</p>
+      <div style="background:var(--sand); border-radius:8px; padding:16px 20px; font-family:'JetBrains Mono', monospace; font-size:13px; line-height:1.8; color:var(--ink);">
+        Nullius In Verba<br>
+        docs/architecture-decisions.md<br>
+        Repository: &lt;your repo URL&gt;
+      </div>
+      <p style="font-size:13px; color:var(--ink-faint); margin-top:14px; font-style:italic;">Any team member can say "Thanks for watching" over the slate.</p>
+    </div>
+  </div>
+
+  <div class="foot">
+    Lumina · Concept Walkthrough Video Script · Nullius In Verba
+  </div>
+
+</div>
+</body>
+</html>
