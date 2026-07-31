@@ -43,16 +43,16 @@ export function ClientPicker({
 
   return (
     <section>
-      <h1 className="text-[21px] font-semibold text-ink">
+      <h1 className="text-[20px] font-semibold text-brand-ink sm:text-[21px]">
         {unrestricted ? "Find a policy" : "Your clients"}
       </h1>
-      <p className="mt-2 max-w-lg text-[13.5px] leading-relaxed text-ink-soft">
+      <p className="mt-1 max-w-lg text-[12px] leading-relaxed text-brand-inkSoft sm:mt-2 sm:text-[13.5px]">
         {unrestricted
           ? "You can open any policy in order to help a caller. Each one you open is recorded against your name."
           : "You are authorised for these policies only. Anything outside this list is refused by the server, not just hidden here."}
       </p>
 
-      <ul className="mt-5 max-w-2xl space-y-3">
+      <ul className="mt-4 max-w-2xl space-y-2 sm:mt-5 sm:space-y-3">
         {subjects.map((policyId) => {
           const policy = getPolicy(policyId);
           const selected = actingFor === policyId;
@@ -63,15 +63,15 @@ export function ClientPicker({
                 type="button"
                 onClick={() => onSelect(policyId)}
                 aria-pressed={selected}
-                className={`flex w-full items-center gap-4 rounded-card border bg-surface px-5 py-4 text-left shadow-sm transition hover:border-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 ${
-                  selected ? "border-teal ring-1 ring-teal" : "border-line"
+                className={`flex w-full items-center gap-3 rounded-[12px] border bg-brand-surface px-4 py-3 text-left text-[12px] shadow-sm transition hover:border-brand-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal focus-visible:ring-offset-2 sm:gap-4 sm:px-5 sm:py-4 sm:text-[14.5px] sm:rounded-lg ${
+                  selected ? "border-brand-teal ring-1 ring-brand-teal" : "border-brand-border"
                 }`}
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[14.5px] font-semibold text-ink">
+                  <span className="block font-semibold text-brand-ink">
                     {POLICY_LABELS[policyId] ?? policyId}
                   </span>
-                  <span className="mt-0.5 block text-[12.5px] text-ink-faint">
+                  <span className="mt-0.5 block text-[11px] text-brand-inkFaint sm:text-[12.5px]">
                     {policy
                       ? `${policy.masked} · ${policy.status}${
                           policy.deceased ? " · claim in progress" : ""
@@ -79,13 +79,13 @@ export function ClientPicker({
                       : policyId}
                   </span>
                   {policy && policy.outstanding.length > 0 && (
-                    <span className="mt-1.5 block text-[12px] font-semibold text-amber-text">
+                    <span className="mt-1 block text-[11px] font-semibold text-brand-amberText sm:text-[12px]">
                       {policy.outstanding.length} outstanding requirement
                       {policy.outstanding.length === 1 ? "" : "s"}
                     </span>
                   )}
                 </span>
-                <span className="shrink-0 text-[12px] font-semibold text-teal">
+                <span className="shrink-0 text-[11px] font-semibold text-brand-teal sm:text-[12px]">
                   {selected ? "Selected" : "Open"}
                 </span>
               </button>
@@ -94,13 +94,13 @@ export function ClientPicker({
         })}
       </ul>
 
-      <p className="mt-6 max-w-lg text-[12px] leading-relaxed text-ink-faint">
+      <p className="mt-4 max-w-lg text-[11px] leading-relaxed text-brand-inkFaint sm:mt-6 sm:text-[12px]">
         The signed token carries the scope{" "}
-        <code className="text-ink-soft">
+        <code className="text-brand-inkSoft">
           {unrestricted ? "[*]" : `[${claims.scope.join(", ")}]`}
         </code>
         . The policy you select travels per-request as{" "}
-        <code className="text-ink-soft">acting_for</code>, and the audit log
+        <code className="text-brand-inkSoft">acting_for</code>, and the audit log
         records both you and the policy.
       </p>
     </section>

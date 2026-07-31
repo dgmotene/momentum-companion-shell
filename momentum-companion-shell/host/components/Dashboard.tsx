@@ -55,17 +55,17 @@ export function Dashboard({
       : `${claims.scope.length} ${claims.scope.length === 1 ? "policy" : "policies"}`;
     return (
       <section>
-        <h1 className="font-serif text-[24px] font-semibold">
+        <h1 className="font-serif text-[20px] font-semibold sm:text-[24px]">
           No client selected
         </h1>
-        <p className="mt-2 max-w-md text-[13.5px] leading-relaxed text-brand-inkSoft">
+        <p className="mt-1 max-w-md text-[12px] leading-relaxed text-brand-inkSoft sm:mt-2 sm:text-[13.5px]">
           You are authorised for {count}. Open one to continue. Lumina follows
           whichever client you are viewing.
         </p>
         <button
           type="button"
           onClick={onChooseClient}
-          className="mt-5 rounded-xl bg-brand-teal px-5 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-brand-tealDark"
+          className="mt-4 rounded-lg bg-brand-teal px-4 py-2 text-[12px] font-semibold text-white transition hover:bg-brand-tealDark sm:mt-5 sm:px-5 sm:py-2.5 sm:text-[13.5px] sm:rounded-xl"
         >
           Choose a client
         </button>
@@ -86,60 +86,58 @@ export function Dashboard({
 
   return (
     <section>
-      <header>
-        <h1 className="font-serif text-[24px] font-semibold">
-          {policy.productName}
-        </h1>
-        <p className="mt-1 flex flex-wrap items-center gap-2 text-[13px] text-brand-inkFaint">
-          <span>{policy.masked}</span>
-          <span className="rounded-full bg-brand-greenTint px-2 py-0.5 text-[11px] font-semibold text-brand-green">
-            &#9679; {policy.status}
-          </span>
+      <h1 className="font-serif text-[20px] font-semibold sm:text-[24px]">
+        {policy.productName}
+      </h1>
+      <p className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-brand-inkFaint sm:text-[13px]">
+        <span>{policy.masked}</span>
+        <span className="rounded-full bg-brand-greenTint px-2 py-0.5 text-[10px] font-semibold text-brand-green sm:text-[11px]">
+          &#9679; {policy.status}
+        </span>
+      </p>
+
+      {bereaved && (
+        <p className="mt-1.5 text-[11px] font-semibold text-brand-inkSoft sm:text-[12px]">
+          Policy of the late {policy.policyholderName}
         </p>
+      )}
 
-        {bereaved && (
-          <p className="mt-1.5 text-[12px] font-semibold text-brand-inkSoft">
-            Policy of the late {policy.policyholderName}
-          </p>
-        )}
+      {staff && (
+        <p className="mt-1.5 text-[11px] text-brand-inkFaint sm:text-[12px]">
+          Acting for{" "}
+          <strong className="text-brand-inkSoft">
+            {POLICY_LABELS[policy.id] ?? policy.id}
+          </strong>{" "}
+          &middot;{" "}
+          <button
+            type="button"
+            onClick={onChooseClient}
+            className="font-semibold text-brand-teal underline decoration-dotted"
+          >
+            switch client
+          </button>
+        </p>
+      )}
 
-        {staff && (
-          <p className="mt-1.5 text-[12px] text-brand-inkFaint">
-            Acting for{" "}
-            <strong className="text-brand-inkSoft">
-              {POLICY_LABELS[policy.id] ?? policy.id}
-            </strong>{" "}
-            &middot;{" "}
-            <button
-              type="button"
-              onClick={onChooseClient}
-              className="font-semibold text-brand-teal underline decoration-dotted"
-            >
-              switch client
-            </button>
-          </p>
-        )}
-
-        {/* The finals brief is explicit that the life insured is not always the
-            policyholder, and the Myriad guide's Role players section treats
-            them as separate parties. Say so on the page rather than leaving
-            someone to assume they own a policy they do not. */}
-        {policy.policyholderName !== policy.lifeInsuredName && (
-          <p className="mt-1.5 text-[12px] text-brand-inkFaint">
-            Policyholder <strong>{policy.policyholderName}</strong> &middot; life
-            insured <strong>{policy.lifeInsuredName}</strong>
-            {isLifeInsured && " — that's you"}
-          </p>
-        )}
-      </header>
-
+      {/* The finals brief is explicit that the life insured is not always the
+          policyholder, and the Myriad guide's Role players section treats
+          them as separate parties. Say so on the page rather than leaving
+          someone to assume they own a policy they do not. */}
+      {policy.policyholderName !== policy.lifeInsuredName && (
+        <p className="mt-1.5 text-[11px] text-brand-inkFaint sm:text-[12px]">
+          Policyholder <strong>{policy.policyholderName}</strong> &middot; life
+          insured <strong>{policy.lifeInsuredName}</strong>
+          {isLifeInsured && " — that's you"}
+        </p>
+      )}
+      
       {/* A bereaved beneficiary is led by the claim, not by servicing. */}
       {bereaved && (
-        <div className="mt-5 max-w-2xl rounded-[18px] border-[1.5px] border-brand-teal bg-gradient-to-b from-brand-blueTint to-brand-surface p-5">
-          <h2 className="font-serif text-[17px] font-semibold">
+        <div className="mt-4 rounded-[14px] border-[1.5px] border-brand-teal bg-gradient-to-b from-brand-blueTint to-brand-surface p-4 sm:mt-5 sm:rounded-[18px] sm:p-5 lg:max-w-2xl">
+          <h2 className="font-serif text-[15px] font-semibold sm:text-[17px]">
             Hi {claims.name.split(" ")[0]}, I&rsquo;m so sorry for your loss.
           </h2>
-          <p className="mt-1.5 max-w-md text-[13px] leading-relaxed text-brand-inkSoft">
+          <p className="mt-1 text-[12px] leading-relaxed text-brand-inkSoft sm:mt-1.5 sm:text-[13px]">
             Whenever you feel ready, Lumina can guide you through starting a
             claim, or simply answer questions about the policy. There is no rush,
             and a person is always available if you would prefer.
@@ -147,14 +145,14 @@ export function Dashboard({
           <button
             type="button"
             onClick={onOpenCompanion}
-            className="mt-4 rounded-xl bg-brand-teal px-5 py-3 text-[14px] font-semibold text-white transition hover:bg-brand-tealDark"
+            className="mt-3 rounded-lg bg-brand-teal px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-brand-tealDark sm:mt-4 sm:px-5 sm:py-3 sm:text-[14px] sm:rounded-xl"
           >
             Begin with Lumina &rarr;
           </button>
         </div>
       )}
 
-      <div className="mt-6 grid max-w-4xl gap-5 lg:grid-cols-2">
+      <div className="mt-4 grid gap-3 sm:mt-6 sm:gap-5 lg:max-w-4xl lg:grid-cols-2">
         <BenefitsCard policy={policy} />
         {/* Premiums are the policyholder's business. A bereaved beneficiary has
             no use for them, and a life insured who does not own the policy is
@@ -167,41 +165,39 @@ export function Dashboard({
 
       {policy.outstanding.length > 0 &&
         capabilities.includes("outstanding_requirements") && (
-          <div className="mt-5 max-w-xl rounded-[18px] border border-brand-amber/60 bg-brand-amberTint p-5">
-            <h2 className="text-[14px] font-semibold text-brand-amberText">
+          <div className="mt-4 rounded-[14px] border border-brand-amber/60 bg-brand-amberTint p-4 sm:mt-5 sm:rounded-[18px] sm:p-5 lg:max-w-xl">
+            <h2 className="text-[13px] font-semibold text-brand-amberText sm:text-[14px]">
               Outstanding requirements
             </h2>
-            <ul className="mt-2 space-y-1 text-[13px] text-brand-amberText">
+            <ul className="mt-2 space-y-1 text-[12px] text-brand-amberText sm:text-[13px]">
               {policy.outstanding.map((item) => (
                 <li key={item}>&bull; {item}</li>
               ))}
             </ul>
           </div>
         )}
-
-
     </section>
   );
 }
 
 function BenefitsCard({ policy }: { policy: Policy }) {
   return (
-    <div className="rounded-[18px] border border-brand-border bg-brand-surface p-5">
-      <h2 className="text-[14px] font-semibold">Cover in place</h2>
-      <ul className="mt-3 divide-y divide-brand-border">
+    <div className="rounded-[14px] border border-brand-border bg-brand-surface p-4 sm:rounded-[18px] sm:p-5">
+      <h2 className="text-[13px] font-semibold sm:text-[14px]">Cover in place</h2>
+      <ul className="mt-2 divide-y divide-brand-border sm:mt-3">
         {policy.benefits.map((benefit) => (
           <li
             key={benefit.name}
-            className="flex items-baseline justify-between gap-4 py-2.5"
+            className="flex items-baseline justify-between gap-3 py-2 sm:gap-4 sm:py-2.5"
           >
-            <span className="text-[13px] text-brand-inkSoft">
+            <span className="text-[12px] text-brand-inkSoft sm:text-[13px]">
               {benefit.name}
             </span>
-            <span className="text-right">
-              <span className="block text-[14px] font-semibold">
+            <span className="text-right shrink-0">
+              <span className="block text-[13px] font-semibold sm:text-[14px]">
                 {benefit.amount}
               </span>
-              <span className="block text-[11.5px] text-brand-inkFaint">
+              <span className="block text-[10.5px] text-brand-inkFaint sm:text-[11.5px]">
                 {benefit.shape}
               </span>
             </span>
@@ -210,7 +206,7 @@ function BenefitsCard({ policy }: { policy: Policy }) {
       </ul>
       {/* Recorded, not payable: the distinction the Scope Change brief
           requires, made on the page as well as in the chat. */}
-      <p className="mt-3 border-t border-brand-border pt-3 text-[11.5px] leading-relaxed text-brand-inkFaint">
+      <p className="mt-2 border-t border-brand-border pt-2 text-[11px] leading-relaxed text-brand-inkFaint sm:mt-3 sm:pt-3 sm:text-[11.5px]">
         These are the benefit amounts recorded on the policy. What is actually
         payable on any claim depends on the policy terms and the outcome of
         claims assessment.
@@ -227,9 +223,9 @@ function PolicyDetailsCard({
   showPremium: boolean;
 }) {
   return (
-    <div className="rounded-[18px] border border-brand-border bg-brand-surface p-5">
-      <h2 className="text-[14px] font-semibold">Policy details</h2>
-      <dl className="mt-3 divide-y divide-brand-border">
+    <div className="rounded-[14px] border border-brand-border bg-brand-surface p-4 sm:rounded-[18px] sm:p-5">
+      <h2 className="text-[13px] font-semibold sm:text-[14px]">Policy details</h2>
+      <dl className="mt-2 divide-y divide-brand-border sm:mt-3">
         {showPremium && (
           <Row
             label="Monthly premium"
@@ -253,9 +249,9 @@ function PolicyDetailsCard({
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 py-2.5">
-      <dt className="text-[13px] text-brand-inkSoft">{label}</dt>
-      <dd className="text-[13.5px] font-semibold">{value}</dd>
+    <div className="flex items-baseline justify-between gap-3 py-2 sm:gap-4 sm:py-2.5">
+      <dt className="text-[12px] text-brand-inkSoft sm:text-[13px]">{label}</dt>
+      <dd className="text-[12.5px] font-semibold sm:text-[13.5px]">{value}</dd>
     </div>
   );
 }
@@ -273,25 +269,25 @@ function Row({ label, value }: { label: string; value: string }) {
 function NoAccessNotice({ name }: { name: string }) {
   return (
     <section className="max-w-xl">
-      <h1 className="font-serif text-[24px] font-semibold">
+      <h1 className="font-serif text-[20px] font-semibold sm:text-[24px]">
         Nothing to show here yet
       </h1>
-      <div className="mt-4 rounded-[18px] border border-brand-border bg-brand-surface p-5">
-        <p className="text-[13.5px] leading-relaxed text-brand-inkSoft">
+      <div className="mt-3 rounded-[14px] border border-brand-border bg-brand-surface p-4 sm:mt-4 sm:rounded-[18px] sm:p-5">
+        <p className="text-[12px] leading-relaxed text-brand-inkSoft sm:text-[13.5px]">
           Hi {name.split(" ")[0]}. You are signed in, but there is no policy
           information available to you at the moment.
         </p>
-        <p className="mt-3 text-[13.5px] leading-relaxed text-brand-inkSoft">
+        <p className="mt-2 text-[12px] leading-relaxed text-brand-inkSoft sm:mt-3 sm:text-[13.5px]">
           Being named on someone&rsquo;s policy does not give access to it while
           they are living. If circumstances change, Momentum will confirm the
           details before anything opens up here.
         </p>
-        <p className="mt-3 text-[13.5px] leading-relaxed text-brand-inkSoft">
+        <p className="mt-2 text-[12px] leading-relaxed text-brand-inkSoft sm:mt-3 sm:text-[13.5px]">
           If you think this is wrong, our team can help on{" "}
           <span className="font-semibold text-brand-ink">0860 66 26 66</span>.
         </p>
       </div>
-      <p className="mt-4 text-[12px] leading-relaxed text-brand-inkFaint">
+      <p className="mt-3 text-[11px] leading-relaxed text-brand-inkFaint sm:mt-4 sm:text-[12px]">
         Demo note: this profile is a listed beneficiary on an active policy whose
         policyholder is alive, so the token carries{" "}
         <code>deceased_flag: false</code> and every capability is closed. Lumina

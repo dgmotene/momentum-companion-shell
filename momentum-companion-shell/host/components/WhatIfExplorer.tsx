@@ -81,23 +81,23 @@ export function WhatIfExplorer({
 
   return (
     <section>
-      <h1 className="text-[21px] font-semibold text-ink">What-If Explorer</h1>
-      <p className="mt-1 text-[13px] text-ink-faint">
+      <h1 className="text-[20px] font-semibold text-brand-ink sm:text-[21px]">What-If Explorer</h1>
+      <p className="mt-1 text-[12px] text-brand-inkSoft sm:text-[13px]">
         {policy.masked} &middot; explore changes to your cover
       </p>
 
       <div
         role="note"
-        className="mt-4 max-w-3xl rounded-btn border border-amber-border bg-amber-tint px-4 py-2.5 text-[12.5px] font-semibold text-amber-text"
+        className="mt-3 max-w-3xl rounded-[12px] border border-brand-amber/60 bg-brand-amberTint px-3 py-2 text-[11px] font-semibold text-brand-amberText sm:mt-4 sm:rounded-lg sm:px-4 sm:py-2.5 sm:text-[12.5px]"
       >
         &#9888; {VALUE_CLASS_NOTE.illustrative}
       </div>
 
-      <div className="mt-5 grid max-w-3xl gap-5 md:grid-cols-2">
+      <div className="mt-4 grid gap-3 max-w-3xl sm:mt-5 sm:gap-5 lg:grid-cols-2">
         {/* Current: recorded values, safe to state plainly. */}
-        <div className="rounded-card border border-line bg-surface p-5 shadow-sm">
-          <h2 className="text-[14px] font-semibold text-ink">Current</h2>
-          <dl className="mt-3 divide-y divide-line">
+        <div className="rounded-[12px] border border-brand-border bg-brand-surface p-3.5 shadow-sm sm:rounded-lg sm:p-5">
+          <h2 className="text-[12.5px] font-semibold text-brand-ink sm:text-[14px]">Current</h2>
+          <dl className="mt-2 divide-y divide-brand-border sm:mt-3">
             <Row label="Sum assured" value={formatRand(policy.sumAssured)} />
             <Row
               label="Monthly premium"
@@ -108,22 +108,22 @@ export function WhatIfExplorer({
               value={`${policy.waitingPeriodMonths} months`}
             />
           </dl>
-          <p className="mt-3 border-t border-line pt-3 text-[11.5px] text-ink-faint">
+          <p className="mt-2 border-t border-brand-border pt-2 text-[10.5px] text-brand-inkFaint sm:mt-3 sm:pt-3 sm:text-[11.5px]">
             These are the values recorded on your policy.
           </p>
         </div>
 
         {/* Adjust: illustrative values, qualified everywhere they appear. */}
-        <div className="rounded-card border border-line bg-surface p-5 shadow-sm">
-          <h2 className="text-[14px] font-semibold text-ink">Adjust</h2>
+        <div className="rounded-[12px] border border-brand-border bg-brand-surface p-3.5 shadow-sm sm:rounded-lg sm:p-5">
+          <h2 className="text-[12.5px] font-semibold text-brand-ink sm:text-[14px]">Adjust</h2>
 
-          <div className="mt-4">
+          <div className="mt-3">
             <label
               htmlFor="wi-sum"
-              className="flex items-baseline justify-between text-[12.5px] font-semibold text-ink-soft"
+              className="flex items-baseline justify-between text-[11px] font-semibold text-brand-inkSoft sm:text-[12.5px]"
             >
               <span>New sum assured</span>
-              <span className="text-ink">{formatRand(sumAssured)}</span>
+              <span className="text-brand-ink">{formatRand(sumAssured)}</span>
             </label>
             <input
               id="wi-sum"
@@ -133,17 +133,17 @@ export function WhatIfExplorer({
               step={10000}
               value={sumAssured}
               onChange={(event) => setSumAssured(Number(event.target.value))}
-              className="mt-2 w-full accent-teal"
+              className="mt-1.5 w-full accent-brand-teal sm:mt-2"
             />
           </div>
 
-          <div className="mt-4">
+          <div className="mt-3 sm:mt-4">
             <label
               htmlFor="wi-wait"
-              className="flex items-baseline justify-between text-[12.5px] font-semibold text-ink-soft"
+              className="flex items-baseline justify-between text-[11px] font-semibold text-brand-inkSoft sm:text-[12.5px]"
             >
               <span>Waiting period</span>
-              <span className="text-ink">{result.waitingMonths} months</span>
+              <span className="text-brand-ink">{result.waitingMonths} months</span>
             </label>
             <input
               id="wi-wait"
@@ -154,27 +154,27 @@ export function WhatIfExplorer({
               value={waitingMonths}
               onChange={(event) => setWaitingMonths(Number(event.target.value))}
               aria-describedby="wi-wait-help"
-              className="mt-2 w-full accent-teal"
+              className="mt-1.5 w-full accent-brand-teal sm:mt-2"
             />
-            <p id="wi-wait-help" className="mt-1 text-[11.5px] text-ink-faint">
+            <p id="wi-wait-help" className="mt-1 text-[10px] text-brand-inkFaint sm:text-[11.5px]">
               Snaps to the documented periods:{" "}
               {WAITING_OPTIONS.join(", ")} months.
             </p>
           </div>
 
-          <div className="mt-5 rounded-btn bg-teal-tint px-4 py-3.5">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
+          <div className="mt-3 rounded-lg bg-brand-blueTint px-3 py-2.5 sm:mt-5 sm:rounded-lg sm:px-4 sm:py-3.5">
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-brand-inkFaint sm:text-[11px]">
               Estimated new premium
             </div>
-            <div className="mt-1 flex flex-wrap items-baseline gap-2">
-              <span className="text-[22px] font-bold text-teal-dark">
+            <div className="mt-1 flex flex-wrap items-baseline gap-1.5">
+              <span className="text-[18px] font-bold text-brand-tealDark sm:text-[22px]">
                 {formatRand(result.premium)}
               </span>
               {Math.abs(delta) >= 1 && (
                 <span
-                  className={`text-[12px] font-semibold ${
-                    delta > 0 ? "text-amber-text" : "text-green-text"
-                  }`}
+                  className={`text-[11px] font-semibold ${
+                    delta > 0 ? "text-brand-amberText" : "text-brand-green"
+                  } sm:text-[12px]`}
                 >
                   ({delta > 0 ? "+" : "−"}
                   {formatRand(Math.abs(delta))})
@@ -185,14 +185,14 @@ export function WhatIfExplorer({
             {/* The R200 floor is real, so say so rather than showing a number
                 the formula did not actually produce. */}
             {result.flooredAt && (
-              <p className="mt-2 text-[12px] leading-relaxed text-amber-text">
+              <p className="mt-1.5 text-[10.5px] leading-relaxed text-brand-amberText sm:mt-2 sm:text-[12px]">
                 The calculation works out to {formatRand(result.rawPremium)}, but
                 the minimum premium on this product is{" "}
                 {formatRand(200)}, so that is what is shown.
               </p>
             )}
 
-            <p className="mt-2 text-[11.5px] leading-relaxed text-ink-soft">
+            <p className="mt-1.5 text-[10px] leading-relaxed text-brand-inkSoft sm:mt-2 sm:text-[11.5px]">
               {VALUE_CLASS_NOTE.illustrative}
             </p>
           </div>
@@ -200,14 +200,14 @@ export function WhatIfExplorer({
           <button
             type="button"
             onClick={onAskLumina}
-            className="mt-4 w-full rounded-btn bg-teal px-4 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-teal-dark"
+            className="mt-3 w-full rounded-lg bg-brand-teal px-3 py-2 text-[12px] font-semibold text-white transition hover:bg-brand-tealDark sm:mt-4 sm:px-4 sm:py-2.5 sm:text-[13.5px] sm:rounded-lg"
           >
             Ask Lumina about this scenario
           </button>
         </div>
       </div>
 
-      <p className="mt-5 max-w-lg text-[12px] leading-relaxed text-ink-faint">
+      <p className="mt-4 max-w-lg text-[11px] leading-relaxed text-brand-inkFaint sm:mt-5 sm:text-[12px]">
         The sliders are the host page. Lumina sits beside them and can explain
         the trade-off you are looking at, because the portal tells it what is on
         screen. It re-derives the numbers from your policy before saying
@@ -219,9 +219,9 @@ export function WhatIfExplorer({
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 py-2.5">
-      <dt className="text-[13px] text-ink-soft">{label}</dt>
-      <dd className="text-[13.5px] font-semibold text-ink">{value}</dd>
+    <div className="flex items-baseline justify-between gap-2 py-1.5 sm:gap-4 sm:py-2.5">
+      <dt className="text-[12px] text-brand-inkSoft sm:text-[13px]">{label}</dt>
+      <dd className="text-[12.5px] font-semibold text-brand-ink sm:text-[13.5px]">{value}</dd>
     </div>
   );
 }

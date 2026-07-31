@@ -35,31 +35,33 @@ export function PortalChrome({
 
   return (
     <div className="min-h-screen bg-brand-bg font-sans text-brand-ink">
-      <header className="flex items-center gap-4 border-b border-brand-border bg-brand-surface px-7 py-3.5">
-        <div className="text-[13px] font-bold tracking-[0.06em]">
+      <header className="flex flex-col gap-3 border-b border-brand-border bg-brand-surface px-4 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:py-3.5 lg:px-8">
+        <div className="text-[12px] font-bold tracking-[0.06em] sm:text-[13px]">
           MOMENTUM <span className="font-medium text-brand-teal">life</span>
         </div>
 
-        <div className="ml-auto flex items-center gap-4">
-          <div className="text-right leading-tight">
-            <div className="text-[13px] font-semibold">{claims.name}</div>
-            <div className="text-[11.5px] text-brand-inkFaint">
+        <div className="ml-0 flex flex-col gap-2 sm:ml-auto sm:flex-row sm:items-center sm:gap-4">
+          <div className="text-right leading-tight order-2 sm:order-none">
+            <div className="text-[12px] font-semibold sm:text-[13px]">{claims.name}</div>
+            <div className="text-[10.5px] text-brand-inkFaint sm:text-[11.5px]">
               {ROLE_LABEL[claims.role]}
             </div>
           </div>
-          <span
-            aria-hidden="true"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-tealDark text-[12px] font-bold text-brand-surface"
-          >
-            {initials}
-          </span>
-          <button
-            type="button"
-            onClick={onSignOut}
-            className="rounded-xl border border-brand-border px-3 py-1.5 text-[12px] font-semibold text-brand-inkSoft transition hover:border-brand-teal hover:text-brand-ink"
-          >
-            Sign out
-          </button>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <span
+              aria-hidden="true"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-tealDark text-[11px] font-bold text-brand-surface sm:h-9 sm:w-9 sm:text-[12px]"
+            >
+              {initials}
+            </span>
+            <button
+              type="button"
+              onClick={onSignOut}
+              className="rounded-lg border border-brand-border px-2.5 py-1 text-[11px] font-semibold text-brand-inkSoft transition hover:border-brand-teal hover:text-brand-ink sm:px-3 sm:py-1.5 sm:text-[12px] sm:rounded-xl"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </header>
 
@@ -67,18 +69,18 @@ export function PortalChrome({
           never dismissible. Bereaved beneficiaries and staff both need this,
           for opposite reasons. */}
       {bereaved && (
-        <div className="border-b border-brand-amber/60 bg-brand-amberTint px-7 py-2.5 text-[13px] font-semibold text-brand-amberText">
+        <div className="border-b border-brand-amber/60 bg-brand-amberTint px-4 py-2 text-[12px] font-semibold text-brand-amberText sm:px-6 sm:py-2.5 sm:text-[13px] lg:px-8">
           You are viewing this policy as a Beneficiary.
         </div>
       )}
       {staff && (
-        <div className="border-b border-brand-teal/25 bg-brand-blueTint px-7 py-2.5 text-[13px] font-semibold text-brand-tealDark">
+        <div className="border-b border-brand-teal/25 bg-brand-blueTint px-4 py-2 text-[12px] font-semibold text-brand-tealDark sm:px-6 sm:py-2.5 sm:text-[13px] lg:px-8">
           Staff access &middot; {ROLE_LABEL[claims.role]}. Every policy you open
           is recorded against your name.
         </div>
       )}
 
-      <main className="px-8 py-7">{children}</main>
+      <main className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7">{children}</main>
     </div>
   );
 }
