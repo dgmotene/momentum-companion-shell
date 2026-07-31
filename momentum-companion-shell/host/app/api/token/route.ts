@@ -11,6 +11,7 @@ import { NextResponse } from "next/server";
 import { SignJWT, importPKCS8 } from "jose";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { PERSONAS } from "../../../lib/personas";
 
 const ISSUER = process.env.JWT_ISSUER ?? "https://mock-host.local";
 const AUDIENCE = process.env.JWT_AUDIENCE ?? "companion-backend";
@@ -18,30 +19,18 @@ const KEY_PATH =
   process.env.JWT_PRIVATE_KEY_PATH ?? path.join(process.cwd(), "..", "keys", "private.pem");
 const KID = "mock-key-1";
 
-// Fake user profiles, matching the rows in db/seed.sql. On a beneficiary's
-// token, deceased_flag refers to their linked policyholder; it is what
-// unlocks the restricted role.
-const PERSONAS: Record<string, Record<string, unknown>> = {
-  policyholder: {
-    sub: "user-001", // Thandi Mokoena
-    role: "policyholder",
-    policy_id: "POL-1001",
-    deceased_flag: false,
-  },
-  beneficiary: {
-    sub: "user-003", // Sipho Dlamini, on his late mother's policy
-    role: "beneficiary",
-    policy_id: "POL-1002",
-    deceased_flag: true,
-  },
-};
-
 export async function POST(req: Request) {
   const { persona } = await req.json().catch(() => ({ persona: null }));
-  const claims = PERSONAS[persona as string];
-  if (!claims) {
+  const selected = PERSONAS[persona as string];
+  if (!selected) {
     return NextResponse.json({ error: "Unknown persona" }, { status: 400 });
   }
+  const claims = {
+    sub: selected.sub,
+    role: selected.role,
+    policy_id: selected.policy_id,
+    deceased_flag: selected.deceased_flag,
+  };
 
   let pem: string;
   try {
