@@ -8,7 +8,9 @@
     "start": "node src/server.mjs"
   },
   "dependencies": {
+    "dotenv": "^17.4.2",
     "express": "^4.19.2",
-    "jose": "^5.9.6"
+    "jose": "^5.9.6",
+    "openai": "^7.3.0"
   }
 }

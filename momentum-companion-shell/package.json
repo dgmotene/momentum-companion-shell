@@ -15,5 +15,9 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.4"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.1101.0",
+    "pg": "^8.22.0"
   }
 }

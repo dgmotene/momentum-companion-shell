@@ -1,0 +1,293 @@
+import OpenAI from "openai";
+import pg from "pg";
+import dotenv from "dotenv";
+
+// Keep secrets outside the repository. Resolve the project-level local .env file
+// so this works whether the script is run from the root or backend directory.
+dotenv.config({ path: new URL("../../.env", import.meta.url) });
+
+// ==========================================
+// 1. CONFIGURATION & GATEWAY CLIENT SETUP
+// ==========================================
+const VIRTUAL_KEY = process.env.UNIVERSAL_API_KEY;
+const GATEWAY_BASE_URL =
+  process.env.GATEWAY_BASE_URL ?? "https://riskbifrostent.momentum.co.za/openai";
+
+const CHAT_MODEL = process.env.CHAT_MODEL_URL || "bedrock/anthropic.claude-3-haiku-20240307-v1:0";
+const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL_URL || "bedrock/amazon.titan-embed-text-v2:0";
+
+if (!VIRTUAL_KEY) {
+  throw new Error("UNIVERSAL_API_KEY is required. Add it to the local .env file or environment.");
+}
+
+// Initialize OpenAI client with required Bifrost Gateway headers[cite: 1]
+const openai = new OpenAI({
+  baseURL: GATEWAY_BASE_URL,
+  apiKey: VIRTUAL_KEY,
+  defaultHeaders: {
+    "x-git": "risk-ai-api",
+    "x-bf-vk": VIRTUAL_KEY
+  }
+});
+
+// Initialize Postgres connection pool
+const pool = new pg.Pool({
+  connectionString:
+    process.env.DATABASE_URL || "postgres://companion:companion@localhost:5432/companion"
+});
+
+// ==========================================
+// 2. RETRY LOGIC (GATEWAY RESILIENCE)
+// ==========================================
+/**
+ * Helper to execute functions with exponential backoff retries[cite: 1]
+ */
+async function callWithRetry(fn, retries = 3, delay = 1000) {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries <= 0) throw error;
+    const cause = error.cause;
+    const detail = [
+      error.message,
+      error.status && `status=${error.status}`,
+      error.code && `code=${error.code}`,
+      cause?.message && `cause=${cause.message}`,
+      cause?.code && `causeCode=${cause.code}`
+    ]
+      .filter(Boolean)
+      .join(" | ");
+    console.warn(`[Gateway Warning] Request failed. Retrying in ${delay}ms... ${detail}`);
+    await new Promise((res) => setTimeout(res, delay));
+    return callWithRetry(fn, retries - 1, delay * 2);
+  }
+}
+
+// ==========================================
+// 3. CORE AI GATEWAY & DB FUNCTIONS
+// ==========================================
+
+/**
+ * Generate embedding vector for user query (Titan Embeddings v2)
+ */
+export async function generateEmbedding(text) {
+  return callWithRetry(async () => {
+    const response = await openai.embeddings.create({
+      model: EMBEDDING_MODEL,
+      input: [text],
+      encoding_format: "float"
+    });
+    return response.data[0].embedding;
+  });
+}
+
+/**
+ * Search relevant documents using pgvector (Cosine Distance)
+ */
+export async function searchVectorStore(queryVector, limit = 3) {
+  const sql = `
+    SELECT 
+      id,
+      source,
+      parent_section,
+      content,
+      (embedding <=> $1::vector) AS distance
+    FROM documents
+    ORDER BY distance ASC
+    LIMIT $2;
+  `;
+  const { rows } = await pool.query(sql, [JSON.stringify(queryVector), limit]);
+  return rows;
+}
+
+/**
+ * Manage Chat Session History and State
+ */
+export async function getOrCreateSession(profileId, role) {
+  const selectSql = `SELECT * FROM sessions WHERE profile_id = $1 ORDER BY updated_at DESC LIMIT 1;`;
+  const { rows } = await pool.query(selectSql, [profileId]);
+
+  if (rows.length > 0) {
+    return rows[0];
+  }
+
+  const insertSql = `
+    INSERT INTO sessions (profile_id, role, history, workflow_state)
+    VALUES ($1, $2, '[]'::jsonb, '{}'::jsonb)
+    RETURNING *;
+  `;
+  const newSession = await pool.query(insertSql, [profileId, role]);
+  return newSession.rows[0];
+}
+
+export async function updateSession(sessionId, history, workflowState) {
+  const sql = `
+    UPDATE sessions
+    SET history = $1::jsonb,
+        workflow_state = $2::jsonb,
+        updated_at = NOW()
+    WHERE id = $3;
+  `;
+  await pool.query(sql, [JSON.stringify(history), JSON.stringify(workflowState), sessionId]);
+}
+
+/**
+ * Write action details to compliance audit log
+ */
+export async function logAudit({ profileId, policyId, role, action, authResult, validationResult, handoffFlag, reason, sessionId }) {
+  const sql = `
+    INSERT INTO audit_log (
+      profile_id, policy_id, role, action, auth_result, validation_result, handoff_flag, reason, session_id
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+  `;
+  await pool.query(sql, [
+    profileId || null,
+    policyId || null,
+    role || null,
+    action,
+    authResult || null,
+    validationResult || null,
+    handoffFlag || false,
+    reason || null,
+    sessionId || null
+  ]);
+}
+
+// ==========================================
+// 4. MAIN CHAT PIPELINE HANDLER
+// ==========================================
+/**
+ * Main chat handler called by Express or API router
+ * Accepts user details from the main app + query string
+ */
+export async function processChatMessage({ userProfile, userPrompt }) {
+  const { id: profileId, full_name: fullName, role, policy_id: policyId, access_level: accessLevel } = userProfile;
+
+  // Step 1: Pre-execution Authorization Check
+  if (accessLevel === "UNAUTHORIZED_BENEFICIARY_CLAIM") {
+    await logAudit({
+      profileId,
+      policyId,
+      role,
+      action: "CLAIM_INITIATION_ATTEMPT",
+      authResult: "DENIED",
+      reason: "Beneficiary attempted access while policyholder is active.",
+      handoffFlag: true
+    });
+
+    return {
+      text: "I am unable to process a claim on this policy as the policyholder status has not been flagged for claims. Please contact Momentum support.",
+      sources: []
+    };
+  }
+
+  // Step 2: Session Retrievalsudo docker compose up -d db
+  const session = await getOrCreateSession(profileId, role);
+
+  // Step 3: Embed Query & Retrieve Context via RAG
+  const queryVector = await generateEmbedding(userPrompt);
+  const matchedChunks = await searchVectorStore(queryVector, 3);
+
+  // Step 4: Build Grounded System Context
+  const contextSnippet = matchedChunks
+    .map((c) => `[Document: ${c.source} | Section: ${c.parent_section}]\n${c.content}`)
+    .join("\n\n---\n\n");
+
+  const systemPrompt = `You are Momentum Life's AI Assistant.
+User Name: ${fullName}
+User Role: ${role}
+Policy ID: ${policyId}
+
+Answer the user's inquiry strictly based on the policy context provided below. If the information is not in the context, state that you do not know and recommend reaching out to support.
+
+Policy Context:
+${contextSnippet}`;
+
+  // Step 5: Execute Chat Completion via Gateway with Retries[cite: 1]
+  const messages = [
+    { role: "system", content: systemPrompt },
+    ...session.history,
+    { role: "user", content: userPrompt }
+  ];
+
+  const aiResponseText = await callWithRetry(async () => {
+    const response = await openai.chat.completions.create({
+      model: CHAT_MODEL,
+      messages: messages,
+      temperature: 0.2,
+      max_tokens: 400
+    });
+    return response.choices[0].message.content;
+  });
+
+  // Step 6: Update Conversation History
+  const updatedHistory = [
+    ...session.history,
+    { role: "user", content: userPrompt },
+    { role: "assistant", content: aiResponseText }
+  ];
+
+  await updateSession(session.id, updatedHistory, session.workflow_state);
+
+  // Step 7: Log Successful Audit Event
+  await logAudit({
+    profileId,
+    policyId,
+    role,
+    action: "CHAT_QUERY",
+    authResult: "ALLOWED",
+    validationResult: "GROUNDED",
+    sessionId: session.id
+  });
+
+  return {
+    text: aiResponseText,
+    sources: Array.from(new Set(matchedChunks.map((c) => c.parent_section)))
+  };
+}
+// ==========================================
+// 5. DIRECT EXECUTION TEST BLOCK
+// ==========================================
+// Runs automatically when executed via `node chat.js`
+if (import.meta.url === `file://${process.argv[1]}`) {
+  (async () => {
+    console.log("\n==================================================");
+    console.log("   RUNNING MOMENTUM CHAT.JS PIPELINE TEST        ");
+    console.log("==================================================");
+
+    // 1. Mock User Payload passed from main application
+    const mockUser = {
+      id: "user-001",
+      full_name: "Thandi Mokoena",
+      role: "policyholder",
+      policy_id: "POL-1001",
+      access_level: "FULL_ACCESS"
+    };
+
+    const mockPrompt = "What is my cooling-off period duration for this policy?";
+
+    try {
+      console.log(`\n[1/3] Testing Titan Embeddings v2...`);
+      const vector = await generateEmbedding(mockPrompt);
+      console.log(`  ✅ Vector generated successfully (${vector.length} dimensions)`);
+
+      console.log(`\n[2/3] Processing Full Chat Request for ${mockUser.full_name}...`);
+      const result = await processChatMessage({
+        userProfile: mockUser,
+        userPrompt: mockPrompt
+      });
+
+      console.log(`\n[3/3] AI Gateway Response Received:`);
+      console.log(`--------------------------------------------------`);
+      console.log(result.text);
+      console.log(`--------------------------------------------------`);
+      console.log(`Sources Referenced:`, result.sources);
+      console.log(`\n🚀 PIPELINE TEST COMPLETE: Success!`);
+    } catch (err) {
+      console.error(`\n❌ PIPELINE TEST FAILED:`, err.message);
+      if (err.stack) console.error(err.stack);
+    } finally {
+      await pool.end();
+    }
+  })();
+}
