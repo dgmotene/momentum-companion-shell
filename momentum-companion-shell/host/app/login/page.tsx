@@ -18,11 +18,19 @@ export default function LoginPage() {
       return;
     }
 
-    setStatus(`Signed in as ${selectedPersona}. The companion is ready to help.`);
+    setStatus(
+      `Signed in as ${selectedPersona}. The companion is ready to help.`,
+    );
   };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_theme(colors.brand.blueTint),_theme(colors.brand.bg)_60%)] px-4 py-8 text-brand-ink sm:px-6 lg:px-8">
+    <main
+      className="min-h-screen bg-brand-blueTint px-4 py-8 text-brand-ink sm:px-6 lg:px-8"
+      style={{
+        backgroundImage:
+          "radial-gradient(circle at top left, rgba(78, 205, 196, 0.24), transparent 60%)",
+      }}
+    >
       <div className="mx-auto flex max-w-6xl flex-col overflow-hidden rounded-[28px] border border-brand-border bg-brand-surface shadow-[0_24px_80px_rgba(0,109,119,0.12)] lg:min-h-[calc(100vh-4rem)] lg:flex-row">
         <section className="relative flex w-full flex-col justify-between overflow-hidden bg-gradient-to-br from-brand-teal via-brand-tealDark to-brand-blue p-6 text-brand-surface sm:p-8 lg:w-[44%] lg:p-10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.18),_transparent_40%)]" />
@@ -47,8 +55,8 @@ export default function LoginPage() {
                 Welcome back to your policy companion.
               </h1>
               <p className="mt-4 text-sm leading-7 text-brand-surface/80">
-                Review updates, understand benefits, and ask for help with claims,
-                beneficiaries, and life changes in one calm experience.
+                Review updates, understand benefits, and ask for help with
+                claims, beneficiaries, and life changes in one calm experience.
               </p>
             </div>
           </div>
@@ -59,7 +67,9 @@ export default function LoginPage() {
               <span className="font-semibold">24k+</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-brand-surface/70">Average response time</span>
+              <span className="text-brand-surface/70">
+                Average response time
+              </span>
               <span className="font-semibold">2 min</span>
             </div>
           </div>
@@ -75,14 +85,17 @@ export default function LoginPage() {
                 Continue to your workspace
               </h2>
               <p className="mt-3 text-sm leading-7 text-brand-inkFaint">
-                Use your member credentials to access the host experience and open
-                the AI companion in context.
+                Use your member credentials to access the host experience and
+                open the AI companion in context.
               </p>
             </div>
 
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-brand-inkSoft" htmlFor="email">
+                <label
+                  className="text-sm font-semibold text-brand-inkSoft"
+                  htmlFor="email"
+                >
                   Email address
                 </label>
                 <input
@@ -96,7 +109,10 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-brand-inkSoft" htmlFor="password">
+                <label
+                  className="text-sm font-semibold text-brand-inkSoft"
+                  htmlFor="password"
+                >
                   Password
                 </label>
                 <input
@@ -111,15 +127,16 @@ export default function LoginPage() {
 
               <div className="flex items-center justify-between text-sm">
                 <label className="flex items-center gap-2 text-brand-inkSoft">
-                  <input type="checkbox" className="rounded border-brand-border text-brand-teal" />
+                  <input
+                    type="checkbox"
+                    className="rounded border-brand-border text-brand-teal"
+                  />
                   Remember me
                 </label>
                 <a href="#" className="font-semibold text-brand-teal">
                   Forgot password?
                 </a>
               </div>
-
-            
 
               <button
                 type="submit"
@@ -128,10 +145,11 @@ export default function LoginPage() {
                 Sign in
               </button>
             </form>
-              <div className="mt-6 text-xs text-brand-inkFaint text-center">
-              By signing in, you agree to Momentum's Terms of Service and Privacy Policy. Lumina is only available once you're signed in, so it always knows who it's helping and what it may share.
+            <div className="mt-6 text-xs text-brand-inkFaint text-center">
+              By signing in, you agree to Momentum's Terms of Service and
+              Privacy Policy. Lumina is only available once you're signed in, so
+              it always knows who it's helping and what it may share.
             </div>
-          
           </div>
         </section>
       </div>
