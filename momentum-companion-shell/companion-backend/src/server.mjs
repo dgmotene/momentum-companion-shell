@@ -9,20 +9,16 @@
 //   - everything else below is just a stub for now, no real AI logic yet
 
 import express from "express";
-import { createRemoteJWKSet, jwtVerify } from "jose";
+import {
+  verifyIdentityToken,
+  isKeyFetchError,
+  HOST_ORIGIN,
+} from "./auth/verify.mjs";
+import domainRoutes from "./domain/routes.mjs";
 
 const PORT = Number(process.env.COMPANION_BACKEND_PORT ?? 4000);
-const ISSUER = process.env.JWT_ISSUER ?? "https://mock-host.local";
-const AUDIENCE = process.env.JWT_AUDIENCE ?? "companion-backend";
-const HOST_ORIGIN = process.env.HOST_ORIGIN ?? "http://localhost:3000";
 const ALLOWED_ORIGIN =
   process.env.COMPANION_ALLOWED_ORIGIN ?? "http://localhost:3001";
-
-// Fetch the host's public key from its JWKS endpoint (cached by jose).
-// The backend can verify tokens but never holds a key that could sign one.
-const hostJWKS = createRemoteJWKSet(
-  new URL(`${HOST_ORIGIN}/.well-known/jwks.json`)
-);
 
 const app = express();
 app.use(express.json());
@@ -44,21 +40,10 @@ app.post("/api/verify", async (req, res) => {
   const token = req.body?.token;
   if (!token) return res.status(400).json({ error: "token required" });
   try {
-    const { payload } = await jwtVerify(token, hostJWKS, {
-      issuer: ISSUER,
-      audience: AUDIENCE,
-      algorithms: ["RS256"],
-    });
-    // TODO: apply the role + deceased_flag rules here on the backend, not in
-    // the UI: beneficiary + flag true = Q&A and claims only; flag false = no
-    // access to the policy yet. When cross-checking against the profiles
-    // table, resolve the flag via linked_to (the beneficiary's claim mirrors
-    // the linked policyholder's row, not their own).
+    const payload = await verifyIdentityToken(token);
     return res.json({ verified: true, claims: payload });
   } catch (err) {
-    // No jose error code (or a JWKS timeout) means the key fetch itself
-    // failed: a setup problem, not a bad token.
-    if (!err.code || err.code === "ERR_JWKS_TIMEOUT") {
+    if (isKeyFetchError(err)) {
       return res.status(503).json({
         verified: false,
         error: `could not fetch the signing key from ${HOST_ORIGIN}/.well-known/jwks.json; is the host running?`,
@@ -67,6 +52,10 @@ app.post("/api/verify", async (req, res) => {
     return res.status(401).json({ verified: false, error: err.code });
   }
 });
+
+// Role-scoped policy servicing: /api/me, /api/policy, /api/whatif,
+// /api/claims/guidance, address update, banking escalation.
+app.use(domainRoutes);
 
 // POST /api/gateway-ping (stub)
 // TODO: this route will eventually call the real AI gateway. Steps:
@@ -88,13 +77,6 @@ app.post("/api/gateway-ping", (_req, res) => {
 // backend has to store the chat history.
 app.post("/api/chat", (_req, res) => {
   res.json({ stub: true, message: "Orchestrator not implemented (design round)." });
-});
-
-// POST /api/whatif (stub)
-// TODO: calculates an estimated new premium if the user changes their cover.
-// Formula: new = max(200, current * (requested / current_sum) * factor)
-app.post("/api/whatif", (_req, res) => {
-  res.json({ stub: true, message: "What-If calculation not implemented (design round)." });
 });
 
 // POST /api/rag/query (stub)
