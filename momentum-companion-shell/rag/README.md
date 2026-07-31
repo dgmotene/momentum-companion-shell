@@ -21,8 +21,22 @@ pip install -e ".[dev]"
 ```
 
 Postgres needs the `vector` extension available; the service applies
-`sql/001_schema.sql` itself on startup. Everything lives under the `rag_`
-prefix in the existing database — nothing new to run.
+`src/myriad_rag/sql/001_schema.sql` itself on startup. Everything lives under
+the `rag_` prefix in the existing database — nothing new to run.
+
+### No local Python? Run everything via Docker
+
+With the compose db up (`docker compose up -d db` from `momentum-companion-shell/`),
+run any CLI command through a throwaway container on the compose network:
+
+```bash
+docker run --rm --network momentum-companion-shell_default \
+  -v "$PWD":/app -w /app -v "/path/to/myriad-technical-guide.pdf":/data/myriad.pdf:ro \
+  python:3.12-slim sh -c "pip install -q . && python -m myriad_rag.cli ingest /data/myriad.pdf"
+```
+
+Set `RAG_DATABASE_URL=postgresql://companion:companion@db:5432/companion` in
+`.env` for this setup.
 
 ## Ingest
 
@@ -37,6 +51,12 @@ python -m myriad_rag.cli ingest ./myriad-guide.pdf
 Re-running on the same file is a no-op unless you pass `--force`. That guard is
 deliberate: the embedding budget is spent per ingestion, and an accidental
 re-ingest buys you a byte-identical corpus.
+
+Two gateway realities baked into the defaults: Bifrost returns ONE vector per
+embeddings request no matter how many inputs you send, so `RAG_EMBED_BATCH_SIZE`
+must stay 1; and the team rate limit trips fast, so `RAG_EMBED_CONCURRENCY=1`
+with extra retries is the reliable setting. Sequential ingest of all 454 pages
+takes a few minutes.
 
 ## Serve
 
