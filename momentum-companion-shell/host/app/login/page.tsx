@@ -23,8 +23,8 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_theme(colors.brand.blueTint),_theme(colors.brand.bg)_60%)] px-4 py-8 text-brand-ink sm:px-6 lg:px-8">
-      <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl overflow-hidden rounded-[28px] border border-brand-border bg-brand-surface shadow-[0_24px_80px_rgba(0,109,119,0.12)]">
-        <section className="relative hidden w-[44%] flex-col justify-between overflow-hidden bg-gradient-to-br from-brand-teal via-brand-tealDark to-brand-blue p-10 text-brand-surface lg:flex">
+      <div className="mx-auto flex max-w-6xl flex-col overflow-hidden rounded-[28px] border border-brand-border bg-brand-surface shadow-[0_24px_80px_rgba(0,109,119,0.12)] lg:min-h-[calc(100vh-4rem)] lg:flex-row">
+        <section className="relative flex w-full flex-col justify-between overflow-hidden bg-gradient-to-br from-brand-teal via-brand-tealDark to-brand-blue p-6 text-brand-surface sm:p-8 lg:w-[44%] lg:p-10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.18),_transparent_40%)]" />
           <div className="relative z-10">
             <div className="mb-8 flex items-center gap-3">
@@ -125,7 +125,7 @@ export default function LoginPage() {
                 type="submit"
                 className="w-full rounded-2xl bg-brand-teal px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(0,109,119,0.2)] transition hover:-translate-y-0.5 hover:bg-brand-tealDark"
               >
-                Continue to portal
+                Sign in
               </button>
             </form>
               <div className="mt-6 text-xs text-brand-inkFaint text-center">
