@@ -25,20 +25,17 @@ import {
 } from "@shared/contract";
 import { POLICY_LABELS } from "@/lib/directory";
 import { formatRand, getPolicy, type Policy } from "@/lib/policies";
-import { LuminaLauncher } from "./LuminaLauncher";
 
 export function Dashboard({
   claims,
   actingFor,
   onOpenCompanion,
   onChooseClient,
-  showLauncher = true,
 }: {
   claims: IdentityClaims;
   actingFor: string | null;
   onOpenCompanion: () => void;
   onChooseClient: () => void;
-  showLauncher?: boolean;
 }) {
   const capabilities = capabilitiesFor(claims);
   const staff = isStaffRole(claims.role);
@@ -88,10 +85,7 @@ export function Dashboard({
   const isLifeInsured = claims.role === "life_insured";
 
   return (
-    <section className="relative">
-      {showLauncher && capabilities.length > 0 && (
-        <LuminaLauncher onClick={onOpenCompanion} />
-      )}
+    <section>
       <h1 className="font-serif text-[20px] font-semibold sm:text-[24px]">
         {policy.productName}
       </h1>

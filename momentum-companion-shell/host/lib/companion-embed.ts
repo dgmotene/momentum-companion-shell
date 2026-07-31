@@ -160,8 +160,8 @@ export class CompanionEmbed {
     if (surface === "pill") {
       Object.assign(pill.style, {
         inset: "auto 20px 20px auto",
-        width: "184px",
-        height: "60px",
+        width: "212px",
+        height: "58px",
         zIndex: Z.pill,
       });
       show(pill, true);

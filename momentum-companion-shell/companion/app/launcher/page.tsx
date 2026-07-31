@@ -28,17 +28,17 @@ export default function Launcher() {
     <button
       type="button"
       onClick={open}
-      className="group flex h-full w-full items-center gap-2.5 rounded-full border-[1.5px] border-teal bg-surface pl-3 pr-4 text-left shadow-pill transition hover:border-teal-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-teal"
+      className="group flex h-full w-full items-center gap-2.5 rounded-full border-[1.5px] border-teal bg-surface pl-3 pr-5 text-left shadow-pill transition-transform duration-150 ease-out hover:-translate-y-0.5 hover:shadow-[0_10px_26px_rgba(0,109,119,0.26)] active:translate-y-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal"
     >
       <span
         aria-hidden="true"
-        className="h-7 w-7 shrink-0 rounded-full bg-gradient-to-br from-teal-light to-teal"
+        className="h-8 w-8 shrink-0 rounded-full bg-gradient-to-br from-teal-light to-teal shadow-[0_0_0_4px_rgba(78,205,196,0.14)] motion-safe:animate-pulse"
       />
-      <span className="min-w-0">
-        <span className="block text-[13px] font-bold leading-tight text-teal-dark">
+      <span className="flex min-w-0 items-baseline gap-2 whitespace-nowrap">
+        <span className="text-[13.5px] font-bold leading-tight text-teal-dark">
           Lumina
         </span>
-        <span className="block truncate text-[11px] leading-tight text-ink-faint">
+        <span className="text-[11.5px] leading-tight text-ink-faint">
           Tap to chat
         </span>
       </span>
