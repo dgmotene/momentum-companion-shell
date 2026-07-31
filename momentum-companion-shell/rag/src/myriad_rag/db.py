@@ -15,7 +15,7 @@ from .config import Settings
 
 log = logging.getLogger(__name__)
 
-SCHEMA_PATH = Path(__file__).resolve().parents[2] / "sql" / "001_schema.sql"
+SCHEMA_PATH = Path(__file__).resolve().parent / "sql" / "001_schema.sql"
 
 
 def to_vector_literal(vec: Sequence[float]) -> str:

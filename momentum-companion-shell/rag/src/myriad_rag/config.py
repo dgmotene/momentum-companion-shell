@@ -47,7 +47,9 @@ class Settings(BaseSettings):
     gateway_max_retries: int = 5
     # Concurrent in-flight embedding requests during ingest.
     embed_concurrency: int = 4
-    embed_batch_size: int = 32
+    # Bifrost returns ONE vector per request regardless of array size, so a
+    # batch must stay a single chunk.
+    embed_batch_size: int = 1
 
     aws_region: str = "us-east-1"  # bedrock only
 
@@ -63,7 +65,8 @@ class Settings(BaseSettings):
     top_k: int = 6  # spec says 5-8
     # Chunks scoring below this cosine similarity are dropped before the
     # prompt is built. Better an honest "I don't know" than a padded prompt.
-    min_similarity: float = 0.35
+    # Titan v2 scores run low: correct hits land ~0.28-0.35, so 0.35 drops them.
+    min_similarity: float = 0.25
 
     # --- generation ------------------------------------------------------
     chat_model: str = "bedrock/anthropic.claude-3-haiku-20240307-v1:0"
