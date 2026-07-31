@@ -66,7 +66,7 @@ class Settings(BaseSettings):
     min_similarity: float = 0.35
 
     # --- generation ------------------------------------------------------
-    chat_model: str = "bedrock/eu.anthropic.claude-sonnet-4-5-20250929-v1:0"
+    chat_model: str = "bedrock/anthropic.claude-3-haiku-20240307-v1:0"
     chat_max_tokens: int = 1024
     chat_temperature: float = 0.0
 
