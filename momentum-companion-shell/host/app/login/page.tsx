@@ -1,26 +1,40 @@
 "use client";
 
-import { useState } from "react";
-
-type Persona = "policyholder" | "beneficiary";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { getMockPortalData } from "../lib/mockPortalData";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
   const [status, setStatus] = useState("Sign in to continue to your portal.");
+  const [users, setUsers] = useState<
+    Record<string, { password: string; persona: string }>
+  >({});
+
+  useEffect(() => {
+    const loadData = async () => {
+      const data = await getMockPortalData();
+      setUsers(data.users);
+    };
+
+    loadData();
+  }, []);
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!selectedPersona) {
-      setStatus("Choose a role to continue.");
+    const normalizedEmail = email.trim().toLowerCase();
+    const mockUser = users[normalizedEmail];
+
+    if (!mockUser || mockUser.password !== password) {
+      setStatus("Use the mock credentials shown below to continue.");
       return;
     }
 
-    setStatus(
-      `Signed in as ${selectedPersona}. The companion is ready to help.`,
-    );
+    setStatus("Login successful. Redirecting to your dashboard...");
+    router.push(`/dashboard?email=${encodeURIComponent(normalizedEmail)}`);
   };
 
   return (
@@ -78,16 +92,11 @@ export default function LoginPage() {
         <section className="flex-1 bg-brand-bg p-6 sm:p-8 lg:p-10">
           <div className="mx-auto flex h-full max-w-md flex-col justify-center">
             <div className="mb-8">
-              <p className="text-sm font-semibold uppercase tracking-[0.28em] text-brand-teal">
-                Secure sign in
-              </p>
-              <h2 className="mt-2 font-serif text-3xl text-brand-ink">
-                Continue to your workspace
+              <h2 className="text-sm font-semibold uppercase tracking-[0.28em] text-brand-teal">
+                 Sign in to your Momentum account
               </h2>
-              <p className="mt-3 text-sm leading-7 text-brand-inkFaint">
-                Use your member credentials to access the host experience and
-                open the AI companion in context.
-              </p>
+             
+    
             </div>
 
             <form className="space-y-4" onSubmit={handleSubmit}>
@@ -125,19 +134,6 @@ export default function LoginPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 text-brand-inkSoft">
-                  <input
-                    type="checkbox"
-                    className="rounded border-brand-border text-brand-teal"
-                  />
-                  Remember me
-                </label>
-                <a href="#" className="font-semibold text-brand-teal">
-                  Forgot password?
-                </a>
-              </div>
-
               <button
                 type="submit"
                 className="w-full rounded-2xl bg-brand-teal px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(0,109,119,0.2)] transition hover:-translate-y-0.5 hover:bg-brand-tealDark"
@@ -145,10 +141,12 @@ export default function LoginPage() {
                 Sign in
               </button>
             </form>
-            <div className="mt-6 text-xs text-brand-inkFaint text-center">
-              By signing in, you agree to Momentum's Terms of Service and
-              Privacy Policy. Lumina is only available once you're signed in, so
-              it always knows who it's helping and what it may share.
+            <div className="mt-6 rounded-2xl bg-brand-bg text-xs leading-6 text-brand-inkFaint">
+             
+              <p className="text-center">
+                By signing in, you agree to Momentum's Terms of Service and Privacy Policy. Lumina is only available once you're signed in, so it always knows who it's helping and what it may share.
+              </p>
+             
             </div>
           </div>
         </section>
