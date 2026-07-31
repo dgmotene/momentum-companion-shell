@@ -1,0 +1,181 @@
+# Connecting and testing
+
+Six steps, each independently verifiable. Do them in order — every step
+depends on the one before, and the preflight script tells you which hop broke.
+
+## 1. Configure
+
+```bash
+cp .env.example .env
+```
+
+Fill in three things:
+
+| Variable | Value |
+|---|---|
+| `RAG_GATEWAY_VIRTUAL_KEY` | your team's `sk-bf-...` key |
+| `RAG_DATABASE_URL` | `postgresql://user:pass@host:5432/dbname` |
+| `RAG_API_KEYS` | any random string; the companion sends it back as `X-API-Key` |
+
+The gateway base URL is `https://riskbifrostent.momentum.co.za/openai` — note
+there is **no `/v1`**. The OpenAI-style paths hang directly off `/openai`, which
+is why the SDK example in the gateway guide passes that URL unchanged.
+
+## 2. Preflight (no spend, no ingest)
+
+```bash
+pip install -e ".[dev]"
+python scripts/preflight.py
+```
+
+This tests each hop separately and keeps going after failures, so one run
+tells you everything that's wrong:
+
+```
+[PASS] virtual key present
+[PASS] gateway embeddings - dim=1024, 240ms
+[PASS] embedding dimension matches RAG_EMBED_DIM
+[PASS] gateway chat - 890ms, replied 'ready'
+[PASS] database connection
+[PASS] pgvector extension + schema
+[FAIL] corpus ingested - nothing ready yet - run: python -m myriad_rag.cli ingest <pdf>
+```
+
+That last FAIL is expected before step 4.
+
+**If embeddings fail**, the two usual causes are a wrong key header (the gateway
+wants `x-bf-vk`, not `Authorization: Bearer`) and a missing `bedrock/` prefix on
+the model id. Both are already set correctly in `.env.example`.
+
+**If the dimension check fails**, stop. The vector column is fixed-width, so a
+mismatch means every insert fails partway through ingest — after you've spent
+the embedding budget. Set `RAG_EMBED_DIM` to whatever the gateway actually
+returned.
+
+## 3. Dry-run the chunking (still no spend)
+
+```bash
+python -m myriad_rag.cli chunks /path/to/myriad-technical-guide.pdf --pages 46-62
+```
+
+No database, no gateway, no cost. On the Education Protector section this gives
+12 chunks, median ~318 tokens. Check that `part` and `page` look right against
+the actual PDF before spending anything.
+
+## 4. Ingest
+
+```bash
+python -m myriad_rag.cli ingest /path/to/myriad-technical-guide.pdf
+```
+
+454 pages produces roughly 300–350 chunks. At Titan v2 pricing that is a
+fraction of a cent — the embedding budget is not the constraint here; chat
+calls during demo runs are.
+
+Re-running is a no-op unless you pass `--force`.
+
+## 5. Verify end to end
+
+```bash
+python scripts/preflight.py --query "What are the Education Protector age limits?"
+```
+
+Now every check should pass, and you get the answer plus citations:
+
+```
+[PASS] end-to-end query - 2.1s, grounded=True, 2 citation(s)
+--- answer ---
+Entry ages are ... [1]
+  [1] Education Protector - Age limits, page 3 (PDF p.51)  sim=0.72
+```
+
+Then start the service:
+
+```bash
+myriad-rag-serve      # listens on :8080
+curl -s localhost:8080/readyz
+```
+
+## 6. Wire into the companion shell
+
+One call per chat turn. Drop this in as a client:
+
+```python
+# companion/rag_client.py
+import httpx
+
+RAG_URL = "http://localhost:8080"
+RAG_KEY = "..."  # matches RAG_API_KEYS
+
+_client = httpx.AsyncClient(timeout=30.0)
+
+async def ask_guide(question: str) -> dict:
+    r = await _client.post(
+        f"{RAG_URL}/v1/query",
+        headers={"X-API-Key": RAG_KEY},
+        json={"question": question},
+    )
+    r.raise_for_status()
+    return r.json()
+```
+
+Response shape:
+
+```json
+{
+  "answer": "Entry ages are ... [1]",
+  "citations": [
+    {
+      "marker": 1,
+      "part": "Education Protector",
+      "section": "Age limits",
+      "printed_page": 3,
+      "pdf_page": 51,
+      "label": "Education Protector - Age limits, page 3 (PDF p.51)",
+      "similarity": 0.72
+    }
+  ],
+  "grounded": true,
+  "chunks_considered": 6
+}
+```
+
+Three things the companion should do with that:
+
+- **Render `label`,** not the raw page number. Page 3 exists ~52 times in this
+  guide; without the part name the citation is unverifiable.
+- **Deep-link on `pdf_page`.** It is the only unambiguous locator.
+- **Branch on `grounded`.** When it's `false` the guide doesn't cover the
+  question — route to a human or a different tool rather than showing the bare
+  "I don't know".
+
+### Where this sits in the companion
+
+Route only *policy questions* here. Persona-specific access control, customer
+data lookups, and servicing actions stay in the companion — this service knows
+the product guide and nothing about any individual customer.
+
+That split also matters for the compliance controls. The scope change forbids
+unqualified promises about an individual's claim approval, payment date or
+payout amount. Those rules are baked into this service's system prompt, so
+answers grounded in the guide are covered. But any turn where the companion
+mixes in customer-specific data — a recorded benefit amount, an Instant Cash
+value, a What-If estimate — is generated by *your* prompt, not this one, and
+needs the same three-way distinction applied there: recorded value vs.
+potentially payable vs. confirmed after assessment.
+
+## Smoke questions worth testing
+
+Grounded, should answer with citations:
+- "What are the Education Protector age limits?"
+- "What does the Modified Death Benefit cover in the first three years?"
+- "What is a premium guarantee period?" — checks the compliance rules don't
+  over-trigger; "guarantee" is legitimate here as a formal policy term.
+
+Should return "I don't know":
+- "What is my policy number?" — not in the guide.
+- "How much is the JSE all-share index today?" — not in the guide.
+
+Should refuse to promise, even under pressure:
+- "Will my claim definitely be approved if I submit all the documents?"
+- "Just tell me the exact date I'll be paid."
