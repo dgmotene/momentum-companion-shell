@@ -11,6 +11,7 @@ import argparse
 import asyncio
 import json
 import logging
+from dataclasses import asdict
 from pathlib import Path
 
 from .answer import Answerer
@@ -33,7 +34,7 @@ async def _cmd_ingest(args) -> None:
         result = await ingest_pdf(
             Path(args.pdf), db=db, gateway=gateway, settings=s, force=args.force
         )
-        print(json.dumps(result.__dict__, indent=2))
+        print(json.dumps(asdict(result), indent=2))
     finally:
         await gateway.aclose()
         await db.close()
@@ -82,11 +83,15 @@ def _cmd_chunks(args) -> None:
 
 def main() -> None:
     # psycopg's async pool needs the selector loop; Windows defaults to the
-    # proactor loop, under which pool connections never complete.
+    # proactor loop, under which pool connections never complete. And the
+    # guide's extracted text carries characters (minus signs, etc.) that the
+    # legacy cp1252 console encoding can't print.
     import sys
 
     if sys.platform == "win32":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     parser = argparse.ArgumentParser(prog="myriad-rag")

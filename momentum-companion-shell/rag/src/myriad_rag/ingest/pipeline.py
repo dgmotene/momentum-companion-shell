@@ -113,6 +113,7 @@ async def ingest_pdf(
         rows = [
             {
                 "chunk_index": c.chunk_index,
+                "part": c.part,
                 "section": c.section,
                 "printed_page": c.printed_page,
                 "pdf_page": c.pdf_page,

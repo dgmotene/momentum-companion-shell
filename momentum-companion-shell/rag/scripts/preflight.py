@@ -98,8 +98,11 @@ async def main(query: str | None) -> int:
             record("corpus ingested", True,
                    f"{d['source_name']}: {d['chunk_count']} chunks, "
                    f"{d['page_count']} pages, model={d['embed_model']}")
-            record("corpus model matches current config",
-                   d["embed_model"] == s.embed_model and d["embed_dim"] == s.embed_dim,
+            model_matches = (
+                d["embed_model"] == s.embed_model and d["embed_dim"] == s.embed_dim
+            )
+            record("corpus model matches current config", model_matches,
+                   "" if model_matches else
                    "corpus and config disagree - queries will return nothing")
         else:
             record("corpus ingested", False,
@@ -135,9 +138,13 @@ async def main(query: str | None) -> int:
 
 if __name__ == "__main__":
     # psycopg's async pool needs the selector loop; Windows defaults to the
-    # proactor loop, under which pool connections never complete.
+    # proactor loop, under which pool connections never complete. And the
+    # guide's extracted text carries characters the legacy cp1252 console
+    # encoding can't print.
     if sys.platform == "win32":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--query", help="also run one end-to-end question")

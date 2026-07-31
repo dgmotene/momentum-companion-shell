@@ -79,7 +79,8 @@ def clean_page(page: Page, boilerplate: set[str]) -> Page:
     text = "\n".join(kept)
     text = _HYPHEN_BREAK.sub(r"\1\2", text)   # rejoin words split across lines
     text = _MULTI_NL.sub("\n\n", text).strip()
-    return Page(pdf_page=page.pdf_page, printed_page=page.printed_page, text=text)
+    return Page(pdf_page=page.pdf_page, printed_page=page.printed_page,
+                part=page.part, text=text)
 
 
 def clean_pages(pages: list[Page], *, threshold: float = 0.5) -> list[Page]:
