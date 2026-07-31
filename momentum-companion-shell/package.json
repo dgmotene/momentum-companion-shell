@@ -7,6 +7,8 @@
     "quickstart": "npm run setup && (docker compose up -d db || echo \"No Docker: skipping the database. The hello-world flow runs without it.\") && npm run install:all && npm run dev",
     "setup": "node scripts/generate-keys.mjs",
     "install:all": "npm install --no-audit --no-fund && npm --prefix host install && npm --prefix companion install && npm --prefix companion-backend install",
+    "db:reset": "docker compose down -v && docker compose up -d db",
+    "db:show": "npm --prefix companion-backend run db:show",
     "predev": "node scripts/check-ports.mjs",
     "dev": "concurrently -k -n backend,companion,host npm:dev:backend npm:dev:companion npm:dev:host",
     "dev:host": "npm --prefix host run dev",
