@@ -1,112 +1,23 @@
-"use client";
-
-// This is the insurer's portal page - the "parent" app that embeds the
-// companion in an iframe.
+// Root route.
 //
-// The login below is fake. Clicking a button calls /api/token, which signs
-// a JWT on the server (so the private key never reaches the browser). That
-// token is then sent to the companion iframe using window.postMessage,
-// always targeted at the companion's exact origin, never "*".
+// Reads the session server-side and sends the user where they belong, so a
+// refresh on "/" does not look like a logout. Signed out, it renders the login
+// screen in place rather than redirecting, which keeps "/" a valid landing URL.
 
-import { useEffect, useRef, useState } from "react";
+import { redirect } from "next/navigation";
+import { readSession } from "@/lib/session";
+import LoginPage from "./login/page";
 
-const COMPANION_ORIGIN =
-  process.env.NEXT_PUBLIC_COMPANION_ORIGIN ?? "http://localhost:3001";
-
-type Persona = "policyholder" | "beneficiary";
-
-export default function HostPortal() {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [persona, setPersona] = useState<Persona | null>(null);
-  const [status, setStatus] = useState<string>("Not logged in.");
-
-  async function loginAs(p: Persona) {
-    setStatus("Signing mock identity token on the host...");
-    // The token is created by the API route, so the private key never leaves the server.
-    const res = await fetch("/api/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ persona: p }),
-    });
-    if (!res.ok) {
-      setStatus("Token endpoint failed. Did you run `npm run setup` to generate keys?");
-      return;
-    }
-    const { token } = await res.json();
-    setPersona(p);
-    setToken(token);
-    setStatus(`Logged in as ${p}. Token will be handed to the companion iframe.`);
+export default async function HomePage() {
+  let sub: string | null = null;
+  try {
+    sub = await readSession();
+  } catch {
+    // Keys missing (npm run setup not run yet). Fall through to the login
+    // screen, which surfaces the real error when someone tries to sign in.
+    sub = null;
   }
 
-  // Send the token when the companion announces it is ready (COMPANION_READY).
-  // The companion re-announces on every (re)load, so that covers reloads too;
-  // the immediate send covers a companion that was ready before login.
-  useEffect(() => {
-    if (!token) return;
-    const send = () => {
-      iframeRef.current?.contentWindow?.postMessage(
-        { type: "COMPANION_IDENTITY_TOKEN", token },
-        COMPANION_ORIGIN // never "*"
-      );
-    };
-    const onReady = (event: MessageEvent) => {
-      if (event.origin !== COMPANION_ORIGIN) return;
-      if (event.data?.type === "COMPANION_READY") send();
-    };
-    window.addEventListener("message", onReady);
-    send();
-    return () => window.removeEventListener("message", onReady);
-  }, [token]);
-
-  return (
-    <main className="mx-auto max-w-5xl p-8">
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold">Momentum Member Portal</h1>
-        <p className="text-sm text-slate-600">
-          Mock host application, design-round environment shell. No real
-          authentication, no real policy data.
-        </p>
-      </header>
-
-      <section className="mb-6 rounded-lg border border-slate-300 bg-white p-4">
-        <h2 className="mb-2 font-medium">Mock login</h2>
-        <div className="flex gap-3">
-          <button
-            onClick={() => loginAs("policyholder")}
-            className="rounded bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-700"
-          >
-            Log in as Policyholder
-          </button>
-          <button
-            onClick={() => loginAs("beneficiary")}
-            className="rounded bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-700"
-          >
-            Log in as Beneficiary
-          </button>
-        </div>
-        <p className="mt-3 text-xs text-slate-500">{status}</p>
-      </section>
-
-      <section className="rounded-lg border border-slate-300 bg-white p-4">
-        <h2 className="mb-2 font-medium">Embedded AI companion</h2>
-        <p className="mb-3 text-xs text-slate-500">
-          Trust boundary: the iframe below is a separate origin (
-          {COMPANION_ORIGIN}). Identity crosses this edge as a short-lived,
-          scoped JWT via targeted postMessage.
-        </p>
-        <iframe
-          ref={iframeRef}
-          src={COMPANION_ORIGIN}
-          title="AI Companion"
-          className="h-[480px] w-full rounded border border-slate-200"
-        />
-        {persona && (
-          <p className="mt-2 text-xs text-slate-500">
-            Handed token for persona: <strong>{persona}</strong>
-          </p>
-        )}
-      </section>
-    </main>
-  );
+  if (sub) redirect("/dashboard");
+  return <LoginPage />;
 }
