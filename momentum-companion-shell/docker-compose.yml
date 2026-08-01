@@ -55,6 +55,9 @@ services:
       # Explicit default: chat.js reads this with ?? so an empty string would
       # become 0 and disable the similarity floor.
       RAG_MIN_SIMILARITY: ${RAG_MIN_SIMILARITY:-0.2}
+      # Optional translation; defaults to 'none' (disabled) so Lelapa stays optional.
+      TRANSLATION_PROVIDER: ${TRANSLATION_PROVIDER:-none}
+      VULAVULA_API_TOKEN: ${VULAVULA_API_TOKEN:-}
       DATABASE_URL: postgres://companion:companion@db:5432/companion
     ports:
       - "4000:4000"
