@@ -22,6 +22,7 @@ import {
   loadPolicySnapshot,
   getOrCreateSession,
   updateSession,
+  appendToHistory,
 } from "./chat.js";
 import { estimatePremium } from "./domain/whatif.mjs";
 import { claimChecklist } from "./domain/claims-content.mjs";
@@ -171,6 +172,35 @@ async function handoffResponse(identity, session, userMessage) {
   };
 }
 
+// What the assistant said, flattened for the conversation record. A quote is
+// only useful context for the next turn if the amount survives into it.
+function spokenText(blocks) {
+  return blocks
+    .map((block) => {
+      switch (block.kind) {
+        case "text":
+        case "sla":
+          return block.text;
+        case "value":
+          return `${block.label}: ${block.amount}`;
+        case "list":
+          return block.items.join("; ");
+        case "checklist":
+          return `${block.title ?? "Documents"}: ${block.items
+            .map((item) => `${item.label} (${item.state})`)
+            .join("; ")}`;
+        case "reference":
+          return `${block.label} ${block.value}`;
+        case "diff":
+          return block.rows.map((row) => `${row.label}: ${row.from} to ${row.to}`).join("; ");
+        default:
+          return "";
+      }
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
 // Staff hold no policy of their own, so a policy question with no client
 // chosen has no subject to answer about.
 function chooseClientResponse() {
@@ -180,6 +210,79 @@ function chooseClientResponse() {
 }
 
 const QUOTE_JOURNEY = "whatif_quote";
+
+// What the assistant asked for last turn, phrased for the classifier. One
+// place, so a new journey teaches the classifier about itself instead of
+// needing another exception in the router.
+function pendingQuestion(workflowState) {
+  const state = workflowState ?? {};
+  if (state.journey === QUOTE_JOURNEY) {
+    return "a cover amount to estimate a premium against, and optionally a waiting period.";
+  }
+  if (state.journey === "address_update" && (state.missing ?? []).length) {
+    return `these parts of their new address: ${state.missing
+      .map((field) => FIELD_LABELS[field])
+      .join(", ")}.`;
+  }
+  return null;
+}
+
+const PROVINCES = [
+  "eastern cape",
+  "free state",
+  "gauteng",
+  "kwazulu-natal",
+  "kwazulu natal",
+  "limpopo",
+  "mpumalanga",
+  "north west",
+  "northern cape",
+  "western cape",
+];
+
+// The classifier gets context, but the router should still understand common
+// bare replies while collecting an address. "Johannesburg and 2029" is not a
+// policy question just because it lacks the word "address".
+function addressFragment(message, missing = []) {
+  const fields = {};
+  const text = String(message ?? "").trim();
+  const lower = text.toLowerCase();
+  const questionLike = /^(what|why|how|when|where|who|can|could|should|would|do|does|is|are)\b/i.test(text);
+
+  const postal = lower.match(/\b\d{4}\b/);
+  if (postal && missing.includes("postal_code")) fields.postal_code = postal[0];
+
+  const province = PROVINCES.find((name) =>
+    new RegExp(`\\b${name.replace(/[- ]/g, "[- ]")}\\b`, "i").test(text)
+  );
+  if (province && missing.includes("province")) {
+    fields.province = province
+      .split(/[- ]+/)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(province.includes("-") ? "-" : " ");
+  }
+
+  const remainder = lower
+    .replace(/\b\d{4}\b/g, " ")
+    .replace(/\b(and|in|at|it'?s|its|my|new|address|is)\b/g, " ")
+    .replace(province ? new RegExp(`\\b${province.replace(/[- ]/g, "[- ]")}\\b`, "i") : /$^/, " ")
+    .replace(/[,.]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const remainderWords = remainder ? remainder.split(" ").length : 0;
+  const looksLikeAddressAnswer =
+    postal || province || (!questionLike && remainderWords > 0 && remainderWords <= 3);
+
+  if (remainder && looksLikeAddressAnswer && missing.includes("city")) {
+    fields.city = remainder
+      .split(" ")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  }
+
+  return fields;
+}
 
 // A cover amount below this is not a cover amount, so an unrelated small number
 // cannot be mistaken for the answer to a pending quote question.
@@ -203,8 +306,8 @@ async function myDetailsResponse(identity, understanding, subject) {
     role: identity.role,
   });
   const detailsTarget = understanding?.detailsTarget ?? null;
-  const { facts, amounts } = describeUserRecord(userContext, detailsTarget);
-  if (!facts.length && !amounts.length) {
+  const { sentences, amounts } = describeUserRecord(userContext, detailsTarget, delegated);
+  if (!sentences.length && !amounts.length) {
     const whose = delegated ? "that client's" : "your";
     return answeredText(
       detailsTarget
@@ -226,8 +329,8 @@ async function myDetailsResponse(identity, understanding, subject) {
   return {
     outcome: "answered",
     blocks: [
-      { kind: "text", text: opening },
-      { kind: "list", items: facts },
+      // One paragraph, not a bulleted database row per field.
+      { kind: "text", text: [opening, ...sentences].join(" ") },
       ...amounts.map((entry) => ({
         kind: "value",
         label: entry.label,
@@ -252,17 +355,6 @@ async function whatIfResponse(identity, understanding, session, subject) {
     requestedSum: understanding.requestedSum,
     waitingMonths: understanding.waitingMonths ?? null,
   };
-  if (!params.requestedSum) {
-    // Remember that we asked, so a bare amount on the next turn is read as the
-    // answer to this question rather than as a new topic.
-    await updateSession(session.id, session.history, { journey: QUOTE_JOURNEY });
-    return answeredText(
-      "Tell me the cover amount to estimate, and optionally a waiting period of 3, 6, 12 or 24 months. For example: what would I pay for R400 000 cover with a 6 month wait?"
-    );
-  }
-  if ((session.workflow_state ?? {}).journey === QUOTE_JOURNEY) {
-    await updateSession(session.id, session.history, {});
-  }
   const policy = await loadPolicySnapshot(subject.policyId);
   if (!policy) {
     return answeredText(
@@ -270,6 +362,20 @@ async function whatIfResponse(identity, understanding, session, subject) {
         ? "I couldn't find that client's policy to estimate against."
         : "I couldn't find a policy on your profile to estimate against."
     );
+  }
+  if (!params.requestedSum) {
+    // Ask one plain question rather than handing over a template. Remembering
+    // that we asked is what lets a bare amount next turn be read as the answer.
+    await updateSession(session.id, session.history, { journey: QUOTE_JOURNEY });
+    const current = `R${Number(policy.sum_assured).toLocaleString("en-ZA")}`;
+    return answeredText(
+      subject.kind === "delegated"
+        ? `Their cover is ${current} at the moment. What would you like to take it to?`
+        : `Your cover is ${current} at the moment. What would you like to take it to?`
+    );
+  }
+  if ((session.workflow_state ?? {}).journey === QUOTE_JOURNEY) {
+    await updateSession(session.id, session.history, {});
   }
   const estimate = estimatePremium({
     currentPremium: Number(policy.monthly_premium),
@@ -583,23 +689,46 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     });
   }
 
-  const understanding = await understandMessage(userMessage).catch(() => ({
+  const activeWorkflow = session.workflow_state ?? {};
+  const understanding = await understandMessage(userMessage, pendingQuestion(activeWorkflow)).catch(() => ({
     intent: "policy_question",
     claimType: null,
     requestedSum: null,
     waitingMonths: null,
+    updateTarget: null,
+    detailsTarget: null,
     address: {},
   }));
+  const activeAddressUpdate = activeWorkflow.journey === "address_update";
+  const fallbackAddress = activeAddressUpdate
+    ? addressFragment(userMessage, activeWorkflow.missing ?? [])
+    : {};
+  // The classifier reads these fragments well, typos and all: "sandton
+  // johanesburg" comes back as suburb Sandton, city Johannesburg. So it wins,
+  // and the deterministic parse only fills what it left empty. Merged the
+  // other way round, the leftover text landed in `city` and "Sandton
+  // Johanesburg" was written to the record.
+  const suppliedAddress = { ...fallbackAddress };
+  for (const [field, value] of Object.entries(understanding.address ?? {})) {
+    if (value && String(value).trim()) suppliedAddress[field] = String(value).trim();
+  }
+  const suppliedAddressFields = ADDRESS_FIELDS.filter((field) =>
+    String(suppliedAddress[field] ?? "").trim()
+  );
+  const routedUnderstanding =
+    activeAddressUpdate && suppliedAddressFields.length
+      ? { ...understanding, intent: "update_request", updateTarget: "address", address: suppliedAddress }
+      : understanding;
   // The classifier only ever sees the current message, so it labels "maybe
   // R700000" as unrelated even though it extracts the amount correctly. If we
   // are the ones who just asked for a cover amount, that answer is the quote.
-  const awaitingCoverAmount = (session.workflow_state ?? {}).journey === QUOTE_JOURNEY;
+  const awaitingCoverAmount = activeWorkflow.journey === QUOTE_JOURNEY;
   const classified =
     awaitingCoverAmount &&
-    understanding.intent !== "quote_request" &&
-    understanding.requestedSum >= PLAUSIBLE_COVER_FLOOR
+    routedUnderstanding.intent !== "quote_request" &&
+    routedUnderstanding.requestedSum >= PLAUSIBLE_COVER_FLOOR
       ? "quote_request"
-      : understanding.intent;
+      : routedUnderstanding.intent;
   // "Explain the product benefits" classifies as a question about the
   // assistant and gets answered with a description of the assistant. Naming
   // the subject matter settles it: this is a question about the product.
@@ -607,32 +736,38 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     classified === "capabilities" && ABOUT_THE_PRODUCT.test(userMessage)
       ? "policy_question"
       : classified;
-  // A claim already in progress stays pinned through unrelated questions and
-  // across a reload, so nobody has to remember where they left off.
-  const pinnedClaim =
-    (session.workflow_state ?? {}).journey === "claim" ? session.workflow_state : null;
+  // The grounded path writes its own history. Everything else did not, so a
+  // quote or a claim was invisible to the next question and the conversation
+  // restarted every turn.
+  let historyWritten = false;
 
-  const send = (payload) => {
+  const send = async (payload) => {
     console.log(
       `[chat] ${req.identity.sub} (${req.identity.role}) intent=${intent} outcome=${payload.outcome} ${Date.now() - startedAt}ms`
     );
-    // Defaults first so a handler that resolved its own session or workflow
-    // still wins.
-    return res.json({ session_id: session.id, workflow: pinnedClaim, ...payload });
+    if (!historyWritten) {
+      // Never let recording the turn be the reason the reply is not sent.
+      await appendToHistory(session.id, [
+        { role: "user", content: userMessage },
+        { role: "assistant", content: spokenText(payload.blocks ?? []) },
+      ]).catch((err) => console.error("could not record the turn", err));
+    }
+    // Default first so a handler that resolved its own session still wins.
+    return res.json({ session_id: session.id, ...payload });
   };
 
+  // Open the door and stop talking. The opening bubble has already said what
+  // this can do, and "what can you do" has its own answer, so reciting the
+  // capability list at someone who said hello just talks over them.
+  // The one thing worth adding is the thing they cannot proceed without.
   if (intent === "greeting") {
     const firstName = req.identity.fullName.split(" ")[0];
-    const summary = capabilitySummary(req.identity);
-    const chooseClient =
-      isStaffRole(req.identity.role) && subject.kind === "none"
-        ? " Choose a client in the portal when you want me to answer about a specific policy."
-        : "";
+    const needsAClient = isStaffRole(req.identity.role) && subject.kind === "none";
     return send(
       answeredText(
-        summary
-          ? `Hello ${firstName}. ${summary}${chooseClient} What can I help with?`
-          : `Hello ${firstName}. What can I help with?`
+        needsAClient
+          ? `Hello ${firstName}. Open a client in the portal and I can answer about their policy, or ask me anything from the Myriad guide.`
+          : `Hello ${firstName}. What's on your mind?`
       )
     );
   }
@@ -641,13 +776,13 @@ app.post("/api/chat", requireAuth, async (req, res) => {
   }
   if (intent === "capabilities") return send(capabilitiesResponse(req.identity));
   if (intent === "my_details")
-    return send(await myDetailsResponse(req.identity, understanding, subject));
+    return send(await myDetailsResponse(req.identity, routedUnderstanding, subject));
   if (intent === "quote_request")
-    return send(await whatIfResponse(req.identity, understanding, session, subject));
+    return send(await whatIfResponse(req.identity, routedUnderstanding, session, subject));
   if (intent === "claim")
-    return send(await claimResponse(req.identity, understanding, subject, session));
+    return send(await claimResponse(req.identity, routedUnderstanding, subject, session));
   if (intent === "update_request")
-    return send(await addressResponse(req.identity, understanding, subject));
+    return send(await addressResponse(req.identity, routedUnderstanding, subject));
   if (intent === "confirm") {
     const applied = await confirmResponse(req.identity);
     if (applied) return send(applied);
@@ -680,6 +815,8 @@ app.post("/api/chat", requireAuth, async (req, res) => {
       userPrompt: userMessage,
       subject: subject.kind === "delegated" ? subject : null,
     });
+    // This path appends the turn itself, with the model's own wording.
+    historyWritten = result.grounded;
 
     if (!result.grounded) {
       return send({

@@ -114,42 +114,68 @@ export async function loadUserContext({ profileId, policyId, role }) {
 
 const formatRand = (amount) => `R${Number(amount).toLocaleString("en-ZA")}`;
 
-// For showing someone their own record. Money is returned separately from the
-// plain facts so every amount can go out as a classified value block rather
-// than as unlabelled prose in a list.
-// `target` narrows the answer to the one detail that was asked for. Someone who
-// asks for their address should not be handed their whole file back.
-export function describeUserRecord(userContext, target = null) {
-  if (!userContext?.profile) return { facts: [], amounts: [] };
+const STATUS_WORDS = {
+  active: "active",
+  claim_pending: "active, with a claim in progress",
+  lapsed: "lapsed",
+  paid_up: "paid up",
+};
+
+/** "a, b and c", so a list of benefits reads as a sentence. */
+function joinNaturally(parts) {
+  if (parts.length <= 1) return parts.join("");
+  return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+}
+
+// Someone's own record, said the way a person would say it. Sentences rather
+// than "Label: value" rows, because this is a conversation.
+//
+// `target` narrows the answer to the one detail asked for: someone who asks
+// for their address should not be handed their whole file back.
+//
+// Recorded amounts are safe to state plainly, and the Scope Change says so
+// explicitly, so they sit in the prose. `amounts` carries the value badge only
+// when the amount IS the question, rather than repeating every figure twice.
+export function describeUserRecord(userContext, target = null, aboutSomeoneElse = false) {
+  if (!userContext?.profile) return { sentences: [], amounts: [] };
 
   const wants = (category) => target === null || target === category;
-  const facts = [];
+  const their = aboutSomeoneElse ? "Their" : "Your";
+  const theyPay = aboutSomeoneElse ? "They pay" : "You pay";
+  const theyNominated = aboutSomeoneElse ? "They have nominated" : "You have nominated";
+  const heldFor = aboutSomeoneElse ? "on file is" : "we have for you is";
+  const sentences = [];
   const amounts = [];
+  const policy = userContext.policy;
 
-  if (userContext.policy && wants("policy")) {
-    facts.push(
-      `Policy ${userContext.policy.policy_id}: ${userContext.policy.product_name}, status ${userContext.policy.status}`
-    );
+  if (policy && wants("policy")) {
+    const status = STATUS_WORDS[policy.status] ?? policy.status;
+    sentences.push(`${their} ${policy.product_name} policy, ${policy.policy_id}, is ${status}.`);
   }
 
-  if (userContext.policy && wants("cover")) {
-    amounts.push({
-      label: "Recorded cover amount",
-      amount: formatRand(userContext.policy.sum_assured),
-    });
-  }
-
-  if (userContext.policy?.monthly_premium !== null && userContext.policy && wants("premium")) {
-    amounts.push({
-      label: "Monthly premium",
-      amount: formatRand(userContext.policy.monthly_premium),
-    });
-  }
-
-  if (wants("benefits")) {
-    for (const benefit of userContext.benefits) {
-      facts.push(`Benefit: ${benefit.benefit_name}, ${formatRand(benefit.cover_amount)}`);
+  if (policy && wants("cover")) {
+    const cover = formatRand(policy.sum_assured);
+    if (target === "cover") {
+      amounts.push({ label: "Recorded cover amount", amount: cover });
+    } else {
+      sentences.push(`The cover recorded on it is ${cover}.`);
     }
+  }
+
+  if (policy && policy.monthly_premium !== null && wants("premium")) {
+    const premium = formatRand(policy.monthly_premium);
+    if (target === "premium") {
+      amounts.push({ label: "Monthly premium", amount: premium });
+    } else {
+      sentences.push(`${theyPay} ${premium} a month.`);
+    }
+  }
+
+  if (wants("benefits") && userContext.benefits.length) {
+    const benefits = userContext.benefits.map(
+      (benefit) => `${benefit.benefit_name} of ${formatRand(benefit.cover_amount)}`
+    );
+    sentences.push(`It includes ${joinNaturally(benefits)}.`);
   }
 
   if (userContext.address && wants("address")) {
@@ -160,30 +186,31 @@ export function describeUserRecord(userContext, target = null) {
       userContext.address.province,
       userContext.address.postal_code,
     ].filter(Boolean);
-    facts.push(`Address on file: ${parts.join(", ")}`);
+    sentences.push(`The address ${heldFor} ${parts.join(", ")}.`);
   }
 
   if (userContext.banking && wants("banking")) {
-    facts.push(
-      `Banking: ${userContext.banking.bank_name}, account ending ${userContext.banking.account_last4}`
+    sentences.push(
+      `${their} premiums come from a ${userContext.banking.bank_name} account ending ${userContext.banking.account_last4}.`
     );
   }
 
-  if (wants("beneficiaries")) {
-    for (const beneficiary of userContext.beneficiaries) {
-      facts.push(
-        `Beneficiary: ${beneficiary.full_name}, ${beneficiary.relationship}, ${beneficiary.percentage}%`
-      );
-    }
+  if (wants("beneficiaries") && userContext.beneficiaries.length) {
+    const nominated = userContext.beneficiaries.map(
+      (beneficiary) =>
+        `${beneficiary.full_name}, ${beneficiary.relationship}, for ${beneficiary.percentage}%`
+    );
+    sentences.push(`${theyNominated} ${joinNaturally(nominated)}.`);
   }
 
-  if (wants("claims")) {
-    for (const claim of userContext.claims) {
-      facts.push(`Claim on record: ${claim.claim_type}, ${claim.status}`);
-    }
+  if (wants("claims") && userContext.claims.length) {
+    const claims = userContext.claims.map(
+      (claim) => `a ${claim.claim_type} claim, ${String(claim.status).replace(/_/g, " ")}`
+    );
+    sentences.push(`There is ${joinNaturally(claims)} on record.`);
   }
 
-  return { facts, amounts };
+  return { sentences, amounts };
 }
 
 // Recorded values only. The wording matters: the model must not present any of
