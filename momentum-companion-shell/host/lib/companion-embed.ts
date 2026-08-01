@@ -123,6 +123,13 @@ export class CompanionEmbed {
     frame.style.border = "0";
     frame.style.background = "transparent";
     frame.style.colorScheme = "normal";
+    // Pill iframe should present as a fully rounded pill.
+    if (path === LAUNCHER_PATH) {
+      frame.style.borderRadius = "9999px";
+      // Clip the iframe contents to the rounded shape so the inner document
+      // does not visually overflow the pill frame on hover or focus.
+      frame.style.overflow = "hidden";
+    }
     frame.style.transition =
       "width 180ms ease, height 180ms ease, inset 180ms ease, opacity 140ms ease";
     return frame;

@@ -249,7 +249,7 @@ function PolicyDetailsCard({
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 py-2 sm:gap-4 sm:py-2.5">
+    <div className="flex items-baseline justify-between gap-3 py-4 sm:gap-4 sm:py-2.5">
       <dt className="text-[12px] text-brand-inkSoft sm:text-[13px]">{label}</dt>
       <dd className="text-[12.5px] font-semibold sm:text-[13.5px]">{value}</dd>
     </div>
