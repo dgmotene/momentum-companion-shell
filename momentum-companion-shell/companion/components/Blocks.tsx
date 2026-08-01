@@ -64,19 +64,15 @@ function BlockView({ block }: { block: Block }) {
         </p>
       );
 
+    // "Saved", not "verified". We checked the format and wrote it down; we did
+    // not confirm the address exists.
     case "checks":
       return (
-        <ul className="my-2 space-y-1 text-[13px]">
+        <ul className="my-2 list-disc space-y-1 pl-5 text-[13px]">
           {block.items.map((item, i) => (
-            <li
-              key={i}
-              className={item.ok ? "text-green-text" : "text-amber-text"}
-            >
-              <span aria-hidden="true">{item.ok ? "✅" : "⚠️"}</span>{" "}
+            <li key={i} className={item.ok ? "text-ink-soft" : "text-amber-text"}>
               {item.label}
-              <span className="sr-only">
-                {item.ok ? " (verified)" : " (needs attention)"}
-              </span>
+              {!item.ok && <span className="sr-only"> (needs attention)</span>}
             </li>
           ))}
         </ul>
@@ -360,6 +356,9 @@ const CHECKLIST_ICON: Record<
   },
 };
 
+// Part of the reply, not a widget. The circled ticks read as checkboxes
+// waiting to be clicked, and nothing here is clickable: this is a list of what
+// a claim needs, so it is written the way the rest of the answer is written.
 export function Checklist({
   title,
   items,
@@ -372,48 +371,35 @@ export function Checklist({
   ).length;
 
   return (
-    <section className="my-3 rounded-btn border border-line bg-surface p-3">
-      <h3 className="text-[12.5px] font-semibold text-ink">
+    <div className="my-2">
+      <p className="text-[13px] leading-relaxed">
         {title ?? "Required documents"}
-        <span className="ml-1.5 font-normal text-ink-faint">
-          &middot; any order is fine
-        </span>
-      </h3>
-      <p className="mt-0.5 text-[11.5px] text-ink-faint">
-        {done} of {items.length} so far, whenever you&rsquo;re ready
+        {done > 0 && (
+          <span className="text-ink-faint">
+            {" "}
+            ({done} of {items.length} already on file)
+          </span>
+        )}
       </p>
-
-      <ul className="mt-2.5 space-y-2">
-        {items.map((item) => {
-          const icon = CHECKLIST_ICON[item.state];
-          return (
-            <li key={item.id} className="flex items-start gap-2.5">
-              <span
-                aria-hidden="true"
-                className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${icon.className}`}
-              >
-                {icon.glyph}
+      <ul className="mt-1.5 list-disc space-y-1 pl-5">
+        {items.map((item) => (
+          <li key={item.id} className="text-[13px] leading-relaxed text-ink-soft">
+            {item.label}
+            {CHECKLIST_ICON[item.state].label !== "outstanding" && (
+              <span className="text-ink-faint">
+                {" "}
+                ({CHECKLIST_ICON[item.state].label})
               </span>
-              <span className="min-w-0">
-                <span
-                  className={`block text-[12.5px] font-semibold ${
-                    item.state === "outstanding" ? "text-ink-soft" : "text-ink"
-                  }`}
-                >
-                  {item.label}
-                  <span className="sr-only"> ({icon.label})</span>
-                </span>
-                {item.detail && (
-                  <span className="block text-[11.5px] leading-snug text-ink-faint">
-                    {item.detail}
-                  </span>
-                )}
+            )}
+            {item.detail && (
+              <span className="block text-[11.5px] leading-snug text-ink-faint">
+                {item.detail}
               </span>
-            </li>
-          );
-        })}
+            )}
+          </li>
+        ))}
       </ul>
-    </section>
+    </div>
   );
 }
 

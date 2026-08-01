@@ -17,13 +17,11 @@ import {
   capabilitiesFor,
   isStaffRole,
   type Block,
-  type WorkflowState,
 } from "@shared/contract";
 import { useHostBridge } from "@/lib/host-bridge";
 import { sendChat, verifyToken, type VerifyResult } from "@/lib/api";
 import { MOCK_NOTICE } from "@/lib/mock-journeys";
 import { Message, type ChatTurn } from "@/components/Message";
-import { Checklist } from "@/components/Blocks";
 
 export default function Companion() {
   const bridge = useHostBridge();
@@ -34,7 +32,6 @@ export default function Companion() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [workflow, setWorkflow] = useState<WorkflowState | null>(null);
   const [usingFixtures, setUsingFixtures] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
@@ -68,7 +65,6 @@ export default function Companion() {
   useEffect(() => {
     setTurns([]);
     setSessionId(null);
-    setWorkflow(null);
   }, [claims?.sub]);
 
   useEffect(() => {
@@ -113,7 +109,7 @@ export default function Companion() {
     return [
       {
         kind: "text",
-        text: `Hi ${firstName}, I'm Lumina. Tell me what's on your mind — I can answer questions about your policy, help with changes, or walk you through a claim. There's no wrong way to ask.`,
+        text: `Hi ${firstName}, I'm Lumina. Tell me what's on your mind. I can answer questions about your policy, help with changes, or walk you through a claim, and there's no wrong way to ask.`,
       },
     ];
   }, [claims, capabilities.length, bereaved, staff, firstName, actingFor]);
@@ -151,7 +147,6 @@ export default function Companion() {
       );
 
       if (response.session_id) setSessionId(response.session_id);
-      if (response.workflow) setWorkflow(response.workflow);
       if (mocked) setUsingFixtures(true);
 
       setTurns((current) =>
@@ -298,17 +293,6 @@ export default function Companion() {
         ))}
       </ol>
 
-      {/* "Where things stand", the pinned workflow card made visible. The
-          model never tracks this; the backend does, which is why a claim
-          survives an interruption, a reload, or a night's sleep. */}
-      {workflow?.checklist && workflow.checklist.length > 0 && (
-        <div className="border-t border-line bg-claims px-3.5 py-2">
-          <Checklist
-            title="Where things stand, in your own time"
-            items={workflow.checklist}
-          />
-        </div>
-      )}
 
       {canChat ? (
         <>
