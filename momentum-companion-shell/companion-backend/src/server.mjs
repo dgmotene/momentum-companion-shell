@@ -117,6 +117,12 @@ function capabilitiesResponse(identity) {
   );
 }
 
+const QUOTE_JOURNEY = "whatif_quote";
+
+// A cover amount below this is not a cover amount, so an unrelated small number
+// cannot be mistaken for the answer to a pending quote question.
+const PLAUSIBLE_COVER_FLOOR = 1000;
+
 // Someone's own record is answered from the database, not the guide: retrieval
 // would find nothing and the no-grounding rule would hide data we already hold.
 async function myDetailsResponse(identity, understanding) {
@@ -164,7 +170,7 @@ async function myDetailsResponse(identity, understanding) {
   };
 }
 
-async function whatIfResponse(identity, understanding) {
+async function whatIfResponse(identity, understanding, session) {
   if (!capabilitiesFor(identity).whatIf) {
     return refusedResponse(
       identity,
@@ -174,12 +180,18 @@ async function whatIfResponse(identity, understanding) {
   }
   const params = {
     requestedSum: understanding.requestedSum,
-    waitingMonths: understanding.waitingMonths ?? 0,
+    waitingMonths: understanding.waitingMonths ?? null,
   };
   if (!params.requestedSum) {
+    // Remember that we asked, so a bare amount on the next turn is read as the
+    // answer to this question rather than as a new topic.
+    await updateSession(session.id, session.history, { journey: QUOTE_JOURNEY });
     return answeredText(
-      "Tell me the cover amount to estimate, and optionally a waiting period of 0, 3, 6, 12 or 24 months. For example: what would I pay for R400 000 cover with a 6 month wait?"
+      "Tell me the cover amount to estimate, and optionally a waiting period of 3, 6, 12 or 24 months. For example: what would I pay for R400 000 cover with a 6 month wait?"
     );
+  }
+  if ((session.workflow_state ?? {}).journey === QUOTE_JOURNEY) {
+    await updateSession(session.id, session.history, {});
   }
   const policy = await loadPolicySnapshot(identity.policyId);
   if (!policy) return answeredText("I couldn't find a policy on your profile to estimate against.");
@@ -198,14 +210,16 @@ async function whatIfResponse(identity, understanding) {
     authResult: "allowed",
     validationResult: "passed",
   });
-  const conditions = [`${params.waitingMonths} month waiting period`];
+  // The guide lists seven waiting periods and none is zero, so never invent one.
+  const wait = estimate.waitingMonths === null ? "" : ` with a ${estimate.waitingMonths} month waiting period`;
+  const conditions = wait ? [`${estimate.waitingMonths} month waiting period`] : [];
   if (estimate.flooredAtMinimum) conditions.push("Minimum premium of R200 applies");
   return {
     outcome: "answered",
     blocks: [
       {
         kind: "text",
-        text: `For R${params.requestedSum.toLocaleString("en-ZA")} of cover with a ${params.waitingMonths} month waiting period, you would pay about R${estimate.estimatedPremium} a month instead of your current R${Number(policy.monthly_premium)}. A shorter wait costs more.`,
+        text: `For R${params.requestedSum.toLocaleString("en-ZA")} of cover${wait}, you would pay about R${estimate.estimatedPremium} a month instead of your current R${Number(policy.monthly_premium)}.`,
       },
       {
         kind: "value",
@@ -418,7 +432,16 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     waitingMonths: null,
     address: {},
   }));
-  const intent = understanding.intent;
+  // The classifier only ever sees the current message, so it labels "maybe
+  // R700000" as unrelated even though it extracts the amount correctly. If we
+  // are the ones who just asked for a cover amount, that answer is the quote.
+  const awaitingCoverAmount = (session.workflow_state ?? {}).journey === QUOTE_JOURNEY;
+  const intent =
+    awaitingCoverAmount &&
+    understanding.intent !== "quote_request" &&
+    understanding.requestedSum >= PLAUSIBLE_COVER_FLOOR
+      ? "quote_request"
+      : understanding.intent;
   const send = (payload) => {
     console.log(
       `[chat] ${req.identity.sub} (${req.identity.role}) intent=${intent} outcome=${payload.outcome} ${Date.now() - startedAt}ms`
@@ -439,7 +462,8 @@ app.post("/api/chat", requireAuth, async (req, res) => {
   }
   if (intent === "capabilities") return send(capabilitiesResponse(req.identity));
   if (intent === "my_details") return send(await myDetailsResponse(req.identity, understanding));
-  if (intent === "quote_request") return send(await whatIfResponse(req.identity, understanding));
+  if (intent === "quote_request")
+    return send(await whatIfResponse(req.identity, understanding, session));
   if (intent === "claim") return send(await claimResponse(req.identity, understanding));
   if (intent === "update_request") return send(await addressResponse(req.identity, understanding));
   if (intent === "confirm") return send(await confirmResponse(req.identity));
