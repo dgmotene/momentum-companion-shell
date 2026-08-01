@@ -4,3 +4,8 @@ keys/*.pem
 .env
 *.log
 dbdata/
+
+# TypeScript incremental build cache, written by `tsc --noEmit`.
+*.tsbuildinfo
+
+.DS_Store
