@@ -105,6 +105,11 @@ export async function searchVectorStore(queryVector, limit = 3) {
     FROM rag_chunks chunk
     JOIN rag_documents document ON document.id = chunk.document_id
     WHERE document.status = 'ready'
+      -- If a chunk cannot be attributed it cannot be cited, so it has no
+      -- business grounding an answer. Excludes the guide's cover page, which
+      -- otherwise retrieves as "Myriad guide / General p.0".
+      AND chunk.printed_page > 0
+      AND chunk.part IS NOT NULL
       AND (chunk.embedding <=> $1::vector) <= $3
     ORDER BY distance ASC
     LIMIT $2;
