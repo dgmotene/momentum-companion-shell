@@ -7,12 +7,12 @@
 // read by anyone who opens dev tools, and a direct line to the model would
 // bypass the role checks that only the backend enforces.
 //
-// Mock fallback: while the orchestrator is still being built, /api/chat
-// answers with a `stub` marker. Rather than showing a broken UI, we detect
-// that and answer from fixtures, flagged clearly as fixtures so nobody
-// mistakes a demo reply for a grounded one. The moment the real route starts
-// returning a ChatResponse, this file stops falling back with no change
-// anywhere else.
+// Fixtures are opt-in and off by default. They exist for demoing the UI with
+// no backend, and they must never stand in for a real failure: an expired
+// token answered from fixtures would show invented policy content at exactly
+// the moment the product should say "your session ended". A refusal replaced
+// by a helpful-looking answer is the one failure that would discredit
+// everything else here, so a failure is reported as a failure.
 
 import {
   API,
@@ -68,12 +68,16 @@ export interface ChatResult {
   mocked: boolean;
 }
 
-function looksLikeStub(body: unknown): boolean {
-  return (
-    typeof body === "object" &&
-    body !== null &&
-    (body as { stub?: unknown }).stub === true
-  );
+/** Fixtures only when someone deliberately asked for them. */
+const USE_FIXTURES = process.env.NEXT_PUBLIC_COMPANION_FIXTURES === "true";
+
+function failure(text: string, sessionId: string | null): ChatResponse {
+  return {
+    session_id: sessionId ?? "",
+    outcome: "error",
+    blocks: [{ kind: "text", text }],
+    citations: [],
+  };
 }
 
 function isChatResponse(body: unknown): body is ChatResponse {
@@ -105,17 +109,41 @@ export async function sendChat(
 
     const body: unknown = await res.json().catch(() => null);
 
+    // The backend answers refusals in this shape too, so a refusal reaches the
+    // user as a refusal.
     if (isChatResponse(body)) {
       return { response: body, mocked: false };
     }
 
-    // Not implemented yet, or an error shape we do not recognise.
-    if (looksLikeStub(body) || !res.ok) {
+    if (USE_FIXTURES) {
       return { response: mockChat(request, claims), mocked: true };
     }
 
-    return { response: mockChat(request, claims), mocked: true };
+    const sessionId = request.session_id ?? null;
+    if (res.status === 401) {
+      return {
+        response: failure(
+          "Your session with the portal has ended. Refresh the page to sign in again and I'll pick up where we left off.",
+          sessionId
+        ),
+        mocked: false,
+      };
+    }
+    const detail =
+      typeof (body as { message?: unknown })?.message === "string"
+        ? (body as { message: string }).message
+        : "Something went wrong on our side. Please try again, or ask me to connect you with a person.";
+    return { response: failure(detail, sessionId), mocked: false };
   } catch {
-    return { response: mockChat(request, claims), mocked: true };
+    if (USE_FIXTURES) {
+      return { response: mockChat(request, claims), mocked: true };
+    }
+    return {
+      response: failure(
+        "I can't reach Momentum's systems from here at the moment. Please try again in a moment.",
+        request.session_id ?? null
+      ),
+      mocked: false,
+    };
   }
 }
