@@ -571,7 +571,9 @@ branch teammates should pull. Local and origin are in sync.
 | `dalton-rag` | Merged, `c02267e`. Clean, additive. |
 | `feat/multilingual-translation` | Merged, `3d5ed6b`. One `docker-compose.yml` conflict: the incoming side still carried the stale `riskservicesdev` URL and dead OAuth vars, so ours was kept and only the two translation vars taken. Its offline smoke test passes. Defaults to `none`, nothing imports it. |
 | `origin/modise` | **Not merged, cherry-picked in `0f2c7f5`.** It is 4608 files and 939k lines, of which only 24 files are real: the rest is a committed `rag/.venv` (one file alone is 104k lines) plus a duplicate 5.5 MB PDF. Its `/api/chat` would also have replaced ours with a 26-line version dropping the shared response shape, the beneficiary refusal and the session fix. Took `rag-client.mjs`, the `gateway.py` error surfacing, and the `RAG_SERVICE_*` vars. `config.py` deliberately left alone. |
-| `origin/ritmo` | Dropped. One file, nine lines, targeting a file deleted for being the identity-spoofing hole. |
+| `origin/dalton-rag` | 1 commit deliberately **not** taken (`6446b95` "policy doc"). It adds a duplicate 5.5 MB copy of the guide PDF (already tracked at `docs/myriad-technical-guide.pdf`), a committed `.pyc`, line-ending churn, and a typo that would break CORS preflight: `res.sendStatus(204)` becomes `ress.endStatus(204)`, which is undefined. Tell its author. |
+| `origin/frontend` | Contained via `origin/main` (PR #3). Merged in `ae3d30d`. |
+| `origin/ritmo` | Deleted upstream. We had already dropped it: one file, nine lines, targeting a file deleted for being the identity-spoofing hole. |
 | `feat/compliance-controls`, `feat/policy-servicing`, `main`, `origin/host-frontend`, `origin/main` | Already ancestors, nothing to merge. Re-verified against the new HEAD. |
 
 `main` is still 17 commits behind this branch. Deciding when to merge there is yours.
