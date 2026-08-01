@@ -1,5 +1,9 @@
-// Lumina's design tokens, lifted from lumina-wireframe.html so the built
-// product and the approved wireframe cannot drift apart.
+// Lumina's design tokens.
+//
+// Structure, spacing, radii and the semantic amber/green come from
+// lumina-wireframe.html. The primary ramp deliberately does NOT: the wireframe
+// was built on teal and the product now runs on Momentum blue, so the two have
+// been allowed to diverge on hue. Everything else still matches the wireframe.
 //
 // Shared by the host and the companion. They are separate origins and separate
 // builds, but the user sees one product, so the palette has one definition.

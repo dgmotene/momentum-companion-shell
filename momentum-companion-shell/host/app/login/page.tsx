@@ -97,7 +97,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="relative z-10 grid gap-3 rounded-2xl border border-brand-surface/20 bg-brand-surface/10 p-4 backdrop-blur">
+          {/* <div className="relative z-10 grid gap-3 rounded-2xl border border-brand-surface/20 bg-brand-surface/10 p-4 backdrop-blur">
             <div className="flex items-center justify-between text-sm">
               <span className="text-brand-surface/70">Active members</span>
               <span className="font-semibold">24k+</span>
@@ -108,7 +108,7 @@ export default function LoginPage() {
               </span>
               <span className="font-semibold">2 min</span>
             </div>
-          </div>
+          </div> */}
         </section>
 
         <section className="flex-1 bg-brand-bg p-6 sm:p-8 lg:p-10">
@@ -170,11 +170,11 @@ export default function LoginPage() {
                 one. Clicking a row fills the form; it does not sign you in, so
                 the credential path is the same one a real user takes. */}
             <div className="mt-6 rounded-2xl bg-brand-bg p-4 text-xs leading-6 text-brand-inkFaint">
-              <p className="mb-2 font-semibold text-brand-inkSoft">
+              {/* <p className="mb-2 font-semibold text-brand-inkSoft">
                 Demo accounts &middot; password{" "}
                 <code className="text-brand-ink">password123</code>
-              </p>
-              <ul className="grid gap-1">
+              </p> */}
+              {/* <ul className="grid gap-1">
                 {DEMO_ACCOUNTS.map((account) => (
                   <li key={account.email}>
                     <button
@@ -194,7 +194,7 @@ export default function LoginPage() {
                     </button>
                   </li>
                 ))}
-              </ul>
+              </ul> */}
               <p className="mt-3 text-center">
                 By signing in, you agree to Momentum&rsquo;s Terms of Service and
                 Privacy Policy. Lumina is only available once you&rsquo;re
