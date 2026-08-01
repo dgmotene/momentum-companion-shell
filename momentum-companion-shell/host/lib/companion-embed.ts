@@ -72,6 +72,7 @@ export class CompanionEmbed {
   private panelReady = false;
   /** Held so a token that arrives before the panel is ready is not lost. */
   private pendingToken: string | null = null;
+  private latestContext: PageContext | null = null;
   /** Guards against overlapping mint requests when several triggers coincide. */
   private minting: Promise<void> | null = null;
 
@@ -108,6 +109,7 @@ export class CompanionEmbed {
     this.panel = null;
     this.panelReady = false;
     this.pendingToken = null;
+    this.latestContext = null;
   }
 
   private createFrame(path: string, title: string): HTMLIFrameElement {
@@ -244,6 +246,10 @@ export class CompanionEmbed {
    * can at worst make the assistant discuss numbers that are not on screen.
    */
   sendPageContext(context: PageContext): void {
+    // Kept even once delivered: the panel re-announces on reload, and a staff
+    // user who picked a client before opening Lumina must not have to pick
+    // again.
+    this.latestContext = context;
     if (!this.panelReady) return;
     this.post({ type: HOST_TO_COMPANION.PAGE_CONTEXT, context });
   }
@@ -292,6 +298,12 @@ export class CompanionEmbed {
             // Panel reloaded mid-session (dev hot reload, or a crash) and has
             // no identity. Re-mint rather than leaving it stranded.
             void this.requestToken();
+          }
+          if (this.latestContext) {
+            this.post({
+              type: HOST_TO_COMPANION.PAGE_CONTEXT,
+              context: this.latestContext,
+            });
           }
         }
         break;
