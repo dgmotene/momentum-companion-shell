@@ -27,6 +27,10 @@ function getOpenAIClient() {
     openaiClient = new OpenAI({
       baseURL: GATEWAY_BASE_URL,
       apiKey: VIRTUAL_KEY,
+      // The SDK retries twice by default and waits ten minutes. Both are ours
+      // to decide: callWithRetry below is the only retry layer.
+      maxRetries: 0,
+      timeout: 30000,
       defaultHeaders: {
         "x-git": "risk-ai-api",
         "x-bf-vk": VIRTUAL_KEY
@@ -45,27 +49,70 @@ const pool = new pg.Pool({
 // ==========================================
 // 2. RETRY LOGIC (GATEWAY RESILIENCE)
 // ==========================================
-/**
- * Helper to execute functions with exponential backoff retries[cite: 1]
- */
-async function callWithRetry(fn, retries = 3, delay = 1000) {
+const RETRYABLE_STATUSES = new Set([408, 409, 425, 429, 500, 502, 503, 504]);
+// ENOTFOUND belongs here despite naming a permanent-sounding condition: on the
+// venue's Wi-Fi a momentary DNS failure surfaces as ENOTFOUND for a hostname
+// that resolves fine a second later. Retrying costs no tokens, since the
+// request never reaches the gateway.
+const RETRYABLE_NETWORK_CODES = new Set([
+  "ECONNRESET",
+  "ECONNREFUSED",
+  "ETIMEDOUT",
+  "EPIPE",
+  "EAI_AGAIN",
+  "ENOTFOUND",
+  "UND_ERR_CONNECT_TIMEOUT",
+  "UND_ERR_HEADERS_TIMEOUT",
+  "UND_ERR_SOCKET"
+]);
+
+// A 400 or a bad key cannot succeed on a second attempt, and retrying one
+// spends budget to reach the same answer more slowly.
+function isRetryable(error) {
+  if (error?.status !== undefined) return RETRYABLE_STATUSES.has(error.status);
+  // The SDK wraps a network failure two layers deep: APIConnectionError, then
+  // TypeError: fetch failed, then the error actually carrying the code.
+  for (let current = error; current; current = current.cause) {
+    if (current.code && RETRYABLE_NETWORK_CODES.has(current.code)) return true;
+  }
+  return error?.name === "APIConnectionTimeoutError";
+}
+
+// Honour Retry-After when the gateway sends one; it knows its own limits
+// better than our backoff does. Capped because a user is waiting: past this we
+// would rather fail and offer a person than hold the turn open.
+const MAX_RETRY_AFTER_MS = 20000;
+
+function retryAfterMs(error) {
+  const header = error?.headers?.get?.("retry-after") ?? error?.headers?.["retry-after"];
+  if (!header) return null;
+  const seconds = Number(header);
+  if (!Number.isFinite(seconds) || seconds < 0) return null;
+  return Math.min(seconds * 1000, MAX_RETRY_AFTER_MS);
+}
+
+const describeFailure = (error) =>
+  [
+    error.message,
+    error.status && `status=${error.status}`,
+    error.code && `code=${error.code}`,
+    error.cause?.code && `causeCode=${error.cause.code}`
+  ]
+    .filter(Boolean)
+    .join(" | ");
+
+async function callWithRetry(fn, attemptsLeft = 3, baseDelay = 1000) {
   try {
     return await fn();
   } catch (error) {
-    if (retries <= 0) throw error;
-    const cause = error.cause;
-    const detail = [
-      error.message,
-      error.status && `status=${error.status}`,
-      error.code && `code=${error.code}`,
-      cause?.message && `cause=${cause.message}`,
-      cause?.code && `causeCode=${cause.code}`
-    ]
-      .filter(Boolean)
-      .join(" | ");
-    console.warn(`[Gateway Warning] Request failed. Retrying in ${delay}ms... ${detail}`);
-    await new Promise((res) => setTimeout(res, delay));
-    return callWithRetry(fn, retries - 1, delay * 2);
+    if (attemptsLeft <= 0 || !isRetryable(error)) throw error;
+    // Full jitter: several turns failing together must not retry in lockstep.
+    const backoff = retryAfterMs(error) ?? Math.random() * baseDelay;
+    console.warn(
+      `[Gateway] retrying in ${Math.round(backoff)}ms (${attemptsLeft} left): ${describeFailure(error)}`
+    );
+    await new Promise((resolve) => setTimeout(resolve, backoff));
+    return callWithRetry(fn, attemptsLeft - 1, baseDelay * 2);
   }
 }
 
@@ -261,8 +308,13 @@ export async function logAudit({ profileId, policyId, role, action, authResult, 
  * Main chat handler called by Express or API router
  * Accepts user details from the main app + query string
  */
-export async function processChatMessage({ userProfile, userPrompt }) {
+export async function processChatMessage({ userProfile, userPrompt, subject = null }) {
   const { id: profileId, full_name: fullName, role, policy_id: policyId, access_level: accessLevel } = userProfile;
+
+  // The session stays keyed to whoever is asking; only the record being read
+  // follows the subject, so an adviser's history never moves with the client.
+  const subjectProfileId = subject?.profileId ?? profileId;
+  const subjectPolicyId = subject?.policyId ?? policyId;
 
   // Step 1: Pre-execution Authorization Check
   if (accessLevel === "UNAUTHORIZED_BENEFICIARY_CLAIM") {
@@ -285,7 +337,11 @@ export async function processChatMessage({ userProfile, userPrompt }) {
   // Step 2: Session Retrieval
   const session = await getOrCreateSession(profileId, role);
 
-  const userContext = await loadUserContext({ profileId, policyId, role });
+  const userContext = await loadUserContext({
+    profileId: subjectProfileId,
+    policyId: subjectPolicyId,
+    role,
+  });
 
   // Step 3: Embed Query & Retrieve Context via RAG
   const queryVector = await generateEmbedding(userPrompt);
@@ -295,7 +351,7 @@ export async function processChatMessage({ userProfile, userPrompt }) {
   if (matchedChunks.length === 0) {
     await logAudit({
       profileId,
-      policyId,
+      policyId: subjectPolicyId,
       role,
       action: "CHAT_QUERY",
       authResult: "ALLOWED",
@@ -315,7 +371,8 @@ export async function processChatMessage({ userProfile, userPrompt }) {
   const systemPrompt = `You are Momentum Life's AI Assistant.
 User Name: ${fullName}
 User Role: ${role}
-Policy ID: ${policyId}
+Policy ID: ${subjectPolicyId}
+${subject ? `${fullName} is staff acting on this client's policy. Answer about the client, and never address the client directly.` : ""}
 ${policySection}
 
 Answer the user's inquiry strictly based on the policy context provided below. If the information is not in the context, state that you do not know and recommend reaching out to support.
@@ -376,12 +433,13 @@ ${contextSnippet}`;
   // Step 7: Log Successful Audit Event
   await logAudit({
     profileId,
-    policyId,
+    policyId: subjectPolicyId,
     role,
     action: "CHAT_QUERY",
     authResult: "ALLOWED",
     validationResult: "GROUNDED",
-    sessionId: session.id
+    sessionId: session.id,
+    reason: subject ? `acting for ${subjectPolicyId}` : null
   });
 
   return {
@@ -418,7 +476,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     try {
       console.log(`\n[1/3] Testing Titan Embeddings v2...`);
       const vector = await generateEmbedding(mockPrompt);
-      console.log(`  ✅ Vector generated successfully (${vector.length} dimensions)`);
+      console.log(`  OK: vector generated (${vector.length} dimensions)`);
 
       console.log(`\n[2/3] Processing Full Chat Request for ${mockUser.full_name}...`);
       const result = await processChatMessage({
@@ -431,9 +489,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       console.log(result.text);
       console.log(`--------------------------------------------------`);
       console.log(`Sources Referenced:`, result.sources);
-      console.log(`\n🚀 PIPELINE TEST COMPLETE: Success!`);
+      console.log(`\nPIPELINE TEST COMPLETE: Success!`);
     } catch (err) {
-      console.error(`\n❌ PIPELINE TEST FAILED:`, err.message);
+      console.error(`\nPIPELINE TEST FAILED:`, err.message);
       if (err.stack) console.error(err.stack);
     } finally {
       await pool.end();
