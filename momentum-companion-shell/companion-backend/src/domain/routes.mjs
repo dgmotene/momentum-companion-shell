@@ -1,13 +1,16 @@
 import { Router } from "express";
 import { createHash } from "node:crypto";
-import { query, withTransaction } from "../db.mjs";
+import { query } from "../db.mjs";
 import { requireAuth } from "../auth/middleware.mjs";
 import { capabilitiesFor, requireCapability } from "./capabilities.mjs";
 import { writeAudit } from "./audit.mjs";
 import { estimatePremium } from "./whatif.mjs";
 import { claimChecklist, CLAIM_TYPE_KEYS } from "./claims-content.mjs";
-
-const ADDRESS_FIELDS = ["street", "suburb", "city", "province", "postal_code"];
+import {
+  ADDRESS_FIELDS,
+  validateAddress,
+  applyAddressUpdate,
+} from "./address-update.mjs";
 
 const router = Router();
 router.use(["/api/me", "/api/policy", "/api/whatif", "/api/claims"], requireAuth);
@@ -131,17 +134,6 @@ router.get(
   }
 );
 
-function validateAddress(body) {
-  const missing = ADDRESS_FIELDS.filter(
-    (field) => !String(body?.[field] ?? "").trim()
-  );
-  if (missing.length) return `missing: ${missing.join(", ")}`;
-  if (!/^\d{4}$/.test(body.postal_code)) {
-    return "postal code must be exactly 4 digits";
-  }
-  return null;
-}
-
 function addressConfirmToken(sub, body) {
   const canonical = ADDRESS_FIELDS.map((field) => body[field].trim()).join("|");
   return createHash("sha256").update(`${sub}|${canonical}`).digest("hex").slice(0, 32);
@@ -184,41 +176,7 @@ router.post(
     if (req.body?.confirm_token !== addressConfirmToken(req.identity.sub, confirmed)) {
       return res.status(400).json({ error: "confirm token does not match the proposed address" });
     }
-    const currentAddress = await query(
-      "SELECT province FROM addresses WHERE profile_id = $1",
-      [req.identity.sub]
-    );
-    const provinceChanged =
-      currentAddress.rows[0] &&
-      currentAddress.rows[0].province !== confirmed.province;
-
-    // Spec: the change and its audit entry commit in one transaction.
-    await withTransaction(async (client) => {
-      await client.query(
-        `INSERT INTO addresses (profile_id, street, suburb, city, province, postal_code, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, now())
-         ON CONFLICT (profile_id) DO UPDATE SET
-           street = $2, suburb = $3, city = $4, province = $5, postal_code = $6, updated_at = now()`,
-        [req.identity.sub, ...ADDRESS_FIELDS.map((field) => confirmed[field])]
-      );
-      await client.query(
-        `INSERT INTO audit_log (profile_id, policy_id, role, action, auth_result, validation_result)
-         VALUES ($1, $2, $3, 'address_update_confirm', 'allowed', 'passed')`,
-        [req.identity.sub, req.identity.policyId, req.identity.role]
-      );
-      if (provinceChanged) {
-        await client.query(
-          `INSERT INTO audit_log (profile_id, policy_id, role, action, auth_result, reason)
-           VALUES ($1, $2, $3, 'province_changed', 'allowed', $4)`,
-          [
-            req.identity.sub,
-            req.identity.policyId,
-            req.identity.role,
-            `province changed to ${confirmed.province}`,
-          ]
-        );
-      }
-    });
+    await applyAddressUpdate(req.identity, confirmed);
     res.json({ updated: true, address: confirmed });
   }
 );
