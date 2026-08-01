@@ -50,10 +50,44 @@ export interface CompanionEmbedOptions {
   onSurfaceChange?: (surface: CompanionSurface) => void;
   /** Where to attach. Defaults to document.body. */
   container?: HTMLElement;
+  /**
+   * Optional: where the docked panel should sit, in viewport pixels.
+   *
+   * The loader has no business knowing about Momentum's layout, so it does not
+   * measure the page. The host measures its own content box and answers this
+   * question; the loader only clamps the answer to something sane and applies
+   * it. Return null (or omit the option entirely) to keep the default
+   * bottom-right offsets.
+   */
+  dockGeometry?: () => DockGeometry | null;
+}
+
+/**
+ * Viewport-relative gutters for the docked panel, so it can be lined up with
+ * whatever content column the host is already rendering.
+ */
+export interface DockGeometry {
+  /** Distance from the top of the viewport to the panel's top edge. */
+  top: number;
+  /** Distance from the right of the viewport to the panel's right edge. */
+  right: number;
+  /** Distance from the bottom of the viewport to the panel's bottom edge. */
+  bottom: number;
+  /** Widest the panel may be. It shrinks to fit a narrow column. */
+  maxWidth?: number;
 }
 
 const PANEL_PATH = "/";
 const LAUNCHER_PATH = "/launcher";
+
+/** Preferred docked width, when the host's column has room for it. */
+const PANEL_WIDTH = 408;
+/** Never let a measured gutter collapse the panel against a viewport edge. */
+const MIN_GUTTER = 12;
+/** Below this the docked panel is unusable, so stop shrinking. */
+const MIN_PANEL_WIDTH = 300;
+/** Below this a docked panel cannot show a conversation, so stop shrinking. */
+const MIN_PANEL_HEIGHT = 360;
 
 const Z = {
   pill: "2147483000",
@@ -76,6 +110,14 @@ export class CompanionEmbed {
   private minting: Promise<void> | null = null;
 
   private onMessage = (event: MessageEvent) => this.handleMessage(event);
+  /**
+   * Re-measure on resize so the docked panel keeps following the host's
+   * content column across breakpoints. Only meaningful when the panel is the
+   * visible surface; the pill's offsets are fixed.
+   */
+  private onResize = () => {
+    if (this.surface !== "pill") this.applySurface(this.surface);
+  };
 
   constructor(options: CompanionEmbedOptions) {
     this.opts = options;
@@ -98,10 +140,12 @@ export class CompanionEmbed {
 
     this.applySurface("pill");
     window.addEventListener("message", this.onMessage);
+    window.addEventListener("resize", this.onResize);
   }
 
   destroy(): void {
     window.removeEventListener("message", this.onMessage);
+    window.removeEventListener("resize", this.onResize);
     this.pill?.remove();
     this.panel?.remove();
     this.pill = null;
@@ -172,10 +216,16 @@ export class CompanionEmbed {
         zIndex: Z.pill,
       });
       show(pill, true);
+      // Pre-size the hidden panel to the box it will actually occupy, so
+      // opening it does not animate out of a stale geometry.
+      const dock = this.measureDock();
       Object.assign(panel.style, {
-        inset: "auto 20px 20px auto",
-        width: "408px",
-        height: "620px",
+        top: "auto",
+        left: "auto",
+        right: `${dock.right}px`,
+        bottom: `${dock.bottom}px`,
+        width: `${dock.width}px`,
+        height: `${dock.height}px`,
         zIndex: Z.panel,
       });
       show(panel, false);
@@ -190,30 +240,69 @@ export class CompanionEmbed {
     // interpolate between `auto` and a length, so mixing anchors here would
     // make the frame snap to the top-left of the viewport at the start of
     // the transition and only its size would animate. By pinning right and
-    // bottom with concrete lengths and giving fullscreen a calc'd width and
-    // height (instead of `auto`), every property that changes is an
-    // animatable length and the panel grows in place from the corner.
+    // bottom with concrete lengths and giving both states a resolved pixel
+    // width and height, every property that changes is an animatable length
+    // and the panel grows in place from the corner.
+    const dock = this.measureDock();
+
     if (surface === "panel") {
       Object.assign(panel.style, {
         top: "auto",
         left: "auto",
-        right: "20px",
-        bottom: "20px",
-        width: "408px",
-        height: "min(620px, calc(100vh - 40px))",
+        right: `${dock.right}px`,
+        bottom: `${dock.bottom}px`,
+        width: `${dock.width}px`,
+        height: `${dock.height}px`,
         zIndex: Z.panel,
       });
     } else {
       Object.assign(panel.style, {
         top: "auto",
         left: "auto",
-        right: "24px",
-        bottom: "24px",
-        width: "calc(100vw - 48px)",
-        height: "calc(100vh - 48px)",
+        right: `${dock.right}px`,
+        bottom: `${dock.bottom}px`,
+        width: `${Math.max(window.innerWidth - dock.right * 2, MIN_PANEL_WIDTH)}px`,
+        height: `${Math.max(window.innerHeight - dock.bottom * 2, MIN_PANEL_HEIGHT)}px`,
         zIndex: Z.panel,
       });
     }
+  }
+
+  /**
+   * Resolve the docked panel's box.
+   *
+   * Asks the host where its content column is and turns that into concrete
+   * pixels. Everything is clamped: a host that reports nonsense, or a viewport
+   * too small for the column it was measured against, still yields a usable
+   * panel rather than a sliver pinned to an edge.
+   */
+  private measureDock(): {
+    right: number;
+    bottom: number;
+    width: number;
+    height: number;
+  } {
+    const fallback = { right: 20, bottom: 20 };
+    const reported = this.opts.dockGeometry?.() ?? null;
+
+    const right = Math.max(reported?.right ?? fallback.right, MIN_GUTTER);
+    const bottom = Math.max(reported?.bottom ?? fallback.bottom, MIN_GUTTER);
+    // A negative or tiny `top` means the host has scrolled its content up
+    // past the viewport, so fall back to the bottom gutter for symmetry.
+    const top = Math.max(reported?.top ?? MIN_GUTTER, MIN_GUTTER);
+
+    const available = window.innerWidth - right * 2;
+    const width = Math.max(
+      MIN_PANEL_WIDTH,
+      Math.min(reported?.maxWidth ?? PANEL_WIDTH, PANEL_WIDTH, available)
+    );
+
+    const height = Math.max(
+      MIN_PANEL_HEIGHT,
+      Math.min(window.innerHeight - top - bottom, window.innerHeight - bottom * 2)
+    );
+
+    return { right, bottom, width, height };
   }
 
   // -------------------------------------------------------------------------

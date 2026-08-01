@@ -80,7 +80,16 @@ export function PortalChrome({
         </div>
       )}
 
-      <main className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7">{children}</main>
+      {/* data-companion-dock marks the column the docked companion lines up
+          with. The loader never looks for it directly: use-companion measures
+          this element and hands the loader plain pixel gutters, so the embed
+          stays free of any Momentum layout knowledge. */}
+      <main
+        data-companion-dock
+        className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7"
+      >
+        {children}
+      </main>
     </div>
   );
 }

@@ -17,7 +17,7 @@ import {
   type CompanionSurface,
   type PageContext,
 } from "@shared/contract";
-import { CompanionEmbed } from "./companion-embed";
+import { CompanionEmbed, type DockGeometry } from "./companion-embed";
 
 const COMPANION_ORIGIN =
   process.env.NEXT_PUBLIC_COMPANION_ORIGIN ?? "http://localhost:3001";
@@ -33,6 +33,36 @@ export interface UseCompanionResult {
   error: string | null;
   /** Counts quiet renewals, so the demo can show them happening. */
   renewals: number;
+}
+
+/**
+ * Measure the portal's content column so the docked panel can line up with it.
+ *
+ * Reads the padding off the element rather than hardcoding the Tailwind values,
+ * so the panel keeps tracking the column across breakpoints (px-4 / sm:px-6 /
+ * lg:px-8) without this file knowing what those values are.
+ *
+ * Returns null when the marker element is absent, which makes the loader fall
+ * back to its own bottom-right offsets.
+ */
+function measureDockGeometry(): DockGeometry | null {
+  const main = document.querySelector<HTMLElement>("[data-companion-dock]");
+  if (!main) return null;
+
+  const rect = main.getBoundingClientRect();
+  const style = window.getComputedStyle(main);
+  const padTop = parseFloat(style.paddingTop) || 0;
+  const padRight = parseFloat(style.paddingRight) || 0;
+  const padBottom = parseFloat(style.paddingBottom) || 0;
+
+  return {
+    // Top of the content box: level with the first line of dashboard content.
+    top: rect.top + padTop,
+    // Right edge of the content box, so the panel shares the column's gutter.
+    right: window.innerWidth - rect.right + padRight,
+    // Mirror the column's own bottom padding rather than the viewport edge.
+    bottom: padBottom,
+  };
 }
 
 /**
@@ -138,6 +168,7 @@ export function useCompanion(
       companionOrigin: COMPANION_ORIGIN,
       mintToken,
       onSurfaceChange: setSurface,
+      dockGeometry: measureDockGeometry,
     });
     embedRef.current = embed;
     embed.mount();
