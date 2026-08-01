@@ -185,30 +185,34 @@ export class CompanionEmbed {
     show(pill, false);
     show(panel, true);
 
+    // Both panel and fullscreen anchor at the bottom-right corner. Keeping
+    // `top` and `left` as `auto` in BOTH states matters: CSS cannot
+    // interpolate between `auto` and a length, so mixing anchors here would
+    // make the frame snap to the top-left of the viewport at the start of
+    // the transition and only its size would animate. By pinning right and
+    // bottom with concrete lengths and giving fullscreen a calc'd width and
+    // height (instead of `auto`), every property that changes is an
+    // animatable length and the panel grows in place from the corner.
     if (surface === "panel") {
       Object.assign(panel.style, {
-        inset: "auto 20px 20px auto",
+        top: "auto",
+        left: "auto",
+        right: "20px",
+        bottom: "20px",
         width: "408px",
         height: "min(620px, calc(100vh - 40px))",
         zIndex: Z.panel,
       });
     } else {
-      // fullscreen: explicitly pin all four edges rather than relying on
-      // the `inset` shorthand. Using top/right/bottom/left ensures the
-      // browser places the frame correctly and avoids layout quirks that
-      // can leave it positioned at the viewport origin with a small size.
       Object.assign(panel.style, {
-        top: "24px",
+        top: "auto",
+        left: "auto",
         right: "24px",
         bottom: "24px",
-        left: "24px",
-        width: "auto",
-        height: "auto",
+        width: "calc(100vw - 48px)",
+        height: "calc(100vh - 48px)",
         zIndex: Z.panel,
       });
-      // Helpful debug output when testing in the host page console.
-      // eslint-disable-next-line no-console
-      console.debug("CompanionEmbed: panel fullscreen -> top:24 right:24 bottom:24 left:24");
     }
   }
 

@@ -17,7 +17,6 @@ import {
   capabilitiesFor,
   isStaffRole,
   type Block,
-  type Capability,
   type WorkflowState,
 } from "@shared/contract";
 import { useHostBridge } from "@/lib/host-bridge";
@@ -25,46 +24,6 @@ import { sendChat, verifyToken, type VerifyResult } from "@/lib/api";
 import { MOCK_NOTICE } from "@/lib/mock-journeys";
 import { Message, type ChatTurn } from "@/components/Message";
 import { Checklist } from "@/components/Blocks";
-
-/** Quick actions, gated by capability so nobody is offered a refusal. */
-const ACTIONS: { label: string; prompt: string; requires: Capability | null }[] =
-  [
-    {
-      label: "Ask a question",
-      prompt: "What does my Death Benefit cover?",
-      requires: "policy_qa",
-    },
-    {
-      label: "Calculators",
-      prompt: "What if I increased my cover?",
-      requires: "what_if",
-    },
-    {
-      label: "Update address",
-      prompt: "I've moved to 14 Oak Road, Sandton, 2196",
-      requires: "self_service_update",
-    },
-    {
-      label: "File a claim",
-      prompt: "I need to submit a claim",
-      requires: "claims_guidance",
-    },
-    {
-      label: "Review evidence",
-      prompt: "Which exclusions apply to this claim?",
-      requires: "claims_assessment",
-    },
-    {
-      label: "Outstanding items",
-      prompt: "What documentation is still outstanding?",
-      requires: "outstanding_requirements",
-    },
-    {
-      label: "Speak to a person",
-      prompt: "I'd like to speak to a person",
-      requires: "human_handoff",
-    },
-  ];
 
 export default function Companion() {
   const bridge = useHostBridge();
@@ -80,6 +39,7 @@ export default function Companion() {
   const [expanded, setExpanded] = useState(false);
 
   const feedRef = useRef<HTMLOListElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const turnCounter = useRef(0);
 
   const capabilities = claims ? capabilitiesFor(claims) : [];
@@ -152,22 +112,14 @@ export default function Companion() {
           kind: "text",
           text: `Hi ${firstName}. I can help you with the policy you have open${
             actingFor ? ` (${actingFor})` : ""
-          }. Everything you ask is recorded against your name.`,
+          }. Talk to me in your own words — everything you ask is recorded against your name.`,
         },
       ];
     }
     return [
       {
         kind: "text",
-        text: `Hi ${firstName}, I'm Lumina. I can answer questions about your policy, help with changes, and walk you through a claim. What would you like to do?`,
-      },
-      {
-        kind: "suggestions",
-        chips: [
-          "What does my Death Benefit cover?",
-          "When is my next premium due?",
-          "What happens if I miss a payment?",
-        ],
+        text: `Hi ${firstName}, I'm Lumina. Tell me what's on your mind — I can answer questions about your policy, help with changes, or walk you through a claim. There's no wrong way to ask.`,
       },
     ];
   }, [claims, capabilities.length, bereaved, staff, firstName, actingFor]);
@@ -372,11 +324,32 @@ export default function Companion() {
             }}
             className="flex items-center gap-2 border-t border-line px-3 py-2.5"
           >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.png,.jpg,.jpeg,.heic,.doc,.docx"
+              hidden
+              // No upload happens in this build: the file never leaves the
+              // page. The button's only job is to give the user a natural way
+              // to mention what they have, in their own words, without
+              // scripting a canned message on their behalf.
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                const tag = `[Attached: ${file.name}] `;
+                setDraft((current) =>
+                  current ? `${current.trimEnd()} ${tag}` : tag
+                );
+                event.target.value = "";
+                // Return focus to the input so the user carries on typing.
+                document.getElementById("lumina-input")?.focus();
+              }}
+            />
             <button
               type="button"
-              title="Attach a document (simulated in this build)"
+              title="Attach a document"
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line text-[15px] text-ink-faint hover:border-teal hover:text-teal"
-              onClick={() => void send("I have the death certificate ready")}
+              onClick={() => fileInputRef.current?.click()}
             >
               +<span className="sr-only">Attach a document</span>
             </button>
@@ -390,7 +363,7 @@ export default function Companion() {
               placeholder={
                 bereaved
                   ? "Ask a question, or say \u201chelp me with the claim\u201d…"
-                  : "Ask me anything about your policy…"
+                  : "Talk to Lumina in your own words\u2026"
               }
               disabled={sending}
               className="min-w-0 flex-1 rounded-full border border-line bg-canvas px-3.5 py-2 text-[13px] text-ink outline-none placeholder:text-ink-faint focus:border-teal disabled:opacity-60"
