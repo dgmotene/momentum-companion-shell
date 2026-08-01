@@ -104,9 +104,9 @@ export default function Companion() {
       return [
         {
           kind: "text",
-          text: `Hi ${firstName}. I can help you with the policy you have open${
-            actingFor ? ` (${actingFor})` : ""
-          }. Talk to me in your own words — everything you ask is recorded against your name.`,
+          text: actingFor
+            ? `Hi ${firstName}. I can help you with ${actingFor}. Talk to me in your own words; everything you ask is recorded against your name.`
+            : `Hi ${firstName}. I can answer product and policy questions from the Myriad guide, and you can open a client to work on a specific policy. Talk to me in your own words; everything you ask is recorded against your name.`,
         },
       ];
     }

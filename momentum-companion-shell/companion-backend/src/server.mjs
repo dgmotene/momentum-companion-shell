@@ -22,6 +22,7 @@ import {
 } from "./chat.js";
 import { estimatePremium } from "./domain/whatif.mjs";
 import { claimChecklist } from "./domain/claims-content.mjs";
+import { capabilitySummary } from "./domain/capability-summary.mjs";
 import {
   ADDRESS_FIELDS,
   validateAddress,
@@ -103,6 +104,25 @@ function refusedResponse(identity, action, text) {
     blocks: [{ kind: "text", text }],
     citations: [],
     refusal_reason: text,
+  };
+}
+
+// "What can you do?" is a question about the assistant, not about the policy,
+// so it is answered from the capability matrix rather than the guide.
+function capabilitiesResponse(identity) {
+  const summary = capabilitySummary(identity);
+  if (!summary) {
+    return answeredText(
+      "There isn't any policy information available to you at the moment, so there is little I can help with here. I can connect you with a person if you think that is wrong."
+    );
+  }
+  return {
+    outcome: "answered",
+    blocks: [
+      { kind: "text", text: summary.text },
+      { kind: "suggestions", chips: summary.chips },
+    ],
+    citations: [],
   };
 }
 
@@ -380,6 +400,7 @@ app.post("/api/chat", requireAuth, async (req, res) => {
   if (intent === "thanks") {
     return send(answeredText("You're welcome. I'm here whenever you need anything on your policy."));
   }
+  if (intent === "capabilities") return send(capabilitiesResponse(req.identity));
   if (intent === "quote_request") return send(await whatIfResponse(req.identity, understanding));
   if (intent === "claim") return send(await claimResponse(req.identity, understanding));
   if (intent === "update_request") return send(await addressResponse(req.identity, understanding));
@@ -405,10 +426,16 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     });
 
     if (!result.grounded) {
+      // The fallback wording is fixed by the shared contract. The chips are
+      // additive: a dead end is honest but unhelpful on its own.
+      const summary = capabilitySummary(req.identity);
       return send({
         session_id: result.sessionId,
         outcome: "no_grounding",
-        blocks: [{ kind: "text", text: NO_GROUNDING_RESPONSE }],
+        blocks: [
+          { kind: "text", text: NO_GROUNDING_RESPONSE },
+          ...(summary ? [{ kind: "suggestions", chips: summary.chips }] : []),
+        ],
         citations: [],
       });
     }
