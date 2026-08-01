@@ -123,6 +123,13 @@ export class CompanionEmbed {
     frame.style.border = "0";
     frame.style.background = "transparent";
     frame.style.colorScheme = "normal";
+    // Pill iframe should present as a fully rounded pill.
+    if (path === LAUNCHER_PATH) {
+      frame.style.borderRadius = "9999px";
+      // Clip the iframe contents to the rounded shape so the inner document
+      // does not visually overflow the pill frame on hover or focus.
+      frame.style.overflow = "hidden";
+    }
     frame.style.transition =
       "width 180ms ease, height 180ms ease, inset 180ms ease, opacity 140ms ease";
     return frame;
@@ -186,15 +193,22 @@ export class CompanionEmbed {
         zIndex: Z.panel,
       });
     } else {
-      // fullscreen: inset rather than edge-to-edge, so the portal stays
-      // visible behind it. The user never loses the sense that Lumina is
-      // part of the page they were already on.
+      // fullscreen: explicitly pin all four edges rather than relying on
+      // the `inset` shorthand. Using top/right/bottom/left ensures the
+      // browser places the frame correctly and avoids layout quirks that
+      // can leave it positioned at the viewport origin with a small size.
       Object.assign(panel.style, {
-        inset: "24px",
+        top: "24px",
+        right: "24px",
+        bottom: "24px",
+        left: "24px",
         width: "auto",
         height: "auto",
         zIndex: Z.panel,
       });
+      // Helpful debug output when testing in the host page console.
+      // eslint-disable-next-line no-console
+      console.debug("CompanionEmbed: panel fullscreen -> top:24 right:24 bottom:24 left:24");
     }
   }
 
