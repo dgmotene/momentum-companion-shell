@@ -9,8 +9,10 @@
     "db:show": "node scripts/show-seed.mjs"
   },
   "dependencies": {
+    "dotenv": "^17.4.2",
     "express": "^4.19.2",
     "jose": "^5.9.6",
+    "openai": "^7.3.0",
     "pg": "^8.13.0"
   }
 }
