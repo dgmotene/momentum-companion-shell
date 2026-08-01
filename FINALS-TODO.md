@@ -630,6 +630,29 @@ middleware and compliance prompt are already here. `[reported]`
   P0-1 through P0-6 plus P1-1, P1-2 and P1-9 are the code work worth doing, and
   everything after that should be the demo script and a rehearsal. Your call.
 
+## Tell the team: a compliance bug on origin/modise
+
+`updateSelfServiceDetails` in `origin/modise:companion-backend/src/chat.js` (around
+line 326) **commits the banking change to the database and then tells the user it was
+queued**:
+
+```
+INSERT INTO banking_details ... ON CONFLICT (profile_id) DO UPDATE SET ...
+return { message: "Banking details submitted for human review.",
+         requiresHumanReview: true }
+```
+
+`[verified by reading the branch]`
+
+This breaks the `human_review` guarantee the compliance story depends on, and the
+message on screen contradicts what the code did. The guide is also explicit that
+Momentum cannot accept a bank-detail change from the policyholder, only the premium
+payer (General information / Payment methods, printed p.5). Our own branch handles this
+correctly: `bankingChange` is `human_review` and `escalatedResponse` never writes.
+
+Nobody should merge that branch. If its author wants the self-service work landed, the
+banking branch needs to escalate without writing first.
+
 ## Two things NOT to "fix". Both were flagged in review and both are wrong.
 
 **The 3 / 5 / 10 day claims SLAs are legitimate.** A review pass reported them as
