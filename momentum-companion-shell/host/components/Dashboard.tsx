@@ -65,7 +65,7 @@ export function Dashboard({
         <button
           type="button"
           onClick={onChooseClient}
-          className="mt-4 rounded-lg bg-brand-teal px-4 py-2 text-[12px] font-semibold text-white transition hover:bg-brand-tealDark sm:mt-5 sm:px-5 sm:py-2.5 sm:text-[13.5px] sm:rounded-xl"
+          className="mt-4 rounded-2xl bg-brand-teal px-4 py-2 text-[12px] font-semibold text-white shadow-[0_10px_24px_rgba(0,109,119,0.2)] transition hover:-translate-y-0.5 hover:bg-brand-tealDark sm:mt-5 sm:px-5 sm:py-2.5 sm:text-[13.5px]"
         >
           Choose a client
         </button>
@@ -133,11 +133,11 @@ export function Dashboard({
       
       {/* A bereaved beneficiary is led by the claim, not by servicing. */}
       {bereaved && (
-        <div className="mt-4 rounded-[14px] border-[1.5px] border-brand-teal bg-gradient-to-b from-brand-blueTint to-brand-surface p-4 sm:mt-5 sm:rounded-[18px] sm:p-5 lg:max-w-2xl">
+        <GradientCard className="mt-4 sm:mt-5 lg:max-w-2xl">
           <h2 className="font-serif text-[15px] font-semibold sm:text-[17px]">
             Hi {claims.name.split(" ")[0]}, I&rsquo;m so sorry for your loss.
           </h2>
-          <p className="mt-1 text-[12px] leading-relaxed text-brand-inkSoft sm:mt-1.5 sm:text-[13px]">
+          <p className="mt-1 text-[12px] leading-relaxed text-brand-surface/85 sm:mt-1.5 sm:text-[13px]">
             Whenever you feel ready, Lumina can guide you through starting a
             claim, or simply answer questions about the policy. There is no rush,
             and a person is always available if you would prefer.
@@ -145,11 +145,11 @@ export function Dashboard({
           <button
             type="button"
             onClick={onOpenCompanion}
-            className="mt-3 rounded-lg bg-brand-teal px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-brand-tealDark sm:mt-4 sm:px-5 sm:py-3 sm:text-[14px] sm:rounded-xl"
+            className="mt-3 rounded-2xl bg-brand-surface px-4 py-2 text-[13px] font-semibold text-brand-tealDark shadow-[0_10px_24px_rgba(0,80,90,0.2)] transition hover:-translate-y-0.5 sm:mt-4 sm:px-5 sm:py-3 sm:text-[14px]"
           >
             Begin with Lumina &rarr;
           </button>
-        </div>
+        </GradientCard>
       )}
 
       <div className="mt-4 grid gap-3 sm:mt-6 sm:gap-5 lg:max-w-4xl lg:grid-cols-2">
@@ -165,7 +165,7 @@ export function Dashboard({
 
       {policy.outstanding.length > 0 &&
         capabilities.includes("outstanding_requirements") && (
-          <div className="mt-4 rounded-[14px] border border-brand-amber/60 bg-brand-amberTint p-4 sm:mt-5 sm:rounded-[18px] sm:p-5 lg:max-w-xl">
+          <div className="mt-4 rounded-[28px] border border-brand-amber/60 bg-brand-amberTint p-4 shadow-[0_24px_80px_rgba(154,91,34,0.10)] sm:mt-5 sm:p-5 lg:max-w-xl">
             <h2 className="text-[13px] font-semibold text-brand-amberText sm:text-[14px]">
               Outstanding requirements
             </h2>
@@ -180,24 +180,56 @@ export function Dashboard({
   );
 }
 
+/**
+ * The card shell, lifted from the login screen's hero panel.
+ *
+ * Same gradient, same radial white wash, same corner radius and shadow, so the
+ * portal reads as the screen the user just signed in through. Defined once
+ * here rather than repeated per card, because a gradient that drifts between
+ * two cards looks like a bug.
+ *
+ * Everything inside sits on `text-brand-surface` tones. The nested translucent
+ * panels (`bg-brand-surface/10`) are the login screen's stats box, reused: they
+ * keep figures legible where the gradient runs lightest.
+ */
+function GradientCard({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`relative overflow-hidden rounded-[28px] bg-gradient-to-br from-brand-teal via-brand-tealDark to-brand-blue p-4 text-brand-surface shadow-[0_24px_80px_rgba(0,109,119,0.12)] sm:p-5 ${className}`}
+    >
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.18),_transparent_45%)]"
+      />
+      <div className="relative z-10">{children}</div>
+    </div>
+  );
+}
+
 function BenefitsCard({ policy }: { policy: Policy }) {
   return (
-    <div className="rounded-[14px] border border-brand-border bg-brand-surface p-4 sm:rounded-[18px] sm:p-5">
+    <GradientCard>
       <h2 className="text-[13px] font-semibold sm:text-[14px]">Cover in place</h2>
-      <ul className="mt-2 divide-y divide-brand-border sm:mt-3">
+      <ul className="mt-2 divide-y divide-brand-surface/20 sm:mt-3">
         {policy.benefits.map((benefit) => (
           <li
             key={benefit.name}
             className="flex items-baseline justify-between gap-3 py-2 sm:gap-4 sm:py-2.5"
           >
-            <span className="text-[12px] text-brand-inkSoft sm:text-[13px]">
+            <span className="text-[12px] text-brand-surface/80 sm:text-[13px]">
               {benefit.name}
             </span>
             <span className="text-right shrink-0">
               <span className="block text-[13px] font-semibold sm:text-[14px]">
                 {benefit.amount}
               </span>
-              <span className="block text-[10.5px] text-brand-inkFaint sm:text-[11.5px]">
+              <span className="block text-[10.5px] text-brand-surface/70 sm:text-[11.5px]">
                 {benefit.shape}
               </span>
             </span>
@@ -206,12 +238,12 @@ function BenefitsCard({ policy }: { policy: Policy }) {
       </ul>
       {/* Recorded, not payable: the distinction the Scope Change brief
           requires, made on the page as well as in the chat. */}
-      <p className="mt-2 border-t border-brand-border pt-2 text-[11px] leading-relaxed text-brand-inkFaint sm:mt-3 sm:pt-3 sm:text-[11.5px]">
+      <p className="mt-2 border-t border-brand-surface/20 pt-2 text-[11px] leading-relaxed text-brand-surface/75 sm:mt-3 sm:pt-3 sm:text-[11.5px]">
         These are the benefit amounts recorded on the policy. What is actually
         payable on any claim depends on the policy terms and the outcome of
         claims assessment.
       </p>
-    </div>
+    </GradientCard>
   );
 }
 
@@ -223,9 +255,9 @@ function PolicyDetailsCard({
   showPremium: boolean;
 }) {
   return (
-    <div className="rounded-[14px] border border-brand-border bg-brand-surface p-4 sm:rounded-[18px] sm:p-5">
+    <GradientCard>
       <h2 className="text-[13px] font-semibold sm:text-[14px]">Policy details</h2>
-      <dl className="mt-2 divide-y divide-brand-border sm:mt-3">
+      <dl className="mt-2 divide-y divide-brand-surface/20 sm:mt-3">
         {showPremium && (
           <Row
             label="Monthly premium"
@@ -243,14 +275,14 @@ function PolicyDetailsCard({
           }
         />
       </dl>
-    </div>
+    </GradientCard>
   );
 }
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3 py-4 sm:gap-4 sm:py-2.5">
-      <dt className="text-[12px] text-brand-inkSoft sm:text-[13px]">{label}</dt>
+      <dt className="text-[12px] text-brand-surface/80 sm:text-[13px]">{label}</dt>
       <dd className="text-[12.5px] font-semibold sm:text-[13.5px]">{value}</dd>
     </div>
   );
@@ -272,7 +304,7 @@ function NoAccessNotice({ name }: { name: string }) {
       <h1 className="font-serif text-[20px] font-semibold sm:text-[24px]">
         Nothing to show here yet
       </h1>
-      <div className="mt-3 rounded-[14px] border border-brand-border bg-brand-surface p-4 sm:mt-4 sm:rounded-[18px] sm:p-5">
+      <div className="mt-3 rounded-[28px] border border-brand-border bg-brand-surface p-4 shadow-[0_24px_80px_rgba(0,109,119,0.12)] sm:mt-4 sm:p-5">
         <p className="text-[12px] leading-relaxed text-brand-inkSoft sm:text-[13.5px]">
           Hi {name.split(" ")[0]}. You are signed in, but there is no policy
           information available to you at the moment.
