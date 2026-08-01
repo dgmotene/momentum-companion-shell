@@ -17,7 +17,10 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./db/seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+      # Applied in filename order on first boot only. The RAG schema is the same
+      # file the Python service migrates with, so the two cannot drift.
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/001-seed.sql:ro
+      - ./rag/src/myriad_rag/sql/001_schema.sql:/docker-entrypoint-initdb.d/002-rag-schema.sql:ro
       - dbdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U companion -d companion"]
