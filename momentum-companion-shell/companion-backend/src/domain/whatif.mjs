@@ -1,7 +1,7 @@
 const WAITING_PERIOD_FACTORS = { 0: 1, 3: 0.95, 6: 0.9, 12: 0.82, 24: 0.72 };
 const MINIMUM_PREMIUM = 200;
 const DISCLAIMER =
-  "This is an estimate, not a final quote. A consultant can confirm the exact premium before any change is made.";
+  "This is an illustrative estimate, not an offer or a confirmed premium. The final premium is only confirmed after validation and underwriting, and a consultant will confirm it before any change is made.";
 
 export function estimatePremium({
   currentPremium,
