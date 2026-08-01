@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import pg from "pg";
 import dotenv from "dotenv";
+import { loadUserContext, formatUserContextForPrompt } from "./domain/user-context.mjs";
 
 // Keep secrets outside the repository. Resolve the project-level local .env file
 // so this works whether the script is run from the root or backend directory.
@@ -261,7 +262,7 @@ export async function processChatMessage({ userProfile, userPrompt }) {
   // Step 2: Session Retrieval
   const session = await getOrCreateSession(profileId, role);
 
-  const policyRecord = policyId ? await loadPolicySnapshot(policyId) : null;
+  const userContext = await loadUserContext({ profileId, policyId, role });
 
   // Step 3: Embed Query & Retrieve Context via RAG
   const queryVector = await generateEmbedding(userPrompt);
@@ -286,15 +287,7 @@ export async function processChatMessage({ userProfile, userPrompt }) {
     .map((c) => `[${c.part ?? "Myriad guide"} | ${c.section ?? "General"} | p.${c.printed_page}]\n${c.content}`)
     .join("\n\n---\n\n");
 
-  const policySection = policyRecord
-    ? `
-Their policy record (recorded values, never final payouts):
-- Product: ${policyRecord.product_name}, status ${policyRecord.status}, started ${policyRecord.start_date?.toISOString?.().slice(0, 10) ?? policyRecord.start_date}
-- Recorded cover amount: R${policyRecord.sum_assured}
-- Monthly premium: R${policyRecord.monthly_premium}
-- Waiting period: ${policyRecord.waiting_period_months} months
-- Benefits: ${(policyRecord.benefits ?? []).map((benefit) => `${benefit.name} (R${benefit.cover})`).join("; ")}`
-    : "";
+  const policySection = formatUserContextForPrompt(userContext, role);
 
   const systemPrompt = `You are Momentum Life's AI Assistant.
 User Name: ${fullName}
