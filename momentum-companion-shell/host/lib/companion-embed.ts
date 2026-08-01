@@ -193,15 +193,22 @@ export class CompanionEmbed {
         zIndex: Z.panel,
       });
     } else {
-      // fullscreen: inset rather than edge-to-edge, so the portal stays
-      // visible behind it. The user never loses the sense that Lumina is
-      // part of the page they were already on.
+      // fullscreen: explicitly pin all four edges rather than relying on
+      // the `inset` shorthand. Using top/right/bottom/left ensures the
+      // browser places the frame correctly and avoids layout quirks that
+      // can leave it positioned at the viewport origin with a small size.
       Object.assign(panel.style, {
-        inset: "24px",
+        top: "24px",
+        right: "24px",
+        bottom: "24px",
+        left: "24px",
         width: "auto",
         height: "auto",
         zIndex: Z.panel,
       });
+      // Helpful debug output when testing in the host page console.
+      // eslint-disable-next-line no-console
+      console.debug("CompanionEmbed: panel fullscreen -> top:24 right:24 bottom:24 left:24");
     }
   }
 

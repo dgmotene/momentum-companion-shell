@@ -404,22 +404,7 @@ export default function Companion() {
             </button>
           </form>
 
-          <div className="flex flex-wrap gap-1.5 border-t border-line bg-canvas px-3 py-2">
-            {ACTIONS.filter(
-              (action) =>
-                action.requires === null || capabilities.includes(action.requires)
-            ).map((action) => (
-              <button
-                key={action.label}
-                type="button"
-                onClick={() => void send(action.prompt)}
-                disabled={sending}
-                className="rounded-full border border-line bg-surface px-2.5 py-1 text-[11.5px] font-medium text-ink-soft transition hover:border-teal hover:text-teal-dark disabled:opacity-50"
-              >
-                {action.label}
-              </button>
-            ))}
-          </div>
+          
         </>
       ) : (
         <p className="border-t border-line bg-canvas px-3.5 py-3 text-[12px] leading-relaxed text-ink-faint">
