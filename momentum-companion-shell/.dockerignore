@@ -1,0 +1,17 @@
+**/node_modules
+**/.next
+**/*.tsbuildinfo
+.git
+.gitignore
+
+# Mounted at runtime, never baked into an image.
+keys
+.env
+**/.env
+
+# Loaded into Postgres separately, not needed in any build context.
+db/rag-corpus.sql.gz
+
+infra
+scripts
+*.md
