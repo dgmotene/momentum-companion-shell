@@ -26,7 +26,21 @@ RETRY_STATUS = {408, 409, 425, 429, 500, 502, 503, 504}
 
 
 class GatewayError(RuntimeError):
-    pass
+    def __init__(self, message: str, *, status_code: int | None = None):
+        super().__init__(message)
+        self.status_code = status_code
+
+
+def _raise_for_status(response: httpx.Response, operation: str) -> None:
+    """Raise gateway failures with its diagnostic body, without logging secrets."""
+    if not response.is_error:
+        return
+    detail = response.text.strip().replace("\n", " ")[:1000]
+    raise GatewayError(
+        f"{operation} gateway returned HTTP {response.status_code}"
+        + (f": {detail}" if detail else ""),
+        status_code=response.status_code,
+    )
 
 
 async def _with_backoff(fn, *, max_retries: int, what: str):
@@ -42,6 +56,8 @@ async def _with_backoff(fn, *, max_retries: int, what: str):
             retryable = isinstance(exc, (httpx.TimeoutException, httpx.NetworkError))
             if isinstance(exc, httpx.HTTPStatusError):
                 retryable = exc.response.status_code in RETRY_STATUS
+            if isinstance(exc, GatewayError) and exc.status_code is not None:
+                retryable = exc.status_code in RETRY_STATUS
             if not retryable or attempt == max_retries:
                 raise
             last = exc
@@ -102,7 +118,7 @@ class OpenAIGateway(Gateway):
 
         async def call():
             r = await self._client.post("/embeddings", json=payload)
-            r.raise_for_status()
+            _raise_for_status(r, "embeddings")
             return r.json()
 
         data = await _with_backoff(
@@ -130,7 +146,7 @@ class OpenAIGateway(Gateway):
                     ],
                 },
             )
-            r.raise_for_status()
+            _raise_for_status(r, "chat")
             return r.json()
 
         data = await _with_backoff(
