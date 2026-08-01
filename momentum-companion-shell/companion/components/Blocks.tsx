@@ -192,24 +192,18 @@ function BlockView({ block }: { block: Block }) {
     case "suggestions":
       return null; // rendered outside the bubble; see SuggestionChips
 
+    // Only what the backend chose to say. This used to carry a teal "Connect
+    // me to a person" that was a span, not a button: the one thing a user
+    // reaches for at the moment they are refused, and it did nothing. The
+    // handover is now a real journey, and the bubble's own outcome label
+    // already announces it, so there is nothing left to draw unless the
+    // backend supplies a wait time.
     case "escalation":
+      if (!block.waitHint) return null;
       return (
-        <div className="my-2 rounded-btn border border-line bg-canvas px-3 py-2.5">
-          <p className="text-[13px] leading-relaxed text-ink-soft">
-            {block.reason ??
-              "This is probably better handled by one of our consultants."}
-          </p>
-          <p className="mt-2 flex items-center gap-2">
-            <span className="rounded-btn bg-teal px-3.5 py-2 text-[12.5px] font-semibold text-white">
-              Connect me to a person
-            </span>
-            {block.waitHint && (
-              <span className="text-[11.5px] text-ink-faint">
-                {block.waitHint}
-              </span>
-            )}
-          </p>
-        </div>
+        <p className="my-2 rounded-btn border border-line bg-canvas px-3 py-2 text-[12.5px] text-ink-soft">
+          {block.waitHint}
+        </p>
       );
 
     default:

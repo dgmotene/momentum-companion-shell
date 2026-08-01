@@ -14,6 +14,7 @@ import { requireAuth } from "./auth/middleware.mjs";
 import { capabilitiesFor } from "./domain/capabilities.mjs";
 import { resolveSubject, isStaffRole } from "./domain/subject.mjs";
 import { guardCompletion } from "./domain/output-guard.mjs";
+import { wantsAPerson, handoffReference } from "./domain/handoff.mjs";
 import { writeAudit } from "./domain/audit.mjs";
 import {
   processChatMessage,
@@ -134,6 +135,40 @@ function capabilitiesResponse(identity) {
     capabilitySummary(identity) ??
       "There isn't any policy information available to you at the moment, so there is little I can help with here. I can connect you with a person if you think that is wrong."
   );
+}
+
+async function handoffResponse(identity, session, userMessage) {
+  const reference = handoffReference(session.id);
+  // The consultant picks up this conversation, so the request that triggered
+  // the handover has to be part of it. Otherwise "you will not have to repeat
+  // yourself" is a promise the record does not keep.
+  const history = [
+    ...(session.history ?? []),
+    { role: "user", content: userMessage },
+    { role: "assistant", content: `Handed to a consultant. Reference ${reference}.` },
+  ];
+  await updateSession(session.id, history, session.workflow_state ?? {});
+  writeAudit({
+    profileId: identity.sub,
+    policyId: identity.policyId,
+    role: identity.role,
+    action: "human_handoff_requested",
+    authResult: "allowed",
+    handoffFlag: true,
+    reason: reference,
+    sessionId: session.id,
+  });
+  return {
+    outcome: "escalated",
+    blocks: [
+      {
+        kind: "text",
+        text: "Of course. I've passed this to our consultants with everything you've told me, so you will not have to repeat yourself. They will be in touch during business hours.",
+      },
+      { kind: "reference", label: "Your reference is", value: reference },
+    ],
+    citations: [],
+  };
 }
 
 // Staff hold no policy of their own, so a policy question with no client
@@ -362,7 +397,9 @@ function escalatedResponse(identity, target, subject) {
         kind: "text",
         text: `${target.charAt(0).toUpperCase() + target.slice(1)} changes are always confirmed by a person, for your protection. I've logged your request; a consultant will contact you to verify the change before anything is updated.`,
       },
-      { kind: "escalation", reason: `${target} change requires human verification` },
+      // No reason: the text above already explains it in the user's terms, and
+      // the internal wording belongs in the audit row, where it is written.
+      { kind: "escalation" },
     ],
     citations: [],
   };
@@ -492,21 +529,32 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     });
   }
 
+  const startedAt = Date.now();
+  const session = await getOrCreateSession(req.identity.sub, req.identity.role);
+
+  // Ahead of every capability check, and never through the classifier. Ten
+  // replies offer to connect this person with someone, including the ones we
+  // refuse everything else to, so the offer has to hold for them too.
+  if (wantsAPerson(userMessage)) {
+    return res.json({
+      session_id: session.id,
+      ...(await handoffResponse(req.identity, session, userMessage)),
+    });
+  }
+
   // A caller who holds nothing at all is refused before the classifier runs,
   // so being refused costs no gateway call.
   const held = capabilitiesFor(req.identity);
   if (!Object.values(held).some(Boolean)) {
-    return res.status(403).json(
-      refusedResponse(
+    return res.status(403).json({
+      session_id: session.id,
+      ...refusedResponse(
         req.identity,
         "policyQA",
         "I can't share policy information with you yet. Access opens once Momentum has verified the policyholder's passing. If you believe this is in error, I can connect you with a person."
-      )
-    );
+      ),
+    });
   }
-
-  const startedAt = Date.now();
-  const session = await getOrCreateSession(req.identity.sub, req.identity.role);
 
   // Before the model, so a request for a policy this caller may not touch
   // costs a database round trip rather than a gateway call.
@@ -660,7 +708,10 @@ app.post("/api/chat", requireAuth, async (req, res) => {
         outcome: "escalated",
         blocks: [
           { kind: "text", text: COMPLIANCE_BLOCKED_RESPONSE },
-          { kind: "escalation", reason: `answer withheld: ${guarded.breach}` },
+          // The breach is named in the audit row, never to the person we just
+          // refused: "promises a claim outcome" is our classification, not
+          // theirs to read.
+          { kind: "escalation" },
         ],
         citations: [],
       });
