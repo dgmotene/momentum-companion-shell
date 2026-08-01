@@ -76,7 +76,7 @@ export default function LoginPage() {
                 L
               </div>
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand-surface/80">
+                <p className="text-sm font-bold uppercase tracking-[0.24em] text-red-500">
                   Momentum
                 </p>
                 <p className="text-xl font-semibold">Lumina</p>

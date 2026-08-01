@@ -46,7 +46,7 @@ export function PortalChrome({
       }}
     >
       <header className="flex flex-col gap-3 border-b border-brand-border/70 bg-brand-surface/80 px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:py-3.5 lg:px-8">
-        <div className="text-[12px] font-bold tracking-[0.06em] sm:text-[13px]">
+        <div className="text-[12px] font-bold tracking-[0.06em] text-red-600 sm:text-[13px]">
           MOMENTUM <span className="font-medium text-brand-teal">life</span>
         </div>
 
