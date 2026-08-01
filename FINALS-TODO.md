@@ -60,14 +60,22 @@ question. Most of P0 exists to close that gap.
   `git merge-tree` reports the merge as clean: 18 files, additive, under `rag/` only,
   touching zero shared files. `[reported, re-check before merging]`
   Do this merge first and alone.
+  **(awaiting review: merged in `c02267e`. 18 files, 2210 insertions, zero
+  deletions, nothing outside `rag/` touched. Smoke test unchanged before and
+  after.)**
 
 - [ ] **P0-2 Make the corpus reproducible from a clean clone.**
-  Either mount the RAG schema as a second DB init file (`db/002_rag.sql`, numbered so
-  it runs after `seed.sql`) plus a documented ingest step, or commit a small
-  pre-embedded corpus so a cold clone answers something grounded.
-  Note: re-running DB init needs `docker compose down -v`, which wipes the current
-  607-chunk corpus and the audit rows. Do it early, then re-run the demo path once to
-  repopulate. Never in the last hour.
+  **(awaiting review: schema half done in `494e82e`. Compose now applies the Python
+  service's own `001_schema.sql` as a second init script, so the SQL cannot drift
+  from what the ingester expects. Verified on a throwaway database: all app tables
+  plus `rag_chunks`, `rag_documents`, HNSW and FTS indexes, and the retrieval query
+  returns zero rows instead of erroring. The live 607-chunk corpus was never
+  touched. A fresh clone now degrades to the approved no-grounding fallback rather
+  than breaking.)**
+  **Still outstanding:** the corpus itself. A fresh clone has the tables but no
+  chunks, so grounded answers need an ingest run. Either document the ingest step in
+  the README (P0-5) or commit a small pre-embedded corpus. Until one of those, a
+  judge cloning the repo gets honest fallbacks, not grounded answers.
 
 - [ ] **P0-3 Delete the two stub routes that call the project unfinished.**
   `server.mjs:98` returns `{stub: true}` for `/api/gateway-ping` describing an OAuth2
@@ -553,7 +561,22 @@ capabilities, claim types, refusal copy, audit writing and Postgres pooling.
 
 ---
 
-## Branch consolidation plan
+## Branch consolidation: DONE (awaiting review)
+
+All merging finished and pushed. `origin/feat/chat-integration` now exists and is the
+branch teammates should pull. Local and origin are in sync.
+
+| Branch | Outcome |
+|---|---|
+| `dalton-rag` | Merged, `c02267e`. Clean, additive. |
+| `feat/multilingual-translation` | Merged, `3d5ed6b`. One `docker-compose.yml` conflict: the incoming side still carried the stale `riskservicesdev` URL and dead OAuth vars, so ours was kept and only the two translation vars taken. Its offline smoke test passes. Defaults to `none`, nothing imports it. |
+| `origin/modise` | **Not merged, cherry-picked in `0f2c7f5`.** It is 4608 files and 939k lines, of which only 24 files are real: the rest is a committed `rag/.venv` (one file alone is 104k lines) plus a duplicate 5.5 MB PDF. Its `/api/chat` would also have replaced ours with a 26-line version dropping the shared response shape, the beneficiary refusal and the session fix. Took `rag-client.mjs`, the `gateway.py` error surfacing, and the `RAG_SERVICE_*` vars. `config.py` deliberately left alone. |
+| `origin/ritmo` | Dropped. One file, nine lines, targeting a file deleted for being the identity-spoofing hole. |
+| `feat/compliance-controls`, `feat/policy-servicing`, `main`, `origin/host-frontend`, `origin/main` | Already ancestors, nothing to merge. Re-verified against the new HEAD. |
+
+`main` is still 17 commits behind this branch. Deciding when to merge there is yours.
+
+## Original branch consolidation plan
 
 Five branches are already ancestors of `feat/chat-integration` and hold nothing
 unique: `feat/compliance-controls`, `feat/policy-servicing`, `main`,
