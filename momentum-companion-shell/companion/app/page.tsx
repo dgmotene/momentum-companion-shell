@@ -359,8 +359,10 @@ export default function Companion() {
                   ? "Ask a question, or say \u201chelp me with the claim\u201d…"
                   : "Talk to Lumina in your own words\u2026"
               }
-              disabled={sending}
-              className="min-w-0 flex-1 rounded-full border border-line bg-canvas px-3.5 py-2 text-[13px] text-ink outline-none placeholder:text-ink-faint focus:border-teal disabled:opacity-60"
+              // Deliberately not disabled while a reply is in flight: a
+              // disabled input cannot hold focus, so the caret was lost on
+              // every turn. send() already ignores a second submit.
+              className="min-w-0 flex-1 rounded-full border border-line bg-canvas px-3.5 py-2 text-[13px] text-ink outline-none placeholder:text-ink-faint focus:border-teal"
             />
             <button
               type="submit"
