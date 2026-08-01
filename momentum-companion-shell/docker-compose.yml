@@ -25,6 +25,19 @@ services:
       timeout: 3s
       retries: 10
 
+  # Web UI to browse the database at http://localhost:8081
+  # (server: db, user/password/database: companion).
+  adminer:
+    image: adminer
+    container_name: companion-adminer
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    ports:
+      - "8081:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
   companion-backend:
     profiles: ["full"]
     image: node:20-alpine
@@ -37,7 +50,9 @@ services:
       # Gateway credentials only ever live here (placeholders come from .env.example).
       GATEWAY_OAUTH_CLIENT_ID: ${GATEWAY_OAUTH_CLIENT_ID:-placeholder}
       GATEWAY_OAUTH_CLIENT_SECRET: ${GATEWAY_OAUTH_CLIENT_SECRET:-placeholder}
-      GATEWAY_BASE_URL: ${GATEWAY_BASE_URL:-https://riskservicesdev.momentum.co.za/ai/api}
+      GATEWAY_BASE_URL: ${GATEWAY_BASE_URL:-https://riskbifrostent.momentum.co.za/openai}
+      UNIVERSAL_API_KEY: ${UNIVERSAL_API_KEY:-}
+      CHAT_MODEL_URL: ${CHAT_MODEL_URL:-}
       DATABASE_URL: postgres://companion:companion@db:5432/companion
     ports:
       - "4000:4000"
@@ -71,6 +86,7 @@ services:
       - "3000:3000"
     volumes:
       - ./host:/app
+      - ./shared:/shared:ro
       - ./keys:/keys:ro
     depends_on:
       keys:
@@ -88,6 +104,7 @@ services:
       - "3001:3001"
     volumes:
       - ./companion:/app
+      - ./shared:/shared:ro
 
 volumes:
   dbdata:
