@@ -201,14 +201,6 @@ export function mockChat(
             ],
           },
           { kind: "citation", section: "Death Benefit section" },
-          {
-            kind: "suggestions",
-            chips: [
-              "What documents are needed to claim?",
-              "What is the Funeral Benefit?",
-              "What happens if I miss a payment?",
-            ],
-          },
         ],
       };
 
@@ -290,7 +282,6 @@ export function mockChat(
             text: "If a payment is going to be late, it's much easier to sort out before the policy lapses. I can put you through to someone who can arrange that.",
           },
           { kind: "citation", section: "Lapses and reinstatements section" },
-          { kind: "suggestions", chips: ["Talk to a consultant"] },
         ],
       };
 
@@ -371,10 +362,6 @@ export function mockChat(
           {
             kind: "text",
             text: "A longer waiting period would bring that down again. If you land on something you like, I can set up a proper quote with a consultant.",
-          },
-          {
-            kind: "suggestions",
-            chips: ["Get an official quote", "What if the waiting period were 12 months?"],
           },
         ],
       };
@@ -698,15 +685,7 @@ export function mockChat(
         blocks: [
           {
             kind: "text",
-            text: `I can help with questions about the policy, the claims process, and what's on record. What would you like to know, ${firstName}?`,
-          },
-          {
-            kind: "suggestions",
-            chips: [
-              "What does my Death Benefit cover?",
-              "What documents do I need to claim?",
-              "What happens if I miss a payment?",
-            ],
+            text: `I'm listening, ${firstName}. Tell me what you'd like to sort out and I'll take it from there — you can be as loose or as specific as you like.`,
           },
         ],
       };

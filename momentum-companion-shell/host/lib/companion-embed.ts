@@ -123,6 +123,13 @@ export class CompanionEmbed {
     frame.style.border = "0";
     frame.style.background = "transparent";
     frame.style.colorScheme = "normal";
+    // Pill iframe should present as a fully rounded pill.
+    if (path === LAUNCHER_PATH) {
+      frame.style.borderRadius = "9999px";
+      // Clip the iframe contents to the rounded shape so the inner document
+      // does not visually overflow the pill frame on hover or focus.
+      frame.style.overflow = "hidden";
+    }
     frame.style.transition =
       "width 180ms ease, height 180ms ease, inset 180ms ease, opacity 140ms ease";
     return frame;
@@ -178,21 +185,32 @@ export class CompanionEmbed {
     show(pill, false);
     show(panel, true);
 
+    // Both panel and fullscreen anchor at the bottom-right corner. Keeping
+    // `top` and `left` as `auto` in BOTH states matters: CSS cannot
+    // interpolate between `auto` and a length, so mixing anchors here would
+    // make the frame snap to the top-left of the viewport at the start of
+    // the transition and only its size would animate. By pinning right and
+    // bottom with concrete lengths and giving fullscreen a calc'd width and
+    // height (instead of `auto`), every property that changes is an
+    // animatable length and the panel grows in place from the corner.
     if (surface === "panel") {
       Object.assign(panel.style, {
-        inset: "auto 20px 20px auto",
+        top: "auto",
+        left: "auto",
+        right: "20px",
+        bottom: "20px",
         width: "408px",
         height: "min(620px, calc(100vh - 40px))",
         zIndex: Z.panel,
       });
     } else {
-      // fullscreen: inset rather than edge-to-edge, so the portal stays
-      // visible behind it. The user never loses the sense that Lumina is
-      // part of the page they were already on.
       Object.assign(panel.style, {
-        inset: "24px",
-        width: "auto",
-        height: "auto",
+        top: "auto",
+        left: "auto",
+        right: "24px",
+        bottom: "24px",
+        width: "calc(100vw - 48px)",
+        height: "calc(100vh - 48px)",
         zIndex: Z.panel,
       });
     }

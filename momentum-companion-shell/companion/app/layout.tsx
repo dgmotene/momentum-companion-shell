@@ -22,7 +22,7 @@ export default function RootLayout({
         white box around it and give away that it is an embed. The panel paints
         its own background instead.
       */}
-      <body className="min-h-screen bg-transparent text-ink antialiased">
+      <body className="bg-transparent text-ink antialiased">
         {children}
       </body>
     </html>
