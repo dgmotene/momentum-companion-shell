@@ -162,6 +162,7 @@ export default function Companion() {
                 blocks: response.blocks,
                 outcome: response.outcome,
                 reference: response.reference ?? null,
+                citations: response.citations ?? [],
                 streaming: false,
                 mocked,
               }

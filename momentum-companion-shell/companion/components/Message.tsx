@@ -9,7 +9,7 @@
 // quietly turn an amber "we've flagged this for a person" into something that
 // reads as done.
 
-import type { Block, Outcome } from "@shared/contract";
+import type { Block, Citation, Outcome } from "@shared/contract";
 import { Blocks, SuggestionChips, extractSuggestions } from "./Blocks";
 
 export interface ChatTurn {
@@ -18,10 +18,24 @@ export interface ChatTurn {
   blocks: Block[];
   outcome?: Outcome;
   reference?: string | null;
+  /** Where a grounded answer came from, as retrieved by the backend. */
+  citations?: Citation[];
   /** True while the reply is still arriving. */
   streaming?: boolean;
   /** True when this reply came from demo fixtures. */
   mocked?: boolean;
+}
+
+// Retrieval often returns the same heading from two nearby pages. Keyed on the
+// section alone so one heading appears once: the repeated line reads as padding
+// rather than as evidence, and the first page is the better-scoring match.
+function uniqueCitations(citations: Citation[]): Citation[] {
+  const seen = new Set<string>();
+  return citations.filter((citation) => {
+    if (seen.has(citation.section)) return false;
+    seen.add(citation.section);
+    return true;
+  });
 }
 
 const OUTCOME_STYLE: Partial<Record<Outcome, string>> = {
@@ -62,6 +76,7 @@ export function Message({
   }
 
   const suggestions = extractSuggestions(turn.blocks);
+  const sources = turn.citations ? uniqueCitations(turn.citations) : [];
   const shell = turn.outcome ? OUTCOME_STYLE[turn.outcome] : undefined;
   const label = turn.outcome ? OUTCOME_LABEL[turn.outcome] : undefined;
 
@@ -84,6 +99,25 @@ export function Message({
           )}
 
           <Blocks blocks={turn.blocks} />
+
+          {sources.length > 0 && (
+            <div className="mt-2.5 border-t border-line pt-2">
+              <p className="text-[10.5px] font-bold uppercase tracking-wide text-ink-faint">
+                {sources.length === 1 ? "Source" : "Sources"}
+              </p>
+              <ul className="mt-1 space-y-0.5">
+                {sources.map((citation) => (
+                  <li
+                    key={citation.section}
+                    className="text-[11.5px] italic text-ink-faint"
+                  >
+                    {citation.section}
+                    {citation.source ? `, ${citation.source}` : ""}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {turn.reference && (
             <p className="mt-2 text-[12px] text-ink-soft">
