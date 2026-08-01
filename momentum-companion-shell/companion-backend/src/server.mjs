@@ -15,6 +15,14 @@ import {
   HOST_ORIGIN,
 } from "./auth/verify.mjs";
 import domainRoutes from "./domain/routes.mjs";
+import { requireAuth } from "./auth/middleware.mjs";
+import { capabilitiesFor } from "./domain/capabilities.mjs";
+import { writeAudit } from "./domain/audit.mjs";
+import { processChatMessage, classifyIntent } from "./chat.js";
+
+// Word-for-word from shared/contract.ts NO_GROUNDING_RESPONSE.
+const NO_GROUNDING_RESPONSE =
+  "I can't confirm that from the provided documents. I can explain what is available or refer this for human review.";
 
 const PORT = Number(process.env.COMPANION_BACKEND_PORT ?? 4000);
 const ALLOWED_ORIGIN =
@@ -71,12 +79,94 @@ app.post("/api/gateway-ping", (_req, res) => {
   });
 });
 
-// POST /api/chat (stub)
-// TODO: this will figure out what the user wants and route to the right
-// logic. Since the gateway itself doesn't remember conversations, our
-// backend has to store the chat history.
-app.post("/api/chat", (_req, res) => {
-  res.json({ stub: true, message: "Orchestrator not implemented (design round)." });
+// POST /api/chat - grounded chat, always in the shared ChatResponse shape.
+app.post("/api/chat", requireAuth, async (req, res) => {
+  const userMessage = String(req.body?.message ?? "").trim();
+  if (!userMessage) return res.status(400).json({ error: "message required" });
+
+  const intent = await classifyIntent(userMessage).catch(() => "policy_question");
+
+  const FIXED_REPLIES = {
+    greeting: `Hello ${req.identity.fullName.split(" ")[0]}. I can answer questions about your policy, estimate premium changes, help update your details, or guide you through a claim. What can I help with?`,
+    quote_request:
+      "I can help with premium estimates. The What-If tool on your dashboard lets you try cover amounts and waiting periods and see the estimated premium side by side. Estimates are illustrative; a consultant confirms the final premium before any change.",
+    update_request:
+      "I can help with that. Address updates are available from your dashboard under your details, where you confirm the change before anything is applied. Banking and beneficiary changes are always verified by a consultant for your protection. Would you like me to arrange a callback?",
+  };
+  if (FIXED_REPLIES[intent]) {
+    return res.json({
+      session_id: "",
+      outcome: "answered",
+      blocks: [{ kind: "text", text: FIXED_REPLIES[intent] }],
+      citations: [],
+    });
+  }
+
+  if (!capabilitiesFor(req.identity).policyQA) {
+    const refusal =
+      req.identity.role === "beneficiary" && !req.identity.deceasedFlag
+        ? "I can't share policy information with you yet. Access opens once Momentum has verified the policyholder's passing. If you believe this is in error, I can connect you with a person."
+        : "That isn't available on your profile.";
+    writeAudit({
+      profileId: req.identity.sub,
+      policyId: req.identity.policyId,
+      role: req.identity.role,
+      action: "CHAT_QUERY",
+      authResult: "denied",
+      reason: `role ${req.identity.role} may not policyQA`,
+    });
+    return res.json({
+      session_id: "",
+      outcome: "refused",
+      blocks: [{ kind: "text", text: refusal }],
+      citations: [],
+      refusal_reason: refusal,
+    });
+  }
+
+  try {
+    const result = await processChatMessage({
+      userProfile: {
+        id: req.identity.sub,
+        full_name: req.identity.fullName,
+        role: req.identity.role,
+        policy_id: req.identity.policyId,
+      },
+      userPrompt: userMessage,
+    });
+
+    if (!result.grounded) {
+      return res.json({
+        session_id: result.sessionId,
+        outcome: "no_grounding",
+        blocks: [{ kind: "text", text: NO_GROUNDING_RESPONSE }],
+        citations: [],
+      });
+    }
+
+    return res.json({
+      session_id: result.sessionId,
+      outcome: "answered",
+      blocks: [{ kind: "text", text: result.text }],
+      citations: result.chunks.map((chunk) => ({
+        section: `${chunk.part ?? "Myriad guide"} / ${chunk.section ?? "General"}`,
+        source: `Myriad technical guide p.${chunk.printed_page}`,
+      })),
+    });
+  } catch (err) {
+    console.error("chat pipeline failed", err);
+    return res.json({
+      session_id: "",
+      outcome: "error",
+      blocks: [
+        {
+          kind: "text",
+          text: "Something went wrong on our side. Please try again, or ask me to connect you with a person.",
+        },
+      ],
+      citations: [],
+    });
+  }
 });
 
 // POST /api/rag/query (stub)
