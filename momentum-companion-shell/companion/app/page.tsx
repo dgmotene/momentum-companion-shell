@@ -90,19 +90,13 @@ export default function Companion() {
     }
     // The opening of a bereavement conversation is fixed, human-written text.
     // It is the single line most likely to do harm if a model improvises it.
+    // No chips: nudging a grieving person toward pre-baked buttons reads as
+    // impatience. The invitation is to say whatever they need to say.
     if (bereaved) {
       return [
         {
           kind: "text",
-          text: `Hi ${firstName}. I'm so sorry for your loss.\n\nWhenever you feel ready, I can help you start a claim or answer questions about the policy. There's no rush, and you can stop at any point and pick it up later.`,
-        },
-        {
-          kind: "suggestions",
-          chips: [
-            "Help me start the claim",
-            "What documents will I need?",
-            "What does the policy cover?",
-          ],
+          text: `Hi ${firstName}. I'm so sorry for your loss.\n\nWhenever you feel ready, I can help you start a claim or answer questions about the policy. There's no rush, and you can stop at any point and pick it up later. Just tell me what feels most useful right now.`,
         },
       ];
     }
