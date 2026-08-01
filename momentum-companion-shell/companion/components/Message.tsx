@@ -18,30 +18,13 @@ export interface ChatTurn {
   blocks: Block[];
   outcome?: Outcome;
   reference?: string | null;
-  /** Where a grounded answer came from, as retrieved by the backend. */
+  /** Retrieved by the backend and kept on the turn, but not shown: retrieval
+   *  is noisy enough that a wrong source reads worse than no source. */
   citations?: Citation[];
   /** True while the reply is still arriving. */
   streaming?: boolean;
   /** True when this reply came from demo fixtures. */
   mocked?: boolean;
-}
-
-// Retrieval often returns the same heading from two nearby pages. Keyed on the
-// section alone so one heading appears once: the repeated line reads as padding
-// rather than as evidence, and the first page is the better-scoring match.
-// The lead-in already names the guide, so only the page needs to survive here.
-function citationLabel(citation: Citation): string {
-  if (!citation.source) return citation.section;
-  return `${citation.section} (${citation.source.replace("Myriad technical guide ", "")})`;
-}
-
-function uniqueCitations(citations: Citation[]): Citation[] {
-  const seen = new Set<string>();
-  return citations.filter((citation) => {
-    if (seen.has(citation.section)) return false;
-    seen.add(citation.section);
-    return true;
-  });
 }
 
 const OUTCOME_STYLE: Partial<Record<Outcome, string>> = {
@@ -82,7 +65,6 @@ export function Message({
   }
 
   const suggestions = extractSuggestions(turn.blocks);
-  const sources = turn.citations ? uniqueCitations(turn.citations) : [];
   const shell = turn.outcome ? OUTCOME_STYLE[turn.outcome] : undefined;
   const label = turn.outcome ? OUTCOME_LABEL[turn.outcome] : undefined;
 
@@ -105,12 +87,6 @@ export function Message({
           )}
 
           <Blocks blocks={turn.blocks} />
-
-          {sources.length > 0 && (
-            <p className="mt-2 text-[12px] italic text-ink-faint">
-              From the Myriad guide: {sources.map(citationLabel).join("; ")}
-            </p>
-          )}
 
           {turn.reference && (
             <p className="mt-2 text-[12px] text-ink-soft">
