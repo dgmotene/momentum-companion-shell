@@ -23,6 +23,7 @@ import {
 import { estimatePremium } from "./domain/whatif.mjs";
 import { claimChecklist } from "./domain/claims-content.mjs";
 import { capabilitySummary } from "./domain/capability-summary.mjs";
+import { loadUserContext, describeUserRecord } from "./domain/user-context.mjs";
 import {
   ADDRESS_FIELDS,
   validateAddress,
@@ -121,6 +122,55 @@ function capabilitiesResponse(identity) {
     blocks: [
       { kind: "text", text: summary.text },
       { kind: "suggestions", chips: summary.chips },
+    ],
+    citations: [],
+  };
+}
+
+// Someone's own record is answered from the database, not the guide: retrieval
+// would find nothing and the no-grounding rule would hide data we already hold.
+async function myDetailsResponse(identity) {
+  if (!capabilitiesFor(identity).policyQA) {
+    return refusedResponse(
+      identity,
+      "policyQA",
+      "I can't share policy information with you yet. Access opens once Momentum has verified the policyholder's passing. If you believe this is in error, I can connect you with a person."
+    );
+  }
+  const userContext = await loadUserContext({
+    profileId: identity.sub,
+    policyId: identity.policyId,
+    role: identity.role,
+  });
+  const { facts, amounts } = describeUserRecord(userContext);
+  if (!facts.length && !amounts.length) {
+    return answeredText(
+      "There is nothing on file against your profile yet. If you expected to see a policy here, I can connect you with a person."
+    );
+  }
+  writeAudit({
+    profileId: identity.sub,
+    policyId: identity.policyId,
+    role: identity.role,
+    action: "view_own_record",
+    authResult: "allowed",
+  });
+  return {
+    outcome: "answered",
+    blocks: [
+      { kind: "text", text: "Here is what Momentum has on file for you." },
+      { kind: "list", items: facts },
+      ...amounts.map((entry) => ({
+        kind: "value",
+        label: entry.label,
+        amount: entry.amount,
+        classification: "recorded",
+      })),
+      // Role's own chips, so a beneficiary is never offered an update they
+      // would only be refused for.
+      ...(capabilitySummary(identity)
+        ? [{ kind: "suggestions", chips: capabilitySummary(identity).chips }]
+        : []),
     ],
     citations: [],
   };
@@ -401,6 +451,7 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     return send(answeredText("You're welcome. I'm here whenever you need anything on your policy."));
   }
   if (intent === "capabilities") return send(capabilitiesResponse(req.identity));
+  if (intent === "my_details") return send(await myDetailsResponse(req.identity));
   if (intent === "quote_request") return send(await whatIfResponse(req.identity, understanding));
   if (intent === "claim") return send(await claimResponse(req.identity, understanding));
   if (intent === "update_request") return send(await addressResponse(req.identity, understanding));

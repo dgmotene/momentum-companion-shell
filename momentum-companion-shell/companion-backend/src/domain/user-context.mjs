@@ -114,6 +114,65 @@ export async function loadUserContext({ profileId, policyId, role }) {
 
 const formatRand = (amount) => `R${Number(amount).toLocaleString("en-ZA")}`;
 
+// For showing someone their own record. Money is returned separately from the
+// plain facts so every amount can go out as a classified value block rather
+// than as unlabelled prose in a list.
+export function describeUserRecord(userContext) {
+  if (!userContext?.profile) return { facts: [], amounts: [] };
+
+  const facts = [];
+  const amounts = [];
+
+  if (userContext.policy) {
+    facts.push(
+      `Policy ${userContext.policy.policy_id}: ${userContext.policy.product_name}, status ${userContext.policy.status}`
+    );
+    amounts.push({
+      label: "Recorded cover amount",
+      amount: formatRand(userContext.policy.sum_assured),
+    });
+    if (userContext.policy.monthly_premium !== null) {
+      amounts.push({
+        label: "Monthly premium",
+        amount: formatRand(userContext.policy.monthly_premium),
+      });
+    }
+  }
+
+  for (const benefit of userContext.benefits) {
+    facts.push(`Benefit: ${benefit.benefit_name}, ${formatRand(benefit.cover_amount)}`);
+  }
+
+  if (userContext.address) {
+    const parts = [
+      userContext.address.street,
+      userContext.address.suburb,
+      userContext.address.city,
+      userContext.address.province,
+      userContext.address.postal_code,
+    ].filter(Boolean);
+    facts.push(`Address on file: ${parts.join(", ")}`);
+  }
+
+  if (userContext.banking) {
+    facts.push(
+      `Banking: ${userContext.banking.bank_name}, account ending ${userContext.banking.account_last4}`
+    );
+  }
+
+  for (const beneficiary of userContext.beneficiaries) {
+    facts.push(
+      `Beneficiary: ${beneficiary.full_name}, ${beneficiary.relationship}, ${beneficiary.percentage}%`
+    );
+  }
+
+  for (const claim of userContext.claims) {
+    facts.push(`Claim on record: ${claim.claim_type}, ${claim.status}`);
+  }
+
+  return { facts, amounts };
+}
+
 // Recorded values only. The wording matters: the model must not present any of
 // these as an amount that will be paid.
 export function formatUserContextForPrompt(userContext, role) {
