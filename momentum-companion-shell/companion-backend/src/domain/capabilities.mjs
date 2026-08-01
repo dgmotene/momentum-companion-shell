@@ -1,36 +1,76 @@
 import { writeAudit } from "./audit.mjs";
 
-// Role-to-capability matrix from SUBMISSION.md 5.2. "human_review" allows the
-// request but routes the result to a person instead of auto-committing.
+// Role-to-capability matrix for the six personas in Appendix A of the brief.
+// "human_review" allows the request but routes the result to a person instead
+// of auto-committing. A role missing from this table is denied everything, so
+// adding a role without deciding its capabilities fails closed.
+const NOTHING_ALLOWED = {
+  policyQA: false,
+  whatIf: false,
+  selfServiceUpdate: false,
+  claimsSupport: false,
+  beneficiaryChange: false,
+  bankingChange: false,
+};
+
+const CAPABILITIES_BY_ROLE = {
+  // Manages their own policy, so the only role that may alter it.
+  policyholder: {
+    ...NOTHING_ALLOWED,
+    policyQA: true,
+    whatIf: true,
+    selfServiceUpdate: true,
+    claimsSupport: true,
+    beneficiaryChange: "human_review",
+    bankingChange: "human_review",
+  },
+
+  // Covered by the policy but does not own it: benefits and claim
+  // requirements on their own life, never servicing or simulations.
+  life_insured: {
+    ...NOTHING_ALLOWED,
+    policyQA: true,
+    claimsSupport: true,
+  },
+
+  // Only after Momentum has verified the death; see the gate below.
+  beneficiary: {
+    ...NOTHING_ALLOWED,
+    policyQA: true,
+    claimsSupport: true,
+  },
+
+  // Acts for a client within their authorised book. Simulations are part of
+  // preparing for a client meeting; changing client details is not.
+  adviser: {
+    ...NOTHING_ALLOWED,
+    policyQA: true,
+    whatIf: true,
+  },
+
+  // Assesses a submitted claim: clauses, exclusions, evidence outstanding.
+  claims_assessor: {
+    ...NOTHING_ALLOWED,
+    policyQA: true,
+    claimsSupport: true,
+  },
+
+  // Front line. May walk a customer through a change, but a change made on
+  // someone else's behalf is confirmed by a person, never auto-committed.
+  service_agent: {
+    ...NOTHING_ALLOWED,
+    policyQA: true,
+    claimsSupport: true,
+    selfServiceUpdate: "human_review",
+    bankingChange: "human_review",
+  },
+};
+
 export function capabilitiesFor(identity) {
-  if (identity.role === "policyholder") {
-    return {
-      policyQA: true,
-      whatIf: true,
-      selfServiceUpdate: true,
-      claimsSupport: true,
-      beneficiaryChange: "human_review",
-      bankingChange: "human_review",
-    };
+  if (identity.role === "beneficiary" && !identity.deceasedFlag) {
+    return NOTHING_ALLOWED;
   }
-  if (identity.role === "beneficiary" && identity.deceasedFlag) {
-    return {
-      policyQA: true,
-      whatIf: false,
-      selfServiceUpdate: false,
-      claimsSupport: true,
-      beneficiaryChange: false,
-      bankingChange: false,
-    };
-  }
-  return {
-    policyQA: false,
-    whatIf: false,
-    selfServiceUpdate: false,
-    claimsSupport: false,
-    beneficiaryChange: false,
-    bankingChange: false,
-  };
+  return CAPABILITIES_BY_ROLE[identity.role] ?? NOTHING_ALLOWED;
 }
 
 const REFUSALS = {
