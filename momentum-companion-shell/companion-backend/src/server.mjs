@@ -1,12 +1,7 @@
-// This is the backend that the companion frontend talks to.
-// We used plain Express instead of Fastify since this skeleton only has one
-// real route (verify) and Express is simpler to read.
-//
-// What this service does:
-//   - verifies the identity JWT (signature, issuer, audience, expiry)
-//     against the public key the host publishes at /.well-known/jwks.json
-//   - will be the only place that holds the Momentum AI Gateway credentials
-//   - everything else below is just a stub for now, no real AI logic yet
+// The backend the companion frontend talks to. It verifies the identity JWT
+// against the public key the host publishes at /.well-known/jwks.json, enforces
+// the role capability matrix, and is the only place holding Momentum AI Gateway
+// credentials.
 
 import express from "express";
 import {
@@ -63,9 +58,8 @@ app.use((req, res, next) => {
 });
 
 // POST /api/verify
-// The only real security logic in this skeleton right now. Checks the token's
-// signature, issuer, audience, and expiry. Every protected route we add later
-// should run this same check on the server, never just trust the frontend.
+// Checks the token's signature, issuer, audience and expiry. Every protected
+// route runs this same check server-side and never trusts the frontend.
 app.post("/api/verify", async (req, res) => {
   const token = req.body?.token;
   if (!token) return res.status(400).json({ error: "token required" });
@@ -86,20 +80,6 @@ app.post("/api/verify", async (req, res) => {
 // Role-scoped policy servicing: /api/me, /api/policy, /api/whatif,
 // /api/claims/guidance, address update, banking escalation.
 app.use(domainRoutes);
-
-// POST /api/gateway-ping (stub)
-// TODO: this route will eventually call the real AI gateway. Steps:
-//   1. Get an OAuth2 token using GATEWAY_OAUTH_CLIENT_ID / _SECRET (these
-//      stay backend-only, never sent to the browser).
-//   2. Call the gateway's chat endpoint with that token.
-// For now it just returns a fake response to prove the route works.
-app.post("/api/gateway-ping", (_req, res) => {
-  res.json({
-    stub: true,
-    message:
-      "Gateway client not implemented in the Environment Shell. OAuth2 client-credentials will be read from env vars here, backend-only.",
-  });
-});
 
 const answeredText = (text) => ({
   session_id: "",
@@ -457,13 +437,6 @@ app.post("/api/chat", requireAuth, async (req, res) => {
       citations: [],
     });
   }
-});
-
-// POST /api/rag/query (stub)
-// TODO: will search the documents table in Postgres (pgvector) for the most
-// relevant policy text, using embeddings created by the gateway.
-app.post("/api/rag/query", (_req, res) => {
-  res.json({ stub: true, message: "RAG retrieval not implemented (design round)." });
 });
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
