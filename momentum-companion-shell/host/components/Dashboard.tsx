@@ -65,7 +65,7 @@ export function Dashboard({
         <button
           type="button"
           onClick={onChooseClient}
-          className="mt-4 rounded-2xl bg-brand-teal px-4 py-2 text-[12px] font-semibold text-white shadow-[0_10px_24px_rgba(0,109,119,0.2)] transition hover:-translate-y-0.5 hover:bg-brand-tealDark sm:mt-5 sm:px-5 sm:py-2.5 sm:text-[13.5px]"
+          className="mt-4 rounded-2xl bg-brand-teal px-4 py-2 text-[12px] font-semibold text-white shadow-[0_10px_24px_rgba(0,51,160,0.22)] transition hover:-translate-y-0.5 hover:bg-brand-tealDark sm:mt-5 sm:px-5 sm:py-2.5 sm:text-[13.5px]"
         >
           Choose a client
         </button>
@@ -145,7 +145,7 @@ export function Dashboard({
           <button
             type="button"
             onClick={onOpenCompanion}
-            className="mt-3 rounded-2xl bg-brand-surface px-4 py-2 text-[13px] font-semibold text-brand-tealDark shadow-[0_10px_24px_rgba(0,80,90,0.2)] transition hover:-translate-y-0.5 sm:mt-4 sm:px-5 sm:py-3 sm:text-[14px]"
+            className="mt-3 rounded-2xl bg-brand-surface px-4 py-2 text-[13px] font-semibold text-brand-tealDark shadow-[0_10px_24px_rgba(0,36,110,0.22)] transition hover:-translate-y-0.5 sm:mt-4 sm:px-5 sm:py-3 sm:text-[14px]"
           >
             Begin with Lumina &rarr;
           </button>
@@ -201,7 +201,7 @@ function GradientCard({
 }) {
   return (
     <div
-      className={`relative overflow-hidden rounded-[28px] bg-gradient-to-br from-brand-teal via-brand-tealDark to-brand-blue p-4 text-brand-surface shadow-[0_24px_80px_rgba(0,109,119,0.12)] sm:p-5 ${className}`}
+      className={`relative overflow-hidden rounded-[28px] bg-gradient-to-br from-brand-teal via-brand-tealDark to-brand-blue p-4 text-brand-surface shadow-[0_24px_80px_rgba(0,51,160,0.16)] sm:p-5 ${className}`}
     >
       <div
         aria-hidden="true"
@@ -304,7 +304,7 @@ function NoAccessNotice({ name }: { name: string }) {
       <h1 className="font-serif text-[20px] font-semibold sm:text-[24px]">
         Nothing to show here yet
       </h1>
-      <div className="mt-3 rounded-[28px] border border-brand-border bg-brand-surface p-4 shadow-[0_24px_80px_rgba(0,109,119,0.12)] sm:mt-4 sm:p-5">
+      <div className="mt-3 rounded-[28px] border border-brand-border bg-brand-surface p-4 shadow-[0_24px_80px_rgba(0,51,160,0.12)] sm:mt-4 sm:p-5">
         <p className="text-[12px] leading-relaxed text-brand-inkSoft sm:text-[13.5px]">
           Hi {name.split(" ")[0]}. You are signed in, but there is no policy
           information available to you at the moment.

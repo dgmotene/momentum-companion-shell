@@ -64,10 +64,10 @@ export default function LoginPage() {
       className="min-h-screen bg-brand-blueTint px-4 py-8 text-brand-ink sm:px-6 lg:px-8"
       style={{
         backgroundImage:
-          "radial-gradient(circle at top left, rgba(78, 205, 196, 0.24), transparent 60%)",
+          "radial-gradient(circle at top left, rgba(76, 143, 216, 0.28), transparent 60%)",
       }}
     >
-      <div className="mx-auto flex max-w-6xl flex-col overflow-hidden rounded-[28px] border border-brand-border bg-brand-surface shadow-[0_24px_80px_rgba(0,109,119,0.12)] lg:min-h-[calc(100vh-4rem)] lg:flex-row">
+      <div className="mx-auto flex max-w-6xl flex-col overflow-hidden rounded-[28px] border border-brand-border bg-brand-surface shadow-[0_24px_80px_rgba(0,51,160,0.12)] lg:min-h-[calc(100vh-4rem)] lg:flex-row">
         <section className="relative flex w-full flex-col justify-between overflow-hidden bg-gradient-to-br from-brand-teal via-brand-tealDark to-brand-blue p-6 text-brand-surface sm:p-8 lg:w-[44%] lg:p-10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.18),_transparent_40%)]" />
           <div className="relative z-10">
@@ -159,7 +159,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full rounded-2xl bg-brand-teal px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(0,109,119,0.2)] transition hover:-translate-y-0.5 hover:bg-brand-tealDark disabled:translate-y-0 disabled:opacity-60"
+                className="w-full rounded-2xl bg-brand-teal px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(0,51,160,0.22)] transition hover:-translate-y-0.5 hover:bg-brand-tealDark disabled:translate-y-0 disabled:opacity-60"
               >
                 {busy ? "Signing in…" : "Sign in"}
               </button>

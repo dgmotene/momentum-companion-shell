@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lumina · Finals Presentation · Nullius In Verba</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #006D77;
+    --teal-dark: #00505A;
+    --teal-soft: #EAF9F7;
+    --amber: #C58432;
+    --amber-tint: #FDF1E6;
+    --green: #1E7A54;
+    --green-tint: #EAF7F0;
+    --ink: #1F2933;
+    --ink-soft: #52606D;
+    --ink-faint: #8A9199;
+    --border: #E7E5E1;
+    --sand: #F6F6F3;
+    --bg: #FAFAF7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+  .deck { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 66px 82px 76px;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 260ms ease;
+  }
+  .slide.active { display: flex; opacity: 1; }
+  .slide-head {
+    position: absolute;
+    top: 26px;
+    left: 82px;
+    right: 82px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .eyebrow { color: var(--teal); background: var(--teal-soft); padding: 4px 11px; border-radius: 999px; }
+  .idx, .mono { font-family: 'JetBrains Mono', monospace; }
+  h1.title {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    font-size: 76px;
+    line-height: 1.04;
+    color: var(--teal-dark);
+    letter-spacing: -1.7px;
+  }
+  h2.title {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    font-size: 42px;
+    line-height: 1.14;
+    color: var(--teal-dark);
+    letter-spacing: -0.7px;
+    margin-bottom: 28px;
+  }
+  .lede { font-size: 19px; line-height: 1.5; color: var(--ink-soft); max-width: 860px; }
+  .kicker {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 18px;
+    color: var(--amber);
+    font-style: italic;
+    margin-top: 28px;
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px;
+  }
+  .card.tinted { background: var(--teal-soft); border-color: transparent; }
+  .card.amber { background: var(--amber-tint); border-color: transparent; }
+  .card.green { background: var(--green-tint); border-color: transparent; }
+  .card .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--teal);
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .card h3 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 19px;
+    line-height: 1.25;
+    font-weight: 500;
+    color: var(--teal-dark);
+    margin-bottom: 7px;
+  }
+  .card.amber h3 { color: var(--amber); }
+  .card.green h3 { color: var(--green); }
+  .card p { font-size: 13.5px; line-height: 1.48; color: var(--ink-soft); }
+  .card strong { color: var(--ink); }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
+  .chip {
+    font-size: 12.5px;
+    font-weight: 500;
+    padding: 6px 13px;
+    border-radius: 999px;
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--ink-soft);
+  }
+  .chip.teal { background: var(--teal-soft); border-color: transparent; color: var(--teal-dark); }
+  .chip.amber { background: var(--amber-tint); border-color: transparent; color: var(--amber); }
+  .chip.green { background: var(--green-tint); border-color: transparent; color: var(--green); }
+
+  /* Architecture */
+  .zones { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .zone {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    background: white;
+  }
+  .zone .z-num { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: var(--teal); letter-spacing: 1px; }
+  .zone h3 { font-family: 'Fraunces', Georgia, serif; color: var(--teal-dark); font-size: 17px; font-weight: 500; margin: 6px 0 8px; }
+  .zone p { font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; }
+  .zone .tech { margin-top: 12px; padding-top: 9px; border-top: 1px dashed var(--border); font: 10.5px 'JetBrains Mono', monospace; color: var(--ink-faint); }
+  .credential-line { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 13px; }
+  .credential {
+    border-radius: 8px;
+    padding: 9px 14px;
+    font-size: 11.5px;
+    line-height: 1.35;
+    color: var(--teal-dark);
+    background: var(--teal-soft);
+  }
+  .credential.machine { color: var(--amber); background: var(--amber-tint); }
+
+  /* Pipeline */
+  .pipeline { display: grid; gap: 10px; align-items: stretch; }
+  .pipeline.six { grid-template-columns: repeat(6, 1fr); }
+  .pipeline.seven { grid-template-columns: repeat(7, 1fr); }
+  .step {
+    position: relative;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 15px;
+    min-height: 128px;
+  }
+  .step:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translate(50%, -50%);
+    color: var(--teal);
+    font-size: 18px;
+    font-weight: 700;
+    z-index: 2;
+  }
+  .step .n { font: 10px 'JetBrains Mono', monospace; color: var(--teal); font-weight: 700; letter-spacing: 1px; }
+  .step h3 { font-family: 'Fraunces', Georgia, serif; color: var(--teal-dark); font-size: 16px; font-weight: 500; margin: 8px 0 6px; }
+  .step p { font-size: 11.5px; color: var(--ink-soft); line-height: 1.42; }
+  .step.highlight { background: var(--teal-soft); border-color: transparent; }
+  .step.warn { background: var(--amber-tint); border-color: transparent; }
+  .step.warn .n, .step.warn h3 { color: var(--amber); }
+  .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 18px; }
+  .fact { border-left: 3px solid var(--teal); padding: 7px 12px; background: white; }
+  .fact b { display: block; color: var(--teal-dark); font: 600 16px 'JetBrains Mono', monospace; margin-bottom: 3px; }
+  .fact span { font-size: 11.5px; color: var(--ink-soft); }
+
+  /* Chunking */
+  .chunk-visual { display: grid; grid-template-columns: 0.9fr 1.15fr 1fr; gap: 18px; align-items: stretch; }
+  .paper {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 19px;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .paper .part { font: 700 10px 'JetBrains Mono', monospace; color: var(--teal); letter-spacing: 1px; }
+  .paper .heading { font-family: 'Fraunces', Georgia, serif; font-size: 17px; color: var(--teal-dark); margin: 10px 0 6px; }
+  .paper .rule { height: 1px; background: var(--border); margin: 9px 0; }
+  .decisions { display: flex; flex-direction: column; gap: 10px; }
+  .decision { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; }
+  .decision b { display: block; font-size: 12.5px; color: var(--teal-dark); margin-bottom: 3px; }
+  .decision span { font-size: 11.5px; color: var(--ink-soft); line-height: 1.4; display: block; }
+
+  /* Safety branch */
+  .branch { display: grid; grid-template-columns: 0.8fr 1fr 1fr; gap: 18px; align-items: stretch; }
+  .branch-box { border-radius: 14px; padding: 21px 22px; background: white; border: 1px solid var(--border); }
+  .branch-box h3 { font-family: 'Fraunces', Georgia, serif; color: var(--teal-dark); font-weight: 500; font-size: 20px; margin-bottom: 12px; }
+  .branch-box.no { background: var(--amber-tint); border-color: transparent; }
+  .branch-box.no h3 { color: var(--amber); }
+  .branch-box.yes { background: var(--teal-soft); border-color: transparent; }
+  .branch-box ul { list-style: none; }
+  .branch-box li { position: relative; padding: 6px 0 6px 17px; font-size: 12.5px; line-height: 1.45; color: var(--ink-soft); }
+  .branch-box li::before { content: ''; position: absolute; left: 0; top: 13px; width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
+  .branch-box.no li::before { background: var(--amber); }
+  .quote { margin-top: 11px; padding: 11px 13px; background: rgba(255,255,255,0.72); border-radius: 8px; font-family: 'Fraunces', Georgia, serif; font-size: 13px; color: var(--ink); line-height: 1.45; }
+
+  /* Compact list */
+  .list { list-style: none; }
+  .list li { position: relative; padding: 9px 0 9px 25px; border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.45; color: var(--ink-soft); }
+  .list li:last-child { border-bottom: none; }
+  .list li::before { content: ''; position: absolute; left: 3px; top: 17px; width: 7px; height: 7px; border-radius: 50%; background: var(--teal); }
+  .list b { color: var(--teal-dark); }
+
+  /* Title and closing */
+  .title-slide { align-items: flex-start; }
+  .title-slide .brand { font-size: 12px; color: var(--teal); letter-spacing: 3px; text-transform: uppercase; font-weight: 700; margin-bottom: 20px; }
+  .title-slide .tagline { font-family: 'Fraunces', Georgia, serif; font-size: 24px; color: var(--ink-soft); margin-top: 22px; max-width: 760px; font-style: italic; line-height: 1.42; }
+  .title-slide .meta { display: flex; gap: 38px; margin-top: 54px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--ink-faint); }
+  .title-slide .meta b { color: var(--teal-dark); display: block; margin-bottom: 3px; }
+  .closing { align-items: center; text-align: center; }
+  .closing h1 { font: 500 78px/1.05 'Fraunces', Georgia, serif; color: var(--teal-dark); letter-spacing: -1.7px; }
+  .closing .promise { font: italic 22px/1.4 'Fraunces', Georgia, serif; color: var(--ink-soft); margin-top: 18px; }
+  .closing .close-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; width: min(920px, 100%); margin-top: 42px; text-align: left; }
+
+  /* Nav */
+  .nav {
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    background: rgba(255,255,255,0.96);
+    padding: 7px 15px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 20px rgba(20,30,30,0.08);
+    z-index: 100;
+  }
+  .nav button { background: none; border: none; color: var(--teal); cursor: pointer; font-size: 18px; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+  .nav button:hover { background: var(--teal-soft); }
+  .counter { font: 12px 'JetBrains Mono', monospace; color: var(--ink-soft); min-width: 44px; text-align: center; }
+  .hint { font-size: 10.5px; color: var(--ink-faint); padding-left: 12px; border-left: 1px solid var(--border); }
+
+  @media (max-width: 1000px) {
+    .slide { padding-left: 52px; padding-right: 52px; }
+    .slide-head { left: 52px; right: 52px; }
+    h2.title { font-size: 36px; }
+    .step { padding: 12px 10px; }
+    .step p { font-size: 10.5px; }
+  }
+  @media print {
+    @page { size: landscape; margin: 0; }
+    body { overflow: visible; background: white; }
+    .deck { height: auto; }
+    .slide { position: relative; display: flex !important; opacity: 1 !important; page-break-after: always; break-after: page; height: 100vh; width: 100vw; }
+    .nav { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <!-- 1. TITLE -->
+  <section class="slide title-slide active">
+    <div>
+      <div class="brand">Nullius In Verba · Hackathon Finals</div>
+      <h1 class="title">Lumina</h1>
+      <p class="tagline">A trustworthy AI companion that makes life insurance easier to understand, manage and claim.</p>
+      <div class="chip-row">
+        <span class="chip teal">Grounded</span>
+        <span class="chip teal">Secure</span>
+        <span class="chip teal">Practical</span>
+        <span class="chip amber">Empathetic</span>
+      </div>
+      <div class="meta">
+        <div><b>Team</b>Vutomi · Thabani · Dalton · Katlego · Modise</div>
+        <div><b>Built for</b>Momentum × Monkey &amp; River Hackathon 2026</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. PROBLEM + PRODUCT -->
+  <section class="slide">
+    <div class="slide-head"><span class="eyebrow">Problem → Product</span><span class="idx">01</span></div>
+    <h2 class="title">Customers need clarity most when life is least clear.</h2>
+    <div class="grid-3">
+      <div class="card">
+        <div class="num">The problem</div>
+        <h3>454 pages are not a conversation</h3>
+        <p>Policy rules, exclusions and claims processes are difficult to find—and harder under stress.</p>
+      </div>
+      <div class="card tinted">
+        <div class="num">Our answer</div>
+        <h3>Lumina, inside the portal</h3>
+        <p>Plain-language help that already knows the authenticated role and policy context.</p>
+      </div>
+      <div class="card amber">
+        <div class="num">Our promise</div>
+        <h3>Never confident without evidence</h3>
+        <p>Grounded policy answers. Deterministic actions. Human help when certainty or authority ends.</p>
+      </div>
+    </div>
+    <div class="grid-5" style="margin-top:16px;">
+      <div class="card"><div class="num">01</div><h3>Authenticate</h3><p>Role-aware access</p></div>
+      <div class="card"><div class="num">02</div><h3>Ask</h3><p>Grounded Q&amp;A</p></div>
+      <div class="card"><div class="num">03</div><h3>Explore</h3><p>Premium What-If</p></div>
+      <div class="card"><div class="num">04</div><h3>Update</h3><p>Self-service details</p></div>
+      <div class="card"><div class="num">05</div><h3>Claim</h3><p>Guidance with care</p></div>
+    </div>
+  </section>
+
+  <!-- 3. ARCHITECTURE -->
+  <section class="slide">
+    <div class="slide-head"><span class="eyebrow">Secure Architecture</span><span class="idx">02</span></div>
+    <h2 class="title">Four trust zones. The model carries no authority.</h2>
+    <div class="zones">
+      <div class="zone">
+        <div class="z-num">ZONE 1</div>
+        <h3>Host Portal</h3>
+        <p>Authenticates the user and signs a short-lived RS256 identity token.</p>
+        <div class="tech">Next.js · JWKS</div>
+      </div>
+      <div class="zone">
+        <div class="z-num">ZONE 2</div>
+        <h3>Companion</h3>
+        <p>Isolated iframe. Receives identity through origin-pinned postMessage.</p>
+        <div class="tech">Next.js · no secrets</div>
+      </div>
+      <div class="zone">
+        <div class="z-num">ZONE 3</div>
+        <h3>Backend</h3>
+        <p>Verifies JWT, checks role, retrieves evidence, runs actions and audits.</p>
+        <div class="tech">Node · Postgres · pgvector</div>
+      </div>
+      <div class="zone">
+        <div class="z-num">ZONE 4</div>
+        <h3>AI Gateway</h3>
+        <p>Stateless chat and embeddings. Never sees or decides user permissions.</p>
+        <div class="tech">Haiku · Titan v2</div>
+      </div>
+    </div>
+    <div class="credential-line">
+      <div class="credential"><b>User JWT:</b> Host → iframe → backend. Proves who the person is.</div>
+      <div class="credential machine"><b>Gateway key:</b> Backend → gateway only. Proves which app is calling.</div>
+    </div>
+    <p class="kicker">Model advises. Code decides.</p>
+  </section>
+
+  <!-- 4. RAG OVERVIEW -->
+  <section class="slide">
+    <div class="slide-head"><span class="eyebrow">RAG · 1 of 4</span><span class="idx">03</span></div>
+    <h2 class="title">From a 454-page guide to searchable evidence.</h2>
+    <div class="pipeline six">
+      <div class="step"><div class="n">01</div><h3>Extract</h3><p>Read one PDF page at a time. Preserve PDF page, printed page and product part.</p></div>
+      <div class="step"><div class="n">02</div><h3>Clean</h3><p>Remove recurring headers, footers, dot leaders and broken hyphenation.</p></div>
+      <div class="step"><div class="n">03</div><h3>Chunk</h3><p>Split on real headings; pack related short fields; window long sections.</p></div>
+      <div class="step highlight"><div class="n">04</div><h3>Embed</h3><p>Titan Embed Text v2 turns every chunk into a 1,024-number meaning vector.</p></div>
+      <div class="step"><div class="n">05</div><h3>Validate</h3><p>Vector count and dimension must match. Partial failures never become searchable.</p></div>
+      <div class="step highlight"><div class="n">06</div><h3>Store</h3><p>Content, source metadata and vector live together in Postgres + pgvector.</p></div>
+    </div>
+    <div class="facts">
+      <div class="fact"><b>SHA-256</b><span>Same source + settings? Skip costly re-ingestion.</span></div>
+      <div class="fact"><b>~400</b><span>Tokens per chunk.</span></div>
+      <div class="fact"><b>60</b><span>Token overlap on long sections.</span></div>
+      <div class="fact"><b>ready</b><span>Only completed corpora can be queried.</span></div>
+    </div>
+  </section>
+
+  <!-- 5. RAG CHUNKING -->
+  <section class="slide">
+    <div class="slide-head"><span class="eyebrow">RAG · 2 of 4</span><span class="idx">04</span></div>
+    <h2 class="title">Chunking preserves meaning—and makes citations useful.</h2>
+    <div class="chunk-visual">
+      <div class="paper">
+        <div class="part">PRODUCT PART</div>
+        <div class="heading">Education Protector</div>
+        <div class="rule"></div>
+        <b>Age limits</b><br>Entry age: 18–60<br><br>
+        <b>Waiting period</b><br>Rules and exceptions…
+        <div class="rule"></div>
+        <span class="mono">printed p.24 · PDF p.187</span>
+      </div>
+      <div class="decisions">
+        <div class="decision"><b>1 · Headings before size</b><span>“Age limits” stays with its rule instead of being cut across topics.</span></div>
+        <div class="decision"><b>2 · Pack within one product</b><span>Short labelled fields gain enough context to match a real question.</span></div>
+        <div class="decision"><b>3 · Prefix the product name</b><span>“Age limits” appears many times; “Education Protector” disambiguates it.</span></div>
+        <div class="decision"><b>4 · Reject noise</b><span>Digit-heavy false headings and fragments under 40 characters are discarded.</span></div>
+      </div>
+      <div class="card tinted">
+        <div class="num">Stored per chunk</div>
+        <h3>Evidence + location</h3>
+        <ul class="list">
+          <li><b>content</b> shown to the model</li>
+          <li><b>part + section</b> for meaning</li>
+          <li><b>printed + PDF page</b> for traceability</li>
+          <li><b>token count</b> for prompt control</li>
+          <li><b>VECTOR(1024)</b> for similarity search</li>
+        </ul>
+      </div>
+    </div>
+    <p class="kicker">We use heading-aware flat chunks today—simple, inspectable and tuned to the guide.</p>
+  </section>
+
+  <!-- 6. RAG QUERY -->
+  <section class="slide">
+    <div class="slide-head"><span class="eyebrow">RAG · 3 of 4</span><span class="idx">05</span></div>
+    <h2 class="title">One policy question, end to end.</h2>
+    <div class="pipeline seven">
+      <div class="step"><div class="n">01</div><h3>Verify</h3><p>JWT signature, issuer, audience, expiry and role.</p></div>
+      <div class="step"><div class="n">02</div><h3>Classify</h3><p>Haiku labels the intent. Code authorizes it.</p></div>
+      <div class="step highlight"><div class="n">03</div><h3>Embed</h3><p>The question becomes a Titan 1,024-D vector.</p></div>
+      <div class="step highlight"><div class="n">04</div><h3>Search</h3><p>HNSW cosine search in pgvector.</p></div>
+      <div class="step"><div class="n">05</div><h3>Select</h3><p>Top 3 chunks above the 0.20 similarity floor.</p></div>
+      <div class="step"><div class="n">06</div><h3>Ground</h3><p>Evidence + policy context + last 10 messages.</p></div>
+      <div class="step warn"><div class="n">07</div><h3>Answer</h3><p>Haiku phrases the response; backend returns sources and audits.</p></div>
+    </div>
+    <div class="grid-3" style="margin-top:18px;">
+      <div class="card"><div class="num">Search rule</div><h3>Only attributable evidence</h3><p>Ready documents, known product part, valid printed page.</p></div>
+      <div class="card"><div class="num">Prompt rule</div><h3>Answer from context only</h3><p>No source evidence means no policy answer.</p></div>
+      <div class="card amber"><div class="num">Small-model strategy</div><h3>Narrow jobs, strong code</h3><p>The model understands and phrases. Code retrieves, authorizes and records.</p></div>
+    </div>
+  </section>
+
+  <!-- 7. RAG HONESTY -->
+  <section class="slide">
+    <div class="slide-head"><span class="eyebrow">RAG · 4 of 4</span><span class="idx">06</span></div>
+    <h2 class="title">Retrieval decides whether the model may speak.</h2>
+    <div class="branch">
+      <div class="branch-box">
+        <h3>Similarity gate</h3>
+        <ul>
+          <li>Embed the question</li>
+          <li>Search ready chunks</li>
+          <li>Apply the 0.20 floor</li>
+        </ul>
+        <div class="quote">Did relevant evidence survive?</div>
+      </div>
+      <div class="branch-box no">
+        <h3>No match → stop</h3>
+        <ul>
+          <li>No answer-generation call</li>
+          <li>Audit: <span class="mono">NO_GROUNDING</span></li>
+          <li>Offer human review</li>
+        </ul>
+        <div class="quote">“I can't confirm that from the provided documents.”</div>
+      </div>
+      <div class="branch-box yes">
+        <h3>Match → grounded answer</h3>
+        <ul>
+          <li>Prompt includes retrieved text only</li>
+          <li>Source labels: part, section, printed page</li>
+          <li>Output guard blocks explicit payout promises</li>
+          <li>Amounts receive a “not confirmed” note</li>
+        </ul>
+      </div>
+    </div>
+    <div class="chip-row">
+      <span class="chip green">Built: retry + jitter</span>
+      <span class="chip green">Built: dimension checks</span>
+      <span class="chip green">Built: preflight smoke checks</span>
+      <span class="chip amber">Next: reranking</span>
+      <span class="chip amber">Next: marker-validated citations</span>
+      <span class="chip amber">Next: formal retrieval evaluation set</span>
+    </div>
+  </section>
+
+  <!-- 8. EXPERIENCE -->
+  <section class="slide">
+    <div class="slide-head"><span class="eyebrow">Beyond Q&amp;A</span><span class="idx">07</span></div>
+    <h2 class="title">The same guardrails protect every journey.</h2>
+    <div class="grid-2">
+      <div class="card tinted">
+        <div class="num">Policyholder</div>
+        <h3>Understand and manage</h3>
+        <p>Grounded Q&amp;A · backend What-If formula · conversational address update · claims support.</p>
+      </div>
+      <div class="card amber">
+        <div class="num">Beneficiary · deceased flag set</div>
+        <h3>Claim with dignity</h3>
+        <p>Q&amp;A and claims only. Death certificate already on file is pre-ticked—not requested again.</p>
+      </div>
+      <div class="card">
+        <div class="num">Deterministic controls</div>
+        <h3>Sensitive actions stay human</h3>
+        <p>Banking and beneficiary changes, high-value claims, distress and legal threats enter review.</p>
+      </div>
+      <div class="card">
+        <div class="num">Compliance</div>
+        <h3>No outcome promises</h3>
+        <p>Estimates are illustrative. Timelines are indicative. Payouts remain subject to validation and assessment.</p>
+      </div>
+    </div>
+    <p class="kicker">Where words could wound, the model never improvises.</p>
+  </section>
+
+  <!-- 9. EXECUTION + TRADE-OFFS -->
+  <section class="slide">
+    <div class="slide-head"><span class="eyebrow">Execution &amp; Decisions</span><span class="idx">08</span></div>
+    <h2 class="title">Practical enough to run. Honest enough to trust.</h2>
+    <div class="grid-3">
+      <div class="card">
+        <div class="num">Technical execution · 20%</div>
+        <h3>Working trust boundaries</h3>
+        <p>RS256/JWKS, iframe isolation, live gateway integration, Postgres sessions, pgvector and audit events.</p>
+      </div>
+      <div class="card tinted">
+        <div class="num">Team decisions · 15%</div>
+        <h3>Constraints shaped the stack</h3>
+        <p>No agent framework. One database. Offline idempotent ingestion. Narrow model tasks.</p>
+      </div>
+      <div class="card amber">
+        <div class="num">User experience · 15%</div>
+        <h3>Evidence without complexity</h3>
+        <p>Plain answers, visible sources, saved workflow state and a human hand-off from anywhere.</p>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:16px;">
+      <div class="card green"><div class="num">What we prioritised</div><h3>Correctness before cleverness</h3><p>Grounding, authorization, auditability and graceful failure.</p></div>
+      <div class="card"><div class="num">Known limits</div><h3>No hidden magic</h3><p>Flat vector retrieval today; no reranker or hybrid query path yet. We show exactly what is built.</p></div>
+    </div>
+  </section>
+
+  <!-- 10. CLOSE -->
+  <section class="slide closing">
+    <div>
+      <h1>Trust needs evidence.</h1>
+      <p class="promise">Lumina turns policy documentation into support people can understand—and decisions the business can defend.</p>
+      <div class="close-grid">
+        <div class="card tinted"><div class="num">Customer</div><h3>Clear answers</h3><p>At the moment they matter.</p></div>
+        <div class="card tinted"><div class="num">Momentum</div><h3>Controlled actions</h3><p>Secure, auditable, compliant.</p></div>
+        <div class="card amber"><div class="num">Our principle</div><h3>Nullius in verba</h3><p>Take nobody's word for it—not even the model's.</p></div>
+      </div>
+      <div class="mono" style="margin-top:34px; font-size:12px; color:var(--ink-faint);">github.com/MnR-Hackathon-Group-C/nullius-in-verba</div>
+    </div>
+  </section>
+
+</div>
+
+<div class="nav">
+  <button id="prev" aria-label="Previous slide">&larr;</button>
+  <span class="counter" id="counter">1 / 10</span>
+  <button id="next" aria-label="Next slide">&rarr;</button>
+  <span class="hint">arrow keys · F fullscreen · P print</span>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const counter = document.getElementById('counter');
+  let current = 0;
+
+  function show(index) {
+    if (index < 0 || index >= slides.length) return;
+    slides[current].classList.remove('active');
+    slides[index].classList.add('active');
+    current = index;
+    counter.textContent = `${index + 1} / ${slides.length}`;
+  }
+
+  document.getElementById('next').addEventListener('click', () => show(current + 1));
+  document.getElementById('prev').addEventListener('click', () => show(current - 1));
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowRight' || event.key === ' ' || event.key === 'PageDown') show(current + 1);
+    else if (event.key === 'ArrowLeft' || event.key === 'PageUp') show(current - 1);
+    else if (event.key === 'Home') show(0);
+    else if (event.key === 'End') show(slides.length - 1);
+    else if (event.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    } else if (event.key.toLowerCase() === 'p') window.print();
+  });
+</script>
+</body>
+</html>

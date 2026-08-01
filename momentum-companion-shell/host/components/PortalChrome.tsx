@@ -41,7 +41,7 @@ export function PortalChrome({
       className="min-h-screen bg-brand-blueTint font-sans text-brand-ink"
       style={{
         backgroundImage:
-          "radial-gradient(circle at top left, rgba(78, 205, 196, 0.24), transparent 60%)",
+          "radial-gradient(circle at top left, rgba(76, 143, 216, 0.28), transparent 60%)",
         backgroundAttachment: "fixed",
       }}
     >
