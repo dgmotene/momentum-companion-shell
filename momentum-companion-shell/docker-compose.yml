@@ -48,11 +48,13 @@ services:
       HOST_ORIGIN: http://host:3000
       COMPANION_ALLOWED_ORIGIN: http://localhost:3001
       # Gateway credentials only ever live here (placeholders come from .env.example).
-      GATEWAY_OAUTH_CLIENT_ID: ${GATEWAY_OAUTH_CLIENT_ID:-placeholder}
-      GATEWAY_OAUTH_CLIENT_SECRET: ${GATEWAY_OAUTH_CLIENT_SECRET:-placeholder}
       GATEWAY_BASE_URL: ${GATEWAY_BASE_URL:-https://riskbifrostent.momentum.co.za/openai}
       UNIVERSAL_API_KEY: ${UNIVERSAL_API_KEY:-}
       CHAT_MODEL_URL: ${CHAT_MODEL_URL:-}
+      EMBEDDING_MODEL_URL: ${EMBEDDING_MODEL_URL:-}
+      # Explicit default: chat.js reads this with ?? so an empty string would
+      # become 0 and disable the similarity floor.
+      RAG_MIN_SIMILARITY: ${RAG_MIN_SIMILARITY:-0.2}
       DATABASE_URL: postgres://companion:companion@db:5432/companion
     ports:
       - "4000:4000"
