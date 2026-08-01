@@ -29,6 +29,12 @@ export interface ChatTurn {
 // Retrieval often returns the same heading from two nearby pages. Keyed on the
 // section alone so one heading appears once: the repeated line reads as padding
 // rather than as evidence, and the first page is the better-scoring match.
+// The lead-in already names the guide, so only the page needs to survive here.
+function citationLabel(citation: Citation): string {
+  if (!citation.source) return citation.section;
+  return `${citation.section} (${citation.source.replace("Myriad technical guide ", "")})`;
+}
+
 function uniqueCitations(citations: Citation[]): Citation[] {
   const seen = new Set<string>();
   return citations.filter((citation) => {
@@ -101,22 +107,9 @@ export function Message({
           <Blocks blocks={turn.blocks} />
 
           {sources.length > 0 && (
-            <div className="mt-2.5 border-t border-line pt-2">
-              <p className="text-[10.5px] font-bold uppercase tracking-wide text-ink-faint">
-                {sources.length === 1 ? "Source" : "Sources"}
-              </p>
-              <ul className="mt-1 space-y-0.5">
-                {sources.map((citation) => (
-                  <li
-                    key={citation.section}
-                    className="text-[11.5px] italic text-ink-faint"
-                  >
-                    {citation.section}
-                    {citation.source ? `, ${citation.source}` : ""}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <p className="mt-2 text-[12px] italic text-ink-faint">
+              From the Myriad guide: {sources.map(citationLabel).join("; ")}
+            </p>
           )}
 
           {turn.reference && (
