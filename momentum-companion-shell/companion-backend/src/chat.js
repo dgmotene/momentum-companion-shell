@@ -120,6 +120,12 @@ export async function searchVectorStore(queryVector, limit = 3) {
 const INTENTS = ["greeting", "thanks", "capabilities", "my_details", "policy_question", "quote_request", "update_request", "claim", "confirm", "other"];
 const CLAIM_TYPES = ["death", "funeral", "income", "disability", "critical_illness"];
 const WAITING_MONTHS = [0, 3, 6, 12, 24];
+const DETAILS_TARGETS = ["address", "banking", "beneficiaries", "premium", "cover", "benefits", "claims"];
+
+function firstAllowed(value, allowed) {
+  const candidate = Array.isArray(value) ? value[0] : value;
+  return allowed.includes(candidate) ? candidate : null;
+}
 
 // Call 1 of the two-call pattern: understand the message in one structured
 // envelope. Code does everything else; this call never answers the user.
@@ -138,6 +144,7 @@ export async function understandMessage(userMessage) {
  "requested_sum": rand amount for a cover-change estimate, number or null,
  "waiting_months": one of ${JSON.stringify(WAITING_MONTHS)} or null (null when not mentioned or not one of these),
  "update_target": "address" | "banking" | "beneficiary" | null (what an update_request wants to change),
+ "details_target": one of ${JSON.stringify(DETAILS_TARGETS)} or null (the single detail a my_details question asks for; null only if they asked for everything),
  "address": {"street": string|null, "suburb": string|null, "city": string|null, "province": string|null, "postal_code": string|null}}
 Intent meanings: greeting = hello/smalltalk (typos too). thanks = thanks or goodbye. capabilities = asking what the assistant itself can do or help with, what to ask it, or how it works. my_details = asking to see their own record as held on file: their address, banking, nominated beneficiaries, premium, cover amount, or "what do you have on file for me". confirm = a bare yes/confirm/correct agreeing to something. quote_request = what would my premium be if cover or waiting period changes. update_request = wants to change personal details, or is providing address details. claim = starting or asking about their claim. policy_question = questions about cover, benefits, rules, processes. other = none of these. Extract only what the user actually said; never invent values.`,
         },
@@ -156,10 +163,21 @@ Intent meanings: greeting = hello/smalltalk (typos too). thanks = thanks or good
       updateTarget: ["address", "banking", "beneficiary"].includes(parsed.update_target)
         ? parsed.update_target
         : null,
+      // Models answer this one with a single-element array as often as a
+      // string, so accept either shape.
+      detailsTarget: firstAllowed(parsed.details_target, DETAILS_TARGETS),
       address: parsed.address && typeof parsed.address === "object" ? parsed.address : {},
     };
   } catch {
-    return { intent: "policy_question", claimType: null, requestedSum: null, waitingMonths: null, updateTarget: null, address: {} };
+    return {
+      intent: "policy_question",
+      claimType: null,
+      requestedSum: null,
+      waitingMonths: null,
+      updateTarget: null,
+      detailsTarget: null,
+      address: {},
+    };
   }
 }
 

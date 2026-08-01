@@ -111,25 +111,15 @@ function refusedResponse(identity, action, text) {
 // "What can you do?" is a question about the assistant, not about the policy,
 // so it is answered from the capability matrix rather than the guide.
 function capabilitiesResponse(identity) {
-  const summary = capabilitySummary(identity);
-  if (!summary) {
-    return answeredText(
+  return answeredText(
+    capabilitySummary(identity) ??
       "There isn't any policy information available to you at the moment, so there is little I can help with here. I can connect you with a person if you think that is wrong."
-    );
-  }
-  return {
-    outcome: "answered",
-    blocks: [
-      { kind: "text", text: summary.text },
-      { kind: "suggestions", chips: summary.chips },
-    ],
-    citations: [],
-  };
+  );
 }
 
 // Someone's own record is answered from the database, not the guide: retrieval
 // would find nothing and the no-grounding rule would hide data we already hold.
-async function myDetailsResponse(identity) {
+async function myDetailsResponse(identity, understanding) {
   if (!capabilitiesFor(identity).policyQA) {
     return refusedResponse(
       identity,
@@ -142,10 +132,13 @@ async function myDetailsResponse(identity) {
     policyId: identity.policyId,
     role: identity.role,
   });
-  const { facts, amounts } = describeUserRecord(userContext);
+  const detailsTarget = understanding?.detailsTarget ?? null;
+  const { facts, amounts } = describeUserRecord(userContext, detailsTarget);
   if (!facts.length && !amounts.length) {
     return answeredText(
-      "There is nothing on file against your profile yet. If you expected to see a policy here, I can connect you with a person."
+      detailsTarget
+        ? "I don't have that on your record. If you expected to see it, I can connect you with a person."
+        : "There is nothing on file against your profile yet. If you expected to see a policy here, I can connect you with a person."
     );
   }
   writeAudit({
@@ -166,11 +159,6 @@ async function myDetailsResponse(identity) {
         amount: entry.amount,
         classification: "recorded",
       })),
-      // Role's own chips, so a beneficiary is never offered an update they
-      // would only be refused for.
-      ...(capabilitySummary(identity)
-        ? [{ kind: "suggestions", chips: capabilitySummary(identity).chips }]
-        : []),
     ],
     citations: [],
   };
@@ -269,7 +257,6 @@ async function claimResponse(identity, understanding) {
         })),
       },
       { kind: "sla", text: checklist.timeline },
-      { kind: "suggestions", chips: ["What happens after I send everything?", "How long does assessment take?"] },
     ],
     citations: [],
   };
@@ -451,7 +438,7 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     return send(answeredText("You're welcome. I'm here whenever you need anything on your policy."));
   }
   if (intent === "capabilities") return send(capabilitiesResponse(req.identity));
-  if (intent === "my_details") return send(await myDetailsResponse(req.identity));
+  if (intent === "my_details") return send(await myDetailsResponse(req.identity, understanding));
   if (intent === "quote_request") return send(await whatIfResponse(req.identity, understanding));
   if (intent === "claim") return send(await claimResponse(req.identity, understanding));
   if (intent === "update_request") return send(await addressResponse(req.identity, understanding));
@@ -477,16 +464,10 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     });
 
     if (!result.grounded) {
-      // The fallback wording is fixed by the shared contract. The chips are
-      // additive: a dead end is honest but unhelpful on its own.
-      const summary = capabilitySummary(req.identity);
       return send({
         session_id: result.sessionId,
         outcome: "no_grounding",
-        blocks: [
-          { kind: "text", text: NO_GROUNDING_RESPONSE },
-          ...(summary ? [{ kind: "suggestions", chips: summary.chips }] : []),
-        ],
+        blocks: [{ kind: "text", text: NO_GROUNDING_RESPONSE }],
         citations: [],
       });
     }

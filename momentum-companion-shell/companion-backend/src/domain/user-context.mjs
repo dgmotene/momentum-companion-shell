@@ -117,33 +117,42 @@ const formatRand = (amount) => `R${Number(amount).toLocaleString("en-ZA")}`;
 // For showing someone their own record. Money is returned separately from the
 // plain facts so every amount can go out as a classified value block rather
 // than as unlabelled prose in a list.
-export function describeUserRecord(userContext) {
+// `target` narrows the answer to the one detail that was asked for. Someone who
+// asks for their address should not be handed their whole file back.
+export function describeUserRecord(userContext, target = null) {
   if (!userContext?.profile) return { facts: [], amounts: [] };
 
+  const wants = (category) => target === null || target === category;
   const facts = [];
   const amounts = [];
 
-  if (userContext.policy) {
+  if (userContext.policy && wants("policy")) {
     facts.push(
       `Policy ${userContext.policy.policy_id}: ${userContext.policy.product_name}, status ${userContext.policy.status}`
     );
+  }
+
+  if (userContext.policy && wants("cover")) {
     amounts.push({
       label: "Recorded cover amount",
       amount: formatRand(userContext.policy.sum_assured),
     });
-    if (userContext.policy.monthly_premium !== null) {
-      amounts.push({
-        label: "Monthly premium",
-        amount: formatRand(userContext.policy.monthly_premium),
-      });
+  }
+
+  if (userContext.policy?.monthly_premium !== null && userContext.policy && wants("premium")) {
+    amounts.push({
+      label: "Monthly premium",
+      amount: formatRand(userContext.policy.monthly_premium),
+    });
+  }
+
+  if (wants("benefits")) {
+    for (const benefit of userContext.benefits) {
+      facts.push(`Benefit: ${benefit.benefit_name}, ${formatRand(benefit.cover_amount)}`);
     }
   }
 
-  for (const benefit of userContext.benefits) {
-    facts.push(`Benefit: ${benefit.benefit_name}, ${formatRand(benefit.cover_amount)}`);
-  }
-
-  if (userContext.address) {
+  if (userContext.address && wants("address")) {
     const parts = [
       userContext.address.street,
       userContext.address.suburb,
@@ -154,20 +163,24 @@ export function describeUserRecord(userContext) {
     facts.push(`Address on file: ${parts.join(", ")}`);
   }
 
-  if (userContext.banking) {
+  if (userContext.banking && wants("banking")) {
     facts.push(
       `Banking: ${userContext.banking.bank_name}, account ending ${userContext.banking.account_last4}`
     );
   }
 
-  for (const beneficiary of userContext.beneficiaries) {
-    facts.push(
-      `Beneficiary: ${beneficiary.full_name}, ${beneficiary.relationship}, ${beneficiary.percentage}%`
-    );
+  if (wants("beneficiaries")) {
+    for (const beneficiary of userContext.beneficiaries) {
+      facts.push(
+        `Beneficiary: ${beneficiary.full_name}, ${beneficiary.relationship}, ${beneficiary.percentage}%`
+      );
+    }
   }
 
-  for (const claim of userContext.claims) {
-    facts.push(`Claim on record: ${claim.claim_type}, ${claim.status}`);
+  if (wants("claims")) {
+    for (const claim of userContext.claims) {
+      facts.push(`Claim on record: ${claim.claim_type}, ${claim.status}`);
+    }
   }
 
   return { facts, amounts };
