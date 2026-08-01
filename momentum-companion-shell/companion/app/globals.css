@@ -11,6 +11,13 @@ body {
   background: transparent;
 }
 
+/* Enforced, not just intended: without this the iframe document scrolls as
+   well as the feed, giving the widget two scrollbars. Body cannot carry it
+   because `display: contents` leaves it without a box. */
+html {
+  overflow: hidden;
+}
+
 body {
   display: contents;
   overflow: visible;

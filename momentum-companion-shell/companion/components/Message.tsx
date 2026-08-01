@@ -9,7 +9,7 @@
 // quietly turn an amber "we've flagged this for a person" into something that
 // reads as done.
 
-import type { Block, Outcome } from "@shared/contract";
+import type { Block, Citation, Outcome } from "@shared/contract";
 import { Blocks, SuggestionChips, extractSuggestions } from "./Blocks";
 
 export interface ChatTurn {
@@ -18,6 +18,9 @@ export interface ChatTurn {
   blocks: Block[];
   outcome?: Outcome;
   reference?: string | null;
+  /** Retrieved by the backend and kept on the turn, but not shown: retrieval
+   *  is noisy enough that a wrong source reads worse than no source. */
+  citations?: Citation[];
   /** True while the reply is still arriving. */
   streaming?: boolean;
   /** True when this reply came from demo fixtures. */

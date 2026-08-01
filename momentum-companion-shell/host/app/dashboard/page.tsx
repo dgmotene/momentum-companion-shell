@@ -84,6 +84,19 @@ export default function PortalPage() {
     [sendPageContext, staff, actingFor]
   );
 
+  // Page context was published only by the What-If Explorer, so a staff user
+  // who picked a client anywhere else left the companion believing nobody was
+  // selected. The choice itself is what the assistant needs to hear.
+  useEffect(() => {
+    if (!user) return;
+    handleContextChange({
+      page: view === "clients" ? "client_picker" : "dashboard",
+      summary: activePolicy
+        ? `The portal is showing policy ${activePolicy.id}, held by ${activePolicy.policyholderName}.`
+        : "No policy is open in the portal yet.",
+    });
+  }, [user, view, activePolicy, handleContextChange]);
+
   const handleSignOut = useCallback(async () => {
     // Clear the browser's view first, so nothing renders for a user on their
     // way out, then drop the cookie so no further identity tokens can be

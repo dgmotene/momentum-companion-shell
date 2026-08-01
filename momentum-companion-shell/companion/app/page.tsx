@@ -104,9 +104,9 @@ export default function Companion() {
       return [
         {
           kind: "text",
-          text: `Hi ${firstName}. I can help you with the policy you have open${
-            actingFor ? ` (${actingFor})` : ""
-          }. Talk to me in your own words — everything you ask is recorded against your name.`,
+          text: actingFor
+            ? `Hi ${firstName}. I can help you with ${actingFor}. Talk to me in your own words; everything you ask is recorded against your name.`
+            : `Hi ${firstName}. I can answer product and policy questions from the Myriad guide, and you can open a client to work on a specific policy. Talk to me in your own words; everything you ask is recorded against your name.`,
         },
       ];
     }
@@ -150,7 +150,7 @@ export default function Companion() {
         claims
       );
 
-      setSessionId(response.session_id);
+      if (response.session_id) setSessionId(response.session_id);
       if (response.workflow) setWorkflow(response.workflow);
       if (mocked) setUsingFixtures(true);
 
@@ -162,6 +162,7 @@ export default function Companion() {
                 blocks: response.blocks,
                 outcome: response.outcome,
                 reference: response.reference ?? null,
+                citations: response.citations ?? [],
                 streaming: false,
                 mocked,
               }
@@ -359,8 +360,10 @@ export default function Companion() {
                   ? "Ask a question, or say \u201chelp me with the claim\u201d…"
                   : "Talk to Lumina in your own words\u2026"
               }
-              disabled={sending}
-              className="min-w-0 flex-1 rounded-full border border-line bg-canvas px-3.5 py-2 text-[13px] text-ink outline-none placeholder:text-ink-faint focus:border-teal disabled:opacity-60"
+              // Deliberately not disabled while a reply is in flight: a
+              // disabled input cannot hold focus, so the caret was lost on
+              // every turn. send() already ignores a second submit.
+              className="min-w-0 flex-1 rounded-full border border-line bg-canvas px-3.5 py-2 text-[13px] text-ink outline-none placeholder:text-ink-faint focus:border-teal"
             />
             <button
               type="submit"

@@ -17,13 +17,29 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./db/seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+      # Applied in filename order on first boot only. The RAG schema is the same
+      # file the Python service migrates with, so the two cannot drift.
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/001-seed.sql:ro
+      - ./rag/src/myriad_rag/sql/001_schema.sql:/docker-entrypoint-initdb.d/002-rag-schema.sql:ro
       - dbdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U companion -d companion"]
       interval: 5s
       timeout: 3s
       retries: 10
+
+  # Web UI to browse the database at http://localhost:8081
+  # (server: db, user/password/database: companion).
+  adminer:
+    image: adminer
+    container_name: companion-adminer
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    ports:
+      - "8081:8080"
+    depends_on:
+      db:
+        condition: service_healthy
 
   companion-backend:
     profiles: ["full"]
@@ -35,9 +51,16 @@ services:
       HOST_ORIGIN: http://host:3000
       COMPANION_ALLOWED_ORIGIN: http://localhost:3001
       # Gateway credentials only ever live here (placeholders come from .env.example).
-      GATEWAY_OAUTH_CLIENT_ID: ${GATEWAY_OAUTH_CLIENT_ID:-placeholder}
-      GATEWAY_OAUTH_CLIENT_SECRET: ${GATEWAY_OAUTH_CLIENT_SECRET:-placeholder}
-      GATEWAY_BASE_URL: ${GATEWAY_BASE_URL:-https://riskservicesdev.momentum.co.za/ai/api}
+      GATEWAY_BASE_URL: ${GATEWAY_BASE_URL:-https://riskbifrostent.momentum.co.za/openai}
+      UNIVERSAL_API_KEY: ${UNIVERSAL_API_KEY:-}
+      CHAT_MODEL_URL: ${CHAT_MODEL_URL:-}
+      EMBEDDING_MODEL_URL: ${EMBEDDING_MODEL_URL:-}
+      # Explicit default: chat.js reads this with ?? so an empty string would
+      # become 0 and disable the similarity floor.
+      RAG_MIN_SIMILARITY: ${RAG_MIN_SIMILARITY:-0.2}
+      # Optional translation; defaults to 'none' (disabled) so Lelapa stays optional.
+      TRANSLATION_PROVIDER: ${TRANSLATION_PROVIDER:-none}
+      VULAVULA_API_TOKEN: ${VULAVULA_API_TOKEN:-}
       DATABASE_URL: postgres://companion:companion@db:5432/companion
     ports:
       - "4000:4000"
@@ -71,6 +94,7 @@ services:
       - "3000:3000"
     volumes:
       - ./host:/app
+      - ./shared:/shared:ro
       - ./keys:/keys:ro
     depends_on:
       keys:
@@ -88,6 +112,7 @@ services:
       - "3001:3001"
     volumes:
       - ./companion:/app
+      - ./shared:/shared:ro
 
 volumes:
   dbdata:

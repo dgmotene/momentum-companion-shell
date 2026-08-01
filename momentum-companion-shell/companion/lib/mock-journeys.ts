@@ -200,7 +200,6 @@ export function mockChat(
               "Any outstanding debt on the policy is deducted before payment.",
             ],
           },
-          { kind: "citation", section: "Death Benefit section" },
         ],
       };
 
@@ -220,7 +219,6 @@ export function mockChat(
             amount: "R 50 000",
             classification: "recorded",
           },
-          { kind: "citation", section: "Funeral Benefit section" },
         ],
       };
 
@@ -236,7 +234,6 @@ export function mockChat(
             kind: "text",
             text: "There is a cooling-off period after the policy starts, during which it can be cancelled and premiums already paid are refunded, provided no benefit has been claimed.",
           },
-          { kind: "citation", section: "Cooling-off section" },
         ],
       };
 
@@ -261,7 +258,6 @@ export function mockChat(
             text:
               "The length of the term is calculated from the premium and benefit amount chosen at the start. It is a defined provision in the policy, not an open-ended promise: once the term ends, premiums can be reviewed.",
           },
-          { kind: "citation", section: "Premium guarantees section" },
         ],
       };
 
@@ -281,7 +277,6 @@ export function mockChat(
             kind: "text",
             text: "If a payment is going to be late, it's much easier to sort out before the policy lapses. I can put you through to someone who can arrange that.",
           },
-          { kind: "citation", section: "Lapses and reinstatements section" },
         ],
       };
 
@@ -322,7 +317,6 @@ export function mockChat(
             kind: "text",
             text: "The confirmed amount is the one you'll be given in writing once assessment is complete. Anything I said before then would be a guess, and this is not something to guess about.",
           },
-          { kind: "citation", section: "Payment of a claim section" },
         ],
       };
 
@@ -548,12 +542,6 @@ export function mockChat(
         text: "There's no order you have to do these in. Tell me what you have and I'll keep track of the rest.",
       });
 
-      blocks.push({
-        kind: "citation",
-        section: "Claim requirements / Death claims",
-        source: "Myriad guide p.443",
-      });
-
       return {
         ...base,
         outcome: "answered",
@@ -604,7 +592,6 @@ export function mockChat(
             kind: "text",
             text: "On this claim the specialist report is still outstanding, so the benefit definition can't be tested yet.",
           },
-          { kind: "citation", section: "Claims introduction", source: "Myriad guide p.442" },
         ],
       };
 
@@ -652,7 +639,6 @@ export function mockChat(
               "Complete Income Protector, for income rather than a lump sum",
             ],
           },
-          { kind: "citation", section: "the disability benefit sections" },
         ],
       };
 

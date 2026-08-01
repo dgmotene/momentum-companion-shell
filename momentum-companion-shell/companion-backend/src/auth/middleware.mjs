@@ -47,6 +47,7 @@ export async function requireAuth(req, res, next) {
       role: profile.role,
       policyId: profile.policy_id,
       deceasedFlag,
+      scope: Array.isArray(claims.scope) ? claims.scope : [],
     };
     return next();
   } catch (err) {
