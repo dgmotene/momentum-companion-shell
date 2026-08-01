@@ -34,9 +34,19 @@ export function PortalChrome({
   const staff = claims.role === "adviser" || claims.role === "claims_assessor" || claims.role === "service_agent";
 
   return (
-    <div className="min-h-screen bg-brand-bg font-sans text-brand-ink">
-      <header className="flex flex-col gap-3 border-b border-brand-border bg-brand-surface px-4 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:py-3.5 lg:px-8">
-        <div className="text-[12px] font-bold tracking-[0.06em] sm:text-[13px]">
+    // Same ground as the login screen: blueTint washed with a teal radial from
+    // the top-left. The user has just come through that screen, so the portal
+    // should not feel like a different product.
+    <div
+      className="min-h-screen bg-brand-blueTint font-sans text-brand-ink"
+      style={{
+        backgroundImage:
+          "radial-gradient(circle at top left, rgba(76, 143, 216, 0.28), transparent 60%)",
+        backgroundAttachment: "fixed",
+      }}
+    >
+      <header className="flex flex-col gap-3 border-b border-brand-border/70 bg-brand-surface/80 px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:py-3.5 lg:px-8">
+        <div className="text-[12px] font-bold tracking-[0.06em] text-red-600 sm:text-[13px]">
           MOMENTUM <span className="font-medium text-brand-teal">life</span>
         </div>
 
@@ -57,7 +67,7 @@ export function PortalChrome({
             <button
               type="button"
               onClick={onSignOut}
-              className="rounded-lg border border-brand-border px-2.5 py-1 text-[11px] font-semibold text-brand-inkSoft transition hover:border-brand-teal hover:text-brand-ink sm:px-3 sm:py-1.5 sm:text-[12px] sm:rounded-xl"
+              className="rounded-2xl border border-brand-border bg-brand-surface px-2.5 py-1 text-[11px] font-semibold text-brand-inkSoft transition hover:-translate-y-0.5 hover:border-brand-teal hover:text-brand-ink sm:px-3 sm:py-1.5 sm:text-[12px]"
             >
               Sign out
             </button>
@@ -69,18 +79,27 @@ export function PortalChrome({
           never dismissible. Bereaved beneficiaries and staff both need this,
           for opposite reasons. */}
       {bereaved && (
-        <div className="border-b border-brand-amber/60 bg-brand-amberTint px-4 py-2 text-[12px] font-semibold text-brand-amberText sm:px-6 sm:py-2.5 sm:text-[13px] lg:px-8">
+        <div className="border-b border-brand-amber/60 bg-brand-amberTint/90 px-4 py-2 text-[12px] font-semibold text-brand-amberText backdrop-blur sm:px-6 sm:py-2.5 sm:text-[13px] lg:px-8">
           You are viewing this policy as a Beneficiary.
         </div>
       )}
       {staff && (
-        <div className="border-b border-brand-teal/25 bg-brand-blueTint px-4 py-2 text-[12px] font-semibold text-brand-tealDark sm:px-6 sm:py-2.5 sm:text-[13px] lg:px-8">
+        <div className="border-b border-brand-teal/25 bg-brand-surface/70 px-4 py-2 text-[12px] font-semibold text-brand-tealDark backdrop-blur sm:px-6 sm:py-2.5 sm:text-[13px] lg:px-8">
           Staff access &middot; {ROLE_LABEL[claims.role]}. Every policy you open
           is recorded against your name.
         </div>
       )}
 
-      <main className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7">{children}</main>
+      {/* data-companion-dock marks the column the docked companion lines up
+          with. The loader never looks for it directly: use-companion measures
+          this element and hands the loader plain pixel gutters, so the embed
+          stays free of any Momentum layout knowledge. */}
+      <main
+        data-companion-dock
+        className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7"
+      >
+        {children}
+      </main>
     </div>
   );
 }

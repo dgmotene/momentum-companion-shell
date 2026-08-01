@@ -64,10 +64,10 @@ export default function LoginPage() {
       className="min-h-screen bg-brand-blueTint px-4 py-8 text-brand-ink sm:px-6 lg:px-8"
       style={{
         backgroundImage:
-          "radial-gradient(circle at top left, rgba(78, 205, 196, 0.24), transparent 60%)",
+          "radial-gradient(circle at top left, rgba(76, 143, 216, 0.28), transparent 60%)",
       }}
     >
-      <div className="mx-auto flex max-w-6xl flex-col overflow-hidden rounded-[28px] border border-brand-border bg-brand-surface shadow-[0_24px_80px_rgba(0,109,119,0.12)] lg:min-h-[calc(100vh-4rem)] lg:flex-row">
+      <div className="mx-auto flex max-w-6xl flex-col overflow-hidden rounded-[28px] border border-brand-border bg-brand-surface shadow-[0_24px_80px_rgba(0,51,160,0.12)] lg:min-h-[calc(100vh-4rem)] lg:flex-row">
         <section className="relative flex w-full flex-col justify-between overflow-hidden bg-gradient-to-br from-brand-teal via-brand-tealDark to-brand-blue p-6 text-brand-surface sm:p-8 lg:w-[44%] lg:p-10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.18),_transparent_40%)]" />
           <div className="relative z-10">
@@ -76,7 +76,7 @@ export default function LoginPage() {
                 L
               </div>
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand-surface/80">
+                <p className="text-sm font-bold uppercase tracking-[0.24em] text-red-500">
                   Momentum
                 </p>
                 <p className="text-xl font-semibold">Lumina</p>
@@ -97,7 +97,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="relative z-10 grid gap-3 rounded-2xl border border-brand-surface/20 bg-brand-surface/10 p-4 backdrop-blur">
+          {/* <div className="relative z-10 grid gap-3 rounded-2xl border border-brand-surface/20 bg-brand-surface/10 p-4 backdrop-blur">
             <div className="flex items-center justify-between text-sm">
               <span className="text-brand-surface/70">Active members</span>
               <span className="font-semibold">24k+</span>
@@ -108,7 +108,7 @@ export default function LoginPage() {
               </span>
               <span className="font-semibold">2 min</span>
             </div>
-          </div>
+          </div> */}
         </section>
 
         <section className="flex-1 bg-brand-bg p-6 sm:p-8 lg:p-10">
@@ -159,7 +159,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full rounded-2xl bg-brand-teal px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(0,109,119,0.2)] transition hover:-translate-y-0.5 hover:bg-brand-tealDark disabled:translate-y-0 disabled:opacity-60"
+                className="w-full rounded-2xl bg-brand-teal px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(0,51,160,0.22)] transition hover:-translate-y-0.5 hover:bg-brand-tealDark disabled:translate-y-0 disabled:opacity-60"
               >
                 {busy ? "Signing in…" : "Sign in"}
               </button>
@@ -170,11 +170,11 @@ export default function LoginPage() {
                 one. Clicking a row fills the form; it does not sign you in, so
                 the credential path is the same one a real user takes. */}
             <div className="mt-6 rounded-2xl bg-brand-bg p-4 text-xs leading-6 text-brand-inkFaint">
-              <p className="mb-2 font-semibold text-brand-inkSoft">
+              {/* <p className="mb-2 font-semibold text-brand-inkSoft">
                 Demo accounts &middot; password{" "}
                 <code className="text-brand-ink">password123</code>
-              </p>
-              <ul className="grid gap-1">
+              </p> */}
+              {/* <ul className="grid gap-1">
                 {DEMO_ACCOUNTS.map((account) => (
                   <li key={account.email}>
                     <button
@@ -194,7 +194,7 @@ export default function LoginPage() {
                     </button>
                   </li>
                 ))}
-              </ul>
+              </ul> */}
               <p className="mt-3 text-center">
                 By signing in, you agree to Momentum&rsquo;s Terms of Service and
                 Privacy Policy. Lumina is only available once you&rsquo;re
