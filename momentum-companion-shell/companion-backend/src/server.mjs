@@ -81,8 +81,9 @@ app.post("/api/verify", async (req, res) => {
 // /api/claims/guidance, address update, banking escalation.
 app.use(domainRoutes);
 
+// These builders omit session_id on purpose: the /api/chat send() helper stamps
+// the resolved session onto every response, so no handler can forget it.
 const answeredText = (text) => ({
-  session_id: "",
   outcome: "answered",
   blocks: [{ kind: "text", text }],
   citations: [],
@@ -98,7 +99,6 @@ function refusedResponse(identity, action, text) {
     reason: `role ${identity.role} may not ${action}`,
   });
   return {
-    session_id: "",
     outcome: "refused",
     blocks: [{ kind: "text", text }],
     citations: [],
@@ -143,7 +143,6 @@ async function whatIfResponse(identity, understanding) {
   const conditions = [`${params.waitingMonths} month waiting period`];
   if (estimate.flooredAtMinimum) conditions.push("Minimum premium of R200 applies");
   return {
-    session_id: "",
     outcome: "answered",
     blocks: [
       {
@@ -187,7 +186,6 @@ async function claimResponse(identity, understanding) {
       ? "I'm so sorry for your loss. There's no rush here; we can go at your pace, and you can pause and come back at any time. The death certificate is already on file, so you will never be asked for it."
       : `Here is what a ${checklist.label.toLowerCase()} needs.`;
   return {
-    session_id: "",
     outcome: "answered",
     blocks: [
       { kind: "text", text: opening },
@@ -229,7 +227,6 @@ function escalatedResponse(identity, target) {
     reason: `${target} changes always require human review`,
   });
   return {
-    session_id: "",
     outcome: "escalated",
     blocks: [
       {
@@ -356,6 +353,7 @@ app.post("/api/chat", requireAuth, async (req, res) => {
   if (!userMessage) return res.status(400).json({ error: "message required" });
 
   const startedAt = Date.now();
+  const session = await getOrCreateSession(req.identity.sub, req.identity.role);
   const understanding = await understandMessage(userMessage).catch(() => ({
     intent: "policy_question",
     claimType: null,
@@ -368,7 +366,8 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     console.log(
       `[chat] ${req.identity.sub} (${req.identity.role}) intent=${intent} outcome=${payload.outcome} ${Date.now() - startedAt}ms`
     );
-    return res.json(payload);
+    // Default first so a handler that resolved its own session still wins.
+    return res.json({ session_id: session.id, ...payload });
   };
 
   if (intent === "greeting") {
@@ -426,7 +425,6 @@ app.post("/api/chat", requireAuth, async (req, res) => {
   } catch (err) {
     console.error("chat pipeline failed", err);
     return send({
-      session_id: "",
       outcome: "error",
       blocks: [
         {

@@ -204,7 +204,7 @@ export default function Companion() {
         claims
       );
 
-      setSessionId(response.session_id);
+      if (response.session_id) setSessionId(response.session_id);
       if (response.workflow) setWorkflow(response.workflow);
       if (mocked) setUsingFixtures(true);
 
