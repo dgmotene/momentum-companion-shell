@@ -116,26 +116,50 @@ export async function searchVectorStore(queryVector, limit = 3) {
   return rows;
 }
 
-const INTENTS = ["greeting", "policy_question", "quote_request", "update_request", "claim", "other"];
+const INTENTS = ["greeting", "thanks", "policy_question", "quote_request", "update_request", "claim", "confirm", "other"];
+const CLAIM_TYPES = ["death", "funeral", "income", "disability", "critical_illness"];
+const WAITING_MONTHS = [0, 3, 6, 12, 24];
 
-// Call 1 of the two-call pattern: name the intent, nothing else.
-export async function classifyIntent(userMessage) {
+// Call 1 of the two-call pattern: understand the message in one structured
+// envelope. Code does everything else; this call never answers the user.
+export async function understandMessage(userMessage) {
   const response = await callWithRetry(async () =>
     getOpenAIClient().chat.completions.create({
       model: CHAT_MODEL,
       temperature: 0,
-      max_tokens: 5,
+      max_tokens: 200,
       messages: [
         {
           role: "system",
-          content: `Classify the user's message as exactly one word from: ${INTENTS.join(", ")}. greeting = greetings, thanks, smalltalk (including typos). quote_request = asking what a premium would be if cover changes. update_request = wanting to change personal or policy details. claim = starting, submitting or asking about their claim. policy_question = questions about cover, benefits, rules, processes. other = anything else.`,
+          content: `Analyse the user's message for a life insurance chat. Respond with ONLY JSON:
+{"intent": one of ${JSON.stringify(INTENTS)},
+ "claim_type": one of ${JSON.stringify(CLAIM_TYPES)} or null,
+ "requested_sum": rand amount for a cover-change estimate, number or null,
+ "waiting_months": one of ${JSON.stringify(WAITING_MONTHS)} or null (null when not mentioned or not one of these),
+ "update_target": "address" | "banking" | "beneficiary" | null (what an update_request wants to change),
+ "address": {"street": string|null, "suburb": string|null, "city": string|null, "province": string|null, "postal_code": string|null}}
+Intent meanings: greeting = hello/smalltalk (typos too). thanks = thanks or goodbye. confirm = a bare yes/confirm/correct agreeing to something. quote_request = what would my premium be if cover or waiting period changes. update_request = wants to change personal details, or is providing address details. claim = starting or asking about their claim. policy_question = questions about cover, benefits, rules, processes. other = none of these. Extract only what the user actually said; never invent values.`,
         },
         { role: "user", content: userMessage },
       ],
     })
   );
-  const intent = response.choices[0].message.content.trim().toLowerCase();
-  return INTENTS.includes(intent) ? intent : "policy_question";
+  try {
+    const raw = response.choices[0].message.content.trim().replace(/^```json?|```$/g, "");
+    const parsed = JSON.parse(raw);
+    return {
+      intent: INTENTS.includes(parsed.intent) ? parsed.intent : "policy_question",
+      claimType: CLAIM_TYPES.includes(parsed.claim_type) ? parsed.claim_type : null,
+      requestedSum: Number.isFinite(parsed.requested_sum) ? parsed.requested_sum : null,
+      waitingMonths: WAITING_MONTHS.includes(parsed.waiting_months) ? parsed.waiting_months : null,
+      updateTarget: ["address", "banking", "beneficiary"].includes(parsed.update_target)
+        ? parsed.update_target
+        : null,
+      address: parsed.address && typeof parsed.address === "object" ? parsed.address : {},
+    };
+  } catch {
+    return { intent: "policy_question", claimType: null, requestedSum: null, waitingMonths: null, updateTarget: null, address: {} };
+  }
 }
 
 // The user's own policy record, so "my policy" questions answer personally.
