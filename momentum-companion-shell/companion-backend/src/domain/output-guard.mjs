@@ -21,6 +21,14 @@ const RAND_AMOUNT = /R\s?\d[\d\s.,]*/;
 // characters.
 export function stripMarkdown(text) {
   return text
+    // The model writes em dashes, curly quotes and ellipses that nothing else
+    // in the product uses. Normalised here rather than asked for in the
+    // prompt, because a prompt is a request and this is not negotiable.
+    .replace(/\s*[—–]\s*/g, ", ")
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/…/g, "...")
+    .replace(/ /g, " ")
     .replace(/^#{1,6}\s+/gm, "")
     .replace(/\*\*(.+?)\*\*/gs, "$1")
     .replace(/(?<![*\w])\*(?!\s)([^*\n]+?)(?<!\s)\*(?![*\w])/g, "$1")

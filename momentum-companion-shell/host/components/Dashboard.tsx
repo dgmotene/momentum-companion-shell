@@ -127,7 +127,7 @@ export function Dashboard({
         <p className="mt-1.5 text-[11px] text-brand-inkFaint sm:text-[12px]">
           Policyholder <strong>{policy.policyholderName}</strong> &middot; life
           insured <strong>{policy.lifeInsuredName}</strong>
-          {isLifeInsured && " — that's you"}
+          {isLifeInsured && " (that's you)"}
         </p>
       )}
       

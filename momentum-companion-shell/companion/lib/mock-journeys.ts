@@ -671,7 +671,7 @@ export function mockChat(
         blocks: [
           {
             kind: "text",
-            text: `I'm listening, ${firstName}. Tell me what you'd like to sort out and I'll take it from there — you can be as loose or as specific as you like.`,
+            text: `I'm listening, ${firstName}. Tell me what you'd like to sort out and I'll take it from there. You can be as loose or as specific as you like.`,
           },
         ],
       };
