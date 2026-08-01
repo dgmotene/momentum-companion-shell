@@ -9,7 +9,11 @@ export function estimatePremium({
   requestedSum,
   waitingMonths,
 }) {
-  const factor = WAITING_PERIOD_FACTORS[waitingMonths];
+  // An unspecified wait is not a zero-month wait. The factor only ever
+  // discounts for accepting a longer wait, so with none chosen there is
+  // nothing to discount and the premium scales on cover alone.
+  const waitSpecified = waitingMonths !== null && waitingMonths !== undefined;
+  const factor = waitSpecified ? WAITING_PERIOD_FACTORS[waitingMonths] : 1;
   if (factor === undefined) {
     return {
       error: `waiting period must be one of ${Object.keys(WAITING_PERIOD_FACTORS).join(", ")} months`,
@@ -24,7 +28,7 @@ export function estimatePremium({
     currentSum,
     currentPremium,
     requestedSum,
-    waitingMonths,
+    waitingMonths: waitSpecified ? waitingMonths : null,
     estimatedPremium: Math.round(estimatedPremium * 100) / 100,
     flooredAtMinimum: rawPremium < MINIMUM_PREMIUM,
     disclaimer: DISCLAIMER,
